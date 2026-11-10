@@ -201,6 +201,8 @@ const RETRIEVER = [
   pr('retriever', 'eastmoney_724', 'daily', { params: { limit: 3 }, expect: { minRows: 1 } }),
   pr('retriever', 'eastmoney_stock_news', 'daily', { params: { code: '600519', limit: 3 }, expect: { minRows: 1 }, note: '上游被间歇风控时会整个丢掉 cmsArticleWebOld 键——那是 UPSTREAM 不是空结果' }),
   pr('retriever', 'eastmoney_reports', 'daily', { params: { code: '600519', pageSize: 3, pageNo: 1 }, expect: { minRows: 1 }, note: '只认裸 6 位代码，带 SH 前缀会 hits=0' }),
+  pr('retriever', 'eastmoney_industry_reports', 'daily', { params: { industry_code: '1044', page_size: 3, page: 1 }, expect: { minRows: 1 }, note: 'qType=1 行业分类；industry_code 走上游精确过滤（1044=生物制品）；时间窗默认 2000-2030' }),
+  pr('retriever', 'eastmoney_macro_reports', 'daily', { params: { page_size: 3, page: 1 }, expect: { minRows: 1 }, note: 'qType=2 宏观/策略分类；不传关键词——上游不支持，title_keyword 是本地过滤' }),
   pr('retriever', 'sina_reports', 'daily', { params: { code: '688017', page: 1 }, expect: { minRows: 1 }, note: '必须带交易所前缀；重定向会换主机并降级到 http' }),
   pr('retriever', 'ths_eps_forecast', 'daily', { params: { code: '600519' }, expect: { minRows: 1 }, note: '正文是 GBK 而响应头不带 charset，按 UTF-8 解会得到 11800 个替换字符' }),
   // SSE Q&A: WAF 403s the hosted egress (3/3) but not a domestic one (3/3). Shadow: probed,

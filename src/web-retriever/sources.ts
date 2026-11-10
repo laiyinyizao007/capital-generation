@@ -885,6 +885,142 @@ export async function eastmoneyReports(
   }
 }
 
+/** `qType` on the upstream report API: 0 = stock, 1 = industry, 2 = macro/strategy. */
+export type ReportScope = 'industry' | 'macro'
+
+const REPORT_SCOPE_QTYPE: Record<ReportScope, string> = { industry: '1', macro: '2' }
+
+export interface EastmoneyScopeReportInput {
+  scope: ReportScope
+  /** Upstream industry filter; `*` is the whole market. Upstream applies it server-side. */
+  industryCode?: string
+  /** Upstream organisation filter; applied server-side. */
+  orgCode?: string
+  /** Title substring; upstream has no keyword search, so this filters locally after the fetch. */
+  titleKeyword?: string
+  /** Organisation display name substring (`orgSName`); also local, upstream has no name search. */
+  orgName?: string
+  startDate?: string
+  endDate?: string
+  pageSize: number
+  pageNo: number
+  signal?: AbortSignal
+}
+
+/**
+ * Upstream ignores every keyword parameter (`q`, `title`, `reportName` were measured to leave
+ * `hits` unchanged), so keyword filtering can only happen after the page is fetched. `note`
+ * therefore states how many rows survived the local filter: an empty list must not read as
+ * "upstream has nothing".
+ */
+function filterScopeRows(
+  rows: Array<Record<string, unknown>>,
+  input: { titleKeyword?: string; orgName?: string },
+): { kept: Array<Record<string, unknown>>; afterTitle: number; afterOrg: number } {
+  const titleNeedle = input.titleKeyword?.trim().toLowerCase()
+  const orgNeedle = input.orgName?.trim().toLowerCase()
+  let kept = rows
+  if (titleNeedle !== undefined && titleNeedle !== '') {
+    kept = kept.filter((row) => String(row.title ?? '').toLowerCase().includes(titleNeedle))
+  }
+  const afterTitle = kept.length
+  if (orgNeedle !== undefined && orgNeedle !== '') {
+    kept = kept.filter((row) => {
+      const name = typeof row.orgSName === 'string' ? row.orgSName : ''
+      return name.toLowerCase().includes(orgNeedle)
+    })
+  }
+  return { kept, afterTitle, afterOrg: kept.length }
+}
+
+/**
+ * Industry / macro-strategy reports. `qType` is the upstream category switch; the individual
+ * report and industry research pages carry no `infoCode`, so the PDF link comes from the API
+ * (`AP…` -> `pdf.dfcfw.com`).
+ */
+export async function eastmoneyScopeReports(
+  client: EastmoneyClient,
+  input: EastmoneyScopeReportInput,
+): Promise<SourceOutcome> {
+  const params = new URLSearchParams({
+    industryCode: input.industryCode ?? '*',
+    pageSize: String(input.pageSize),
+    industry: '*',
+    rating: '*',
+    ratingChange: '*',
+    beginTime: input.startDate ?? '2000-01-01',
+    endTime: input.endDate ?? '2030-01-01',
+    pageNo: String(input.pageNo),
+    fields: '',
+    qType: REPORT_SCOPE_QTYPE[input.scope],
+    orgCode: input.orgCode ?? '',
+    code: '',
+    rcode: '',
+    p: String(input.pageNo),
+    pageNum: String(input.pageNo),
+    pageNumber: String(input.pageNo),
+  })
+  const outcome = await client.fetchText(`${EM_REPORT_URL}?${params.toString()}`, {
+    headers: { referer: EM_DATA_REFERER },
+    ...(input.signal === undefined ? {} : { signal: input.signal }),
+  })
+  const body = asRecord(parseJson(outcome.text, 'eastmoney', '东财研报响应'))
+  const rows = Array.isArray(body?.data) ? body.data : []
+  const totalPage = typeof body?.TotalPage === 'number' ? body.TotalPage : 1
+  const hits = typeof body?.hits === 'number' ? body.hits : rows.length
+
+  const { kept, afterTitle, afterOrg } = filterScopeRows(
+    rows.filter((row): row is Record<string, unknown> => asRecord(row) !== undefined),
+    input,
+  )
+
+  const items: SourceItem[] = []
+  for (const row of kept) {
+    const pdfUrl = emReportPdfUrl(row.infoCode)
+    items.push({
+      date: typeof row.publishDate === 'string' ? row.publishDate.slice(0, 10) : '',
+      title: clip(row.title),
+      org: clip(row.orgSName),
+      researcher: clip(row.researcher),
+      ...(typeof row.industryName === 'string' && row.industryName !== ''
+        ? { industry: clip(row.industryName) }
+        : {}),
+      ...(typeof row.emRatingName === 'string' && row.emRatingName !== ''
+        ? { rating: clip(row.emRatingName) }
+        : {}),
+      info_code: clip(row.infoCode),
+      ...(pdfUrl === undefined ? {} : { pdf_url: pdfUrl }),
+      attach_pages: typeof row.attachPages === 'number' && Number.isFinite(row.attachPages) ? row.attachPages : null,
+    })
+  }
+
+  const scopeLabel = input.scope === 'industry' ? '行业研报' : '宏观/策略研报'
+  const notes: string[] = []
+  notes.push(`${scopeLabel}共 ${hits} 篇（上游 qType=${REPORT_SCOPE_QTYPE[input.scope]}）；列表不含摘要，正文在各条的 pdf_url 里，交 ocr 解析`)
+  if (input.titleKeyword !== undefined && input.titleKeyword !== '') {
+    notes.push(`上游不支持关键词检索：title_keyword 是拉取后本地过滤，本页 ${rows.length} 条中标题命中 ${afterTitle} 条`)
+  }
+  if (input.orgName !== undefined && input.orgName !== '') {
+    const base = input.titleKeyword !== undefined && input.titleKeyword !== ''
+      ? `在标题命中的 ${afterTitle} 条里`
+      : `本页 ${rows.length} 条里`
+    notes.push(`org_name 也是拉取后本地过滤：${base}机构名命中 ${afterOrg} 条`)
+  }
+  const filtered = (input.titleKeyword !== undefined && input.titleKeyword !== '')
+    || (input.orgName !== undefined && input.orgName !== '')
+  if (items.length === 0 && rows.length > 0 && filtered) {
+    notes.push('空结果来自本地过滤，不是上游没有研报——换关键词或放宽过滤条件再查')
+  }
+
+  return {
+    source: 'eastmoney',
+    operation: `${input.scope}_reports`,
+    items: clipItems(items),
+    ...(totalPage > input.pageNo ? { next_cursor: String(input.pageNo + 1) } : {}),
+    note: notes.join('；'),
+  }
+}
+
 
 const EM_ANNOUNCEMENT_LIST_URL = 'https://np-anotice-stock.eastmoney.com/api/security/ann'
 const EM_ANNOUNCEMENT_BODY_URL = 'https://np-cnotice-stock.eastmoney.com/api/content/ann'

@@ -12,6 +12,7 @@ import {
   eastmoneyAnnouncements,
   eastmoneyFastNews,
   eastmoneyReports,
+  eastmoneyScopeReports,
   eastmoneyStockNews,
   normalizeAnnouncementCodes,
   sinaReports,
@@ -19,7 +20,7 @@ import {
   thsEpsForecast,
   wscnLives,
 } from './sources.js'
-import type { AnnouncementMarket, SourceId, SourceItem, SourceOutcome } from './sources.js'
+import type { AnnouncementMarket, ReportScope, SourceId, SourceItem, SourceOutcome } from './sources.js'
 import type { LocalFetchOptions } from './local-fetch.js'
 import { assertPublicUrlTarget } from './local-fetch.js'
 import { createEastmoneyClient, sharedEastmoneyThrottle } from '../net/eastmoney-client.js'
@@ -1224,6 +1225,87 @@ export function registerSourceTools(ctx: Context, localFetchOptions: LocalFetchO
         const pageNo = integer(args.page, 'page', 1, 1000) ?? 1
         return run(exec, 'eastmoney', 'reports', `code=${code} page=${pageNo}`, () =>
           eastmoneyReports(eastmoneyClient, { code, pageSize, pageNo, signal: exec.signal }))
+      },
+    },
+    {
+      name: 'eastmoney_industry_reports',
+      description: '取行业研报列表（东财研报库行业分类，零 key）。与 eastmoney_reports（个股研报）互为分类补充：本工具不含个股研报。industry_code 是东财行业码（如 1044=生物制品），上游按它精确过滤；org_code 是东财机构码（如 80036717=中邮证券），同样上游过滤。⚠️ 上游**不支持关键词检索**（实测 q/title/reportName 都被忽略，hits 不变），所以 title_keyword 与 org_name 是拉取后本地过滤——只过滤当前页，不是全库检索，空结果不代表上游没有，换关键词或翻页再查。列表**不含摘要**：正文只在 pdf_url（研报 PDF 直链）里，把该条 pdf_url 交 ocr 解析（整篇一次算完）。本工具不指定 code，所以拿不到个股评级与 EPS 预测；券商观点属第三方预测，回传时标注机构名与发布日期。',
+      parameters: jsonObject({
+        industry_code: { type: 'string', description: '可选，东财行业码（数字，如 1044=生物制品）；省略或填 * 表示全市场' },
+        org_code: { type: 'string', description: '可选，东财机构码（数字，如 80036717=中邮证券）；上游按机构精确过滤' },
+        title_keyword: { type: 'string', description: '可选，标题子串过滤；上游不支持关键词检索，这是拉取后本地过滤（只作用于当前页）' },
+        org_name: { type: 'string', description: '可选，机构名子串过滤（如「华泰」）；本地过滤，与 org_code 二选一用即可' },
+        start_date: { type: 'string', description: '可选，发布日期起 YYYY-MM-DD（含）' },
+        end_date: { type: 'string', description: '可选，发布日期止 YYYY-MM-DD（含）' },
+        page_size: { type: 'integer', description: '可选，每页条数 1~50，默认 20' },
+        page: { type: 'integer', description: '可选，页码从 1 开始' },
+      }, []),
+      output: { schema: envelope({ next_cursor: { type: 'string' } }), render },
+      async execute(args: Record<string, unknown>, exec: ToolExecLike) {
+        const industryCode = optionalString(args.industry_code, 'industry_code', 32)
+        const orgCode = optionalString(args.org_code, 'org_code', 32)
+        const titleKeyword = optionalString(args.title_keyword, 'title_keyword', 64)
+        const orgName = optionalString(args.org_name, 'org_name', 64)
+        const startDate = args.start_date === undefined ? undefined : strictCalendarDate(args.start_date, 'start_date')
+        const endDate = args.end_date === undefined ? undefined : strictCalendarDate(args.end_date, 'end_date')
+        if (startDate !== undefined && endDate !== undefined && startDate > endDate) {
+          throw new Error('start_date must not be later than end_date')
+        }
+        const pageSize = integer(args.page_size, 'page_size', 1, SOURCE_RESULT_CAP) ?? 20
+        const pageNo = integer(args.page, 'page', 1, 1000) ?? 1
+        return run(exec, 'eastmoney', 'industry_reports',
+          `industry=${industryCode ?? '*'} org=${orgCode ?? '-'} page=${pageNo}`, () =>
+          eastmoneyScopeReports(eastmoneyClient, {
+            scope: 'industry',
+            ...(industryCode === undefined ? {} : { industryCode }),
+            ...(orgCode === undefined ? {} : { orgCode }),
+            ...(titleKeyword === undefined ? {} : { titleKeyword }),
+            ...(orgName === undefined ? {} : { orgName }),
+            ...(startDate === undefined ? {} : { startDate }),
+            ...(endDate === undefined ? {} : { endDate }),
+            pageSize,
+            pageNo,
+            signal: exec.signal,
+          }))
+      },
+    },
+    {
+      name: 'eastmoney_macro_reports',
+      description: '取宏观、策略与大宗商品研报列表（东财研报库宏观分类，零 key）。这个分类里装着卖方策略研究——策略周报、资产配置、量化与金工研究、大宗与商品周报都在这一档；个股研报不在这里（用 eastmoney_reports），行业研报用 eastmoney_industry_reports。org_code 是东财机构码（如 80000208=华宝证券），上游按它精确过滤。⚠️ 上游**不支持关键词检索**（实测 q/title/reportName 都被忽略），所以 title_keyword 与 org_name 是拉取后本地过滤——只过滤当前页，空结果不代表上游没有。列表**不含摘要**：正文只在 pdf_url 里，把该条 pdf_url 交 ocr 解析（整篇一次算完）。策略观点属第三方预测，回传时标注机构名与发布日期，不要当作已验证事实。',
+      parameters: jsonObject({
+        org_code: { type: 'string', description: '可选，东财机构码（数字，如 80000208=华宝证券）；上游按机构精确过滤' },
+        title_keyword: { type: 'string', description: '可选，标题子串过滤；上游不支持关键词检索，这是拉取后本地过滤（只作用于当前页）' },
+        org_name: { type: 'string', description: '可选，机构名子串过滤（如「国信」）；本地过滤，与 org_code 二选一用即可' },
+        start_date: { type: 'string', description: '可选，发布日期起 YYYY-MM-DD（含）' },
+        end_date: { type: 'string', description: '可选，发布日期止 YYYY-MM-DD（含）' },
+        page_size: { type: 'integer', description: '可选，每页条数 1~50，默认 20' },
+        page: { type: 'integer', description: '可选，页码从 1 开始' },
+      }, []),
+      output: { schema: envelope({ next_cursor: { type: 'string' } }), render },
+      async execute(args: Record<string, unknown>, exec: ToolExecLike) {
+        const orgCode = optionalString(args.org_code, 'org_code', 32)
+        const titleKeyword = optionalString(args.title_keyword, 'title_keyword', 64)
+        const orgName = optionalString(args.org_name, 'org_name', 64)
+        const startDate = args.start_date === undefined ? undefined : strictCalendarDate(args.start_date, 'start_date')
+        const endDate = args.end_date === undefined ? undefined : strictCalendarDate(args.end_date, 'end_date')
+        if (startDate !== undefined && endDate !== undefined && startDate > endDate) {
+          throw new Error('start_date must not be later than end_date')
+        }
+        const pageSize = integer(args.page_size, 'page_size', 1, SOURCE_RESULT_CAP) ?? 20
+        const pageNo = integer(args.page, 'page', 1, 1000) ?? 1
+        return run(exec, 'eastmoney', 'macro_reports',
+          `org=${orgCode ?? '-'} page=${pageNo}`, () =>
+          eastmoneyScopeReports(eastmoneyClient, {
+            scope: 'macro',
+            ...(orgCode === undefined ? {} : { orgCode }),
+            ...(titleKeyword === undefined ? {} : { titleKeyword }),
+            ...(orgName === undefined ? {} : { orgName }),
+            ...(startDate === undefined ? {} : { startDate }),
+            ...(endDate === undefined ? {} : { endDate }),
+            pageSize,
+            pageNo,
+            signal: exec.signal,
+          }))
       },
     },
     {

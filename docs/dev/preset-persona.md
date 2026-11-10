@@ -123,7 +123,7 @@
   `ROOT_AGENT_DENIED_TOOLS`，**新增来源只改这一处**）+ 主 persona 禁直连
   文案；这批名字同时**只由 `capital-web-retriever` 挂的 `tools/retrieve-search` +
   `tools/retrieve-sources` 两行带出来**（§8.1 → `agent.patch.yml` 的组合与
-  `test/family-rows.mjs` 的行契约），别的角色没挂那两行、也就拿不到。④ 本地回退开关支配十一个具名来源
+  `test/family-rows.mjs` 的行契约），别的角色没挂那两行、也就拿不到。④ 本地回退开关支配十三个具名来源
   （§4.2 → `web-retriever.md`）。②③ 由
   `test/persona.test.mjs`（无通配 + deepEqual 对齐同一名单）与 `test/root-tool-policy.test.mjs`
   （名单长度 15）钉死。**教训**：`工具前缀_*` 通配在工具改名后一个都不匹配——禁直连文案必须

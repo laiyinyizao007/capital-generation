@@ -17,10 +17,10 @@ persona 只保留硬规则（先定来源再动手、只用这十六个工具、
 §7 抓取与失败处置 / §8 文档解析 `ocr`）。要给出编号证据、判定 `verified_official`、处理抓取失败或
 解析 PDF，加载 `capital-web-evidence`。
 
-## 1. 来源边界（两个搜索 provider + 十一个具名来源工具 + 文档解析）
+## 1. 来源边界（两个搜索 provider + 十三个具名来源工具 + 文档解析）
 
 **三类工作面，别混**：`search` / `fetch` 是**检索**（先发现候选，再按 URL 取正文）；
-下面十一个工具是**来源查询**（具名来源 + 业务参数 → 确定、有序、可翻页、同参可复现的结果集）；
+下面十三个工具是**来源查询**（具名来源 + 业务参数 → 确定、有序、可翻页、同参可复现的结果集）；
 `ocr` 是**文档解析**（PDF / 图片 → markdown 正文，见 `capital-web-evidence` §8——它是这批工具里**唯一要 token** 的）。
 
 | 来源 | 工具 | 性格 | 用途 |
@@ -31,6 +31,7 @@ persona 只保留硬规则（先定来源再动手、只用这十六个工具、
 | `cls` | `cls_telegraph` | 来源查询（媒体） | 财联社 7×24 全市场快讯 |
 | `wscn` | `wscn_lives` | 来源查询（媒体） | 华尔街见闻 7×24 快讯，按 `channel` + `cursor` 翻页 |
 | `eastmoney` | `eastmoney_724` / `eastmoney_stock_news` / `eastmoney_reports` | 来源查询（媒体 / 券商研报） | 东财 7×24 快讯、个股新闻、个股研报列表 |
+| `eastmoney` | `eastmoney_industry_reports` / `eastmoney_macro_reports` | 来源查询（行业 / 宏观策略研报） | 行业研报（`qType=1`，带行业名）与宏观策略研报（`qType=2`，卖方策略周报、资产配置、量化与金工研究）。`industry_code` / `org_code` 走上游精确过滤；⚠️ 上游不支持关键词检索，`title_keyword` / `org_name` 是拉取后本地过滤，只作用于当前页，空结果不代表上游没有 |
 | `sina` | `sina_reports` | 来源查询（研报第二来源） | 新浪研报列表（**不含评级与目标价**） |
 | `ths` | `ths_eps_forecast` | 来源查询（一致预期） | 同花顺机构一致预期 EPS（逐年：机构数 / 最小 / **均值** / 最大 / 行业平均） |
 | `cninfo_irm` | `cninfo_irm` | 来源查询（巨潮，**深市**） | 互动易投资者问答：公司怎么回应某传闻/关切 |
@@ -57,6 +58,10 @@ persona 只保留硬规则（先定来源再动手、只用这十六个工具、
 - `ths_eps_forecast` 是**一致预期**（观点聚合），不是官方事实、也不是已实现业绩。
   `institutions`（预测机构数）< 3 时参考价值有限，回传时必须把机构数一并向用户披露。
 - `sina_reports` **不含评级与目标价**；需要这些改用 `eastmoney_reports`。
+- `eastmoney_industry_reports` / `eastmoney_macro_reports` 的 `title_keyword` 与 `org_name` 是**拉取后本地过滤**：
+  东财研报接口不支持关键词检索（实测 `q` / `title` / `reportName` 都被忽略，`hits` 不变），所以这两个参数
+  只作用于当前页，**不是全库检索**。空结果**不等于上游没有研报**——换关键词、放宽过滤或翻页再查。
+  要精确筛行业或机构用上游真支持的 `industry_code` / `org_code`。
 
 - **先定来源再动手**：公告清单先 `eastmoney_announcements`，不要等 anysearch 空转后才想起；
   公告引用用东财正文/PDF（`authoritative_reprint`），官方域名核验才走官网 fetch；需要按语义找一段话、
@@ -98,7 +103,7 @@ persona 只保留硬规则（先定来源再动手、只用这十六个工具、
   `web_retriever_fetch`。
 - **`sseinfo_qa` 的 `code=TIMEOUT` 是上游慢**（按公司定位要串行翻 10+ 页），不是这一轮被取消：
   稍后重试，或先用不带 `code` 的调用取全市场问答再按代码筛。
-- 这十一个工具的失败是**工具错误**（`isError`），不是"正常返回的失败信封"；`code` 取值见回执
+- 这十三个工具的失败是**工具错误**（`isError`），不是"正常返回的失败信封"；`code` 取值见回执
   （`UPSTREAM` 上游报错 / `INVALID_RESPONSE` 上游结构变了 / `NOT_FOUND` 标的不存在 /
   `NETWORK` 网络失败 / `TIMEOUT` 上游慢到超过总时限）。**结构变更类错误不要重试**，如实回传。
 

@@ -4,7 +4,7 @@
 > `src/agents/root-tool-policy.ts` 注册的工具集**完全一致**（不多不少）。新增工具却忘了更新本表，
 > 测试会点名缺了哪个。
 
-当前共 **16 个工具**，分布在三个工作面：检索 4 个、具名来源查询 11 个、文档解析 1 个。
+当前共 **18 个工具**，分布在三个工作面：检索 4 个、具名来源查询 13 个、文档解析 1 个。
 参数后带 **\*** 表示必填。除标注「需要」的三把密钥外，其余全部走公开端点、**零密钥**。
 
 ## 怎么用
@@ -35,7 +35,7 @@
 | `wind_docs_announcements` | Wind Alice | 需要 | `query`* `top_k` | 官方文件的**语义检索**（query 必须一次带齐公司实体 + 文件类型 + 时间范围三要素；消耗积分，按需少量调用）。公告清单不要用它，改用 `eastmoney_announcements` |
 | `wind_docs_news` | Wind Alice | 需要 | `query`* `top_k` | 财经新闻的**语义深研**（同上三要素；不含发行人官方公告与券商研报；同样按次消耗积分）。日常新闻优先零 key 的 `eastmoney_stock_news` / `cls_telegraph` / `wscn_lives` / `eastmoney_724` |
 
-## 来源查询面（9）
+## 来源查询面（13）
 
 全部公开端点、**零密钥**。东财公告正文/PDF 是发行人披露的权威转载（`authoritative_reprint`）；东财快讯/新闻、财联社、华尔街见闻仍是「媒体转述旁证」，不得标 `verified_official`。
 
@@ -48,6 +48,8 @@
 | `eastmoney_announcements` | 东方财富 | 无 | `codes`* `start_date`* `end_date`* `market` `cursor` `page_size` | 公司公告列表（A/H/US，一次一个市场）：标题、披露时间（`published_at` 含时分）、分类、`art_code`、详情页链接；按 `display_time` 过滤，翻页传 `next_cursor`。东财公告正文/PDF 可作公告事实的权威引用（`authoritative_reprint`）；`verified_official` 仍只给官方域名 |
 | `eastmoney_announcement_body` | 东方财富 | 无 | `art_code`* `page` `offset` `limit` | 公告正文分页读取：上游 5,000 字符/页，单次最多 4,000 字符；给 `next_offset` / `next_page` / `done` / `is_ai_summary` / `pdf_url`。`is_ai_summary=1` 只是摘要；美股正文常为空、附件可能是 `.html` 或 PDF：PDF 交 `ocr`，HTML 用 `web_retriever_fetch`；港股为繁体原文 |
 | `eastmoney_reports` | 东方财富 | 无 | `code`* `page_size` `page` | 个股研报列表：评级、评级变动、逐篇当年预测 EPS，并给出每条 `pdf_url` 直链与 `attach_pages`。列表不含摘要，正文只在 PDF 里 → 交 `ocr` |
+| `eastmoney_industry_reports` | 东方财富 | 无 | `industry_code` `org_code` `title_keyword` `org_name` `start_date` `end_date` `page_size` `page` | 行业研报列表（东财 `qType=1`）：机构、日期、行业名、评级与每条 `pdf_url` 直链。`industry_code`（如 1044=生物制品）与 `org_code`（如 80036717=中邮证券）走上游精确过滤；⚠️ 上游不支持关键词检索，`title_keyword` / `org_name` 是拉取后本地过滤，只作用于当前页 |
+| `eastmoney_macro_reports` | 东方财富 | 无 | `org_code` `title_keyword` `org_name` `start_date` `end_date` `page_size` `page` | 宏观、策略与大宗商品研报列表（东财 `qType=2`）：卖方策略周报、资产配置、量化与金工研究都在这一档。同样只有 `org_code` 走上游，`title_keyword` / `org_name` 是本地过滤 |
 | `sina_reports` | 新浪 | 无 | `code` `page` | 研报第二来源（不传 `code` 取全市场最新）；只有标题 / 类型 / 日期 / 机构 / 研究员，**不含评级与目标价** |
 | `ths_eps_forecast` | 同花顺 | 无 | `code`* | 机构一致预期 EPS，逐年一行：预测机构数 / 最小 / **均值** / 最大 / 行业平均。机构数 <3 家时须一并披露 |
 | `cninfo_irm` | 巨潮互动易 | 无 | `code`* `page_size` `page_num` | **深市**投资者问答：投资者提问 + 公司回复，用于「公司怎么回应某传闻」。`unanswered` 是事实不是缺口 |

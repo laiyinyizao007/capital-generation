@@ -128,6 +128,30 @@ export declare function eastmoneyReports(client: EastmoneyClient, input: {
     pageNo: number;
     signal?: AbortSignal;
 }): Promise<SourceOutcome>;
+/** `qType` on the upstream report API: 0 = stock, 1 = industry, 2 = macro/strategy. */
+export type ReportScope = 'industry' | 'macro';
+export interface EastmoneyScopeReportInput {
+    scope: ReportScope;
+    /** Upstream industry filter; `*` is the whole market. Upstream applies it server-side. */
+    industryCode?: string;
+    /** Upstream organisation filter; applied server-side. */
+    orgCode?: string;
+    /** Title substring; upstream has no keyword search, so this filters locally after the fetch. */
+    titleKeyword?: string;
+    /** Organisation display name substring (`orgSName`); also local, upstream has no name search. */
+    orgName?: string;
+    startDate?: string;
+    endDate?: string;
+    pageSize: number;
+    pageNo: number;
+    signal?: AbortSignal;
+}
+/**
+ * Industry / macro-strategy reports. `qType` is the upstream category switch; the individual
+ * report and industry research pages carry no `infoCode`, so the PDF link comes from the API
+ * (`AP…` -> `pdf.dfcfw.com`).
+ */
+export declare function eastmoneyScopeReports(client: EastmoneyClient, input: EastmoneyScopeReportInput): Promise<SourceOutcome>;
 export type AnnouncementMarket = 'A' | 'H' | 'U';
 export interface NormalizedAnnouncementCode {
     code: string;

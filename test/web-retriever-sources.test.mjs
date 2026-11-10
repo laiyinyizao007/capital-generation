@@ -15,6 +15,7 @@ import {
   eastmoneyAnnouncements,
   eastmoneyFastNews,
   eastmoneyReports,
+  eastmoneyScopeReports,
   eastmoneyStockNews,
   normalizeAnnouncementCodes,
   sinaReports,
@@ -479,11 +480,12 @@ function registerSources() {
   return definitions
 }
 
-test('工具注册：十一个来源工具 named provider_operation，且参数根为 object', () => {
+test('工具注册：十三个来源工具 named provider_operation，且参数根为 object', () => {
   const definitions = registerSources()
   assert.deepEqual(definitions.map((definition) => definition.name), [
     'cls_telegraph', 'wscn_lives', 'cninfo_irm', 'sseinfo_qa',
     'eastmoney_724', 'eastmoney_stock_news', 'eastmoney_reports',
+    'eastmoney_industry_reports', 'eastmoney_macro_reports',
     'eastmoney_announcements', 'eastmoney_announcement_body',
     'sina_reports', 'ths_eps_forecast',
   ])
@@ -807,6 +809,90 @@ test('eastmoney_reports：infoCode 形状不认识就不给 pdf_url（宁缺勿�
     } finally {
       restore.restore()
     }
+  }
+})
+
+const SCOPE_ROWS = [
+  { publishDate: '2026-11-09 00:00:00.000', title: '医药行业周报：药明康德开放日', orgSName: '中邮证券', researcher: '盛丽华', industryName: '生物制品', emRatingName: '增持', infoCode: 'AP202611091831562687', attachPages: 20 },
+  { publishDate: '2026-11-09 00:00:00.000', title: '金融工程周报：因子表现与模型跟踪', orgSName: '华泰证券', researcher: '林晓明', industryName: '金融工程', emRatingName: '', infoCode: 'AP202611091831560001', attachPages: 12 },
+  { publishDate: '2026-11-08 00:00:00.000', title: '汽车行业点评：小米汽车新动态', orgSName: '爱建证券', researcher: '张三', industryName: '汽车零部件', emRatingName: '买入', infoCode: 'AP202611081831560002', attachPages: 8 },
+]
+
+function scopeResponse(rows = SCOPE_ROWS, extra = {}) {
+  return makeResponse(200, { 'content-type': 'text/plain;charset=UTF-8' },
+    JSON.stringify({ hits: rows.length, TotalPage: 1, data: rows, ...extra }))
+}
+
+test('eastmoneyScopeReports：qType 决定分类，行业码与机构码走上游，标题关键词走本地过滤', async () => {
+  const restore = installFetch(async () => scopeResponse())
+  try {
+    const outcome = await eastmoneyScopeReports(makeEastmoneyClient(), {
+      scope: 'industry', industryCode: '1044', orgCode: '80036717', titleKeyword: '周报', pageSize: 20, pageNo: 1,
+    })
+    const url = new URL(restore.requests[0].url)
+    assert.equal(url.searchParams.get('qType'), '1', '行业研报是 qType=1')
+    assert.equal(url.searchParams.get('industryCode'), '1044', '行业码走上游精确过滤')
+    assert.equal(url.searchParams.get('orgCode'), '80036717', '机构码走上游精确过滤')
+    // Upstream has no keyword search, so title filtering is local: only the matching rows survive.
+    assert.equal(outcome.items.length, 2, '只有标题命中的两行留下')
+    assert.ok(outcome.items.every((item) => String(item.title).includes('周报')))
+  } finally {
+    restore.restore()
+  }
+})
+
+test('eastmoneyScopeReports：宏观分类是 qType=2，条目带 pdf_url 直链与行业名', async () => {
+  const restore = installFetch(async () => scopeResponse())
+  try {
+    const outcome = await eastmoneyScopeReports(makeEastmoneyClient(), { scope: 'macro', pageSize: 20, pageNo: 1 })
+    const url = new URL(restore.requests[0].url)
+    assert.equal(url.searchParams.get('qType'), '2', '宏观/策略研报是 qType=2')
+    assert.equal(outcome.operation, 'macro_reports')
+    assert.equal(outcome.items.length, 3)
+    assert.equal(outcome.items[0].industry, '生物制品')
+    assert.equal(outcome.items[0].pdf_url, 'https://pdf.dfcfw.com/pdf/H3_AP202611091831562687_1.pdf')
+    assert.equal(outcome.items[0].attach_pages, 20)
+  } finally {
+    restore.restore()
+  }
+})
+
+test('eastmoneyScopeReports：本地过滤后为空要说清是过滤所致，不是上游没有', async () => {
+  const restore = installFetch(async () => scopeResponse())
+  try {
+    const outcome = await eastmoneyScopeReports(makeEastmoneyClient(), {
+      scope: 'industry', titleKeyword: '这个关键词不可能命中', pageSize: 20, pageNo: 1,
+    })
+    assert.equal(outcome.items.length, 0)
+    assert.match(String(outcome.note), /本地过滤/, '必须写明关键词是本地过滤')
+    assert.match(String(outcome.note), /不是上游没有研报/, '必须写明空结果不等于上游没有研报')
+    assert.match(String(outcome.note), /3/, '必须写出过滤前本页有几条，否则无法判断漏了什么')
+  } finally {
+    restore.restore()
+  }
+})
+
+test('eastmoneyScopeReports：机构名过滤按 orgSName 子串，大小写不敏感', async () => {
+  const restore = installFetch(async () => scopeResponse())
+  try {
+    const outcome = await eastmoneyScopeReports(makeEastmoneyClient(), {
+      scope: 'industry', orgName: '华泰', pageSize: 20, pageNo: 1,
+    })
+    assert.equal(outcome.items.length, 1)
+    assert.equal(outcome.items[0].org, '华泰证券')
+  } finally {
+    restore.restore()
+  }
+})
+
+test('eastmoneyScopeReports：infoCode 形状不认识就不给 pdf_url（宁缺勿造链接）', async () => {
+  const restore = installFetch(async () => scopeResponse([{ publishDate: '2026-11-09 00:00:00.000', title: 't', infoCode: 'https://evil.test/x' }]))
+  try {
+    const outcome = await eastmoneyScopeReports(makeEastmoneyClient(), { scope: 'industry', pageSize: 20, pageNo: 1 })
+    assert.equal(outcome.items[0].pdf_url, undefined)
+    assert.ok(!String(outcome.items[0].pdf_url ?? '').includes('evil.test'))
+  } finally {
+    restore.restore()
   }
 })
 

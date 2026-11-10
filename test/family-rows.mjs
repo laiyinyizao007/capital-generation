@@ -14,6 +14,7 @@ export const CAPITAL_ROW_TOOLS = {
   '@v587d/capital-generation/tools/retrieve-sources': [
     'cls_telegraph', 'wscn_lives', 'cninfo_irm', 'sseinfo_qa',
     'eastmoney_724', 'eastmoney_stock_news', 'eastmoney_reports',
+    'eastmoney_industry_reports', 'eastmoney_macro_reports',
     'eastmoney_announcements', 'eastmoney_announcement_body',
     'sina_reports', 'ths_eps_forecast',
   ],
