@@ -16,7 +16,7 @@ import {
   CONTRACT_PROBES, KNOWN_GAP_CODES, PROBE_FAMILIES, stateOf, secretRefOf, probesForTier, resolveTier,
   lastScheduledDue, previousScheduledDue, beijingDateOf, resolveDayShifts,
 } from '../scripts/lib/contract-registry.mjs'
-import { withResolvedDates, FAMILY_ORDER } from '../scripts/lib/contract-probe.mjs'
+import { withResolvedDates, FAMILY_ORDER, buildProbeTable } from '../scripts/lib/contract-probe.mjs'
 
 // Coverage denominator: capabilities actually registered in production.
 const registered = new Map()
@@ -37,6 +37,18 @@ const sourceEntries = CONTRACT_PROBES.filter((entry) => entry.face === 'datasour
 // Only entries that really go live have meaningful params; excluded ones never do.
 const liveSourceEntries = sourceEntries.filter((entry) => !entry.excluded)
 const capabilitiesOf = (face) => CONTRACT_PROBES.filter((e) => e.face === face).map((e) => e.capability)
+
+test('每条 probe 条目都要有 runner 实现：注册表多写一行，巡检每跑一次就红一次', () => {
+  // A registry row without a probeTable entry is a runtime throw in runOne(), not a test failure:
+  // the coverage gate above only walks `datasource` rows, so probe rows slipped through.
+  // Wind rows are dispatched to runWindProtocol instead of the probe table (contract-probe.mjs).
+  const table = buildProbeTable()
+  const missing = CONTRACT_PROBES
+    .filter((entry) => entry.face === 'probe' && !entry.excluded && entry.family !== 'wind')
+    .map((entry) => entry.capability)
+    .filter((capability) => typeof table[capability] !== 'function')
+  assert.deepEqual(missing, [], `注册表里有这些 probe 条目，但 runner 的 probeTable 没有对应实现：${missing.join(', ')}`)
+})
 
 test('注册表覆盖住每一颗已注册能力：漏一行就红，且不许有多余行', () => {
   const covered = capabilitiesOf('datasource')

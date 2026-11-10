@@ -49,7 +49,7 @@
 | `eastmoney_announcement_body` | 东方财富 | 无 | `art_code`* `page` `offset` `limit` | 公告正文分页读取：上游 5,000 字符/页，单次最多 4,000 字符；给 `next_offset` / `next_page` / `done` / `is_ai_summary` / `pdf_url`。`is_ai_summary=1` 只是摘要；美股正文常为空、附件可能是 `.html` 或 PDF：PDF 交 `ocr`，HTML 用 `web_retriever_fetch`；港股为繁体原文 |
 | `eastmoney_reports` | 东方财富 | 无 | `code`* `page_size` `page` | 个股研报列表：评级、评级变动、逐篇当年预测 EPS，并给出每条 `pdf_url` 直链与 `attach_pages`。列表不含摘要，正文只在 PDF 里 → 交 `ocr` |
 | `eastmoney_industry_reports` | 东方财富 | 无 | `industry_code` `org_code` `title_keyword` `org_name` `start_date` `end_date` `page_size` `page` | 行业研报列表（东财 `qType=1`）：机构、日期、行业名、评级与每条 `pdf_url` 直链。`industry_code`（如 1044=生物制品）与 `org_code`（如 80036717=中邮证券）走上游精确过滤；⚠️ 上游不支持关键词检索，`title_keyword` / `org_name` 是拉取后本地过滤，只作用于当前页 |
-| `eastmoney_macro_reports` | 东方财富 | 无 | `org_code` `title_keyword` `org_name` `start_date` `end_date` `page_size` `page` | 宏观、策略与大宗商品研报列表（东财 `qType=2`）：卖方策略周报、资产配置、量化与金工研究都在这一档。同样只有 `org_code` 走上游，`title_keyword` / `org_name` 是本地过滤 |
+| `eastmoney_macro_reports` | 东方财富 | 无 | `org_code` `title_keyword` `org_name` `start_date` `end_date` `page_size` `page` | 宏观、策略与大宗商品研报列表（东财 `qType=2`）：宏观周报、卖方策略周报、资产配置报告都在这一档。⚠️ 卖方金工/量化研究基本不在这一档（实测全年 3000 行无此类），找量化方法论研报需另找来源。同样只有 `org_code` 走上游，`title_keyword` / `org_name` 是本地过滤 |
 | `sina_reports` | 新浪 | 无 | `code` `page` | 研报第二来源（不传 `code` 取全市场最新）；只有标题 / 类型 / 日期 / 机构 / 研究员，**不含评级与目标价** |
 | `ths_eps_forecast` | 同花顺 | 无 | `code`* | 机构一致预期 EPS，逐年一行：预测机构数 / 最小 / **均值** / 最大 / 行业平均。机构数 <3 家时须一并披露 |
 | `cninfo_irm` | 巨潮互动易 | 无 | `code`* `page_size` `page_num` | **深市**投资者问答：投资者提问 + 公司回复，用于「公司怎么回应某传闻」。`unanswered` 是事实不是缺口 |

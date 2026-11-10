@@ -13,7 +13,7 @@ import { createTencentSources } from '../../lib/sources/tencent-http.js'
 import {
   createSourceTransport, createGatedEastmoneyTransport,
   clsTelegraph, wscnLives, cninfoIrm, sseinfoQa,
-  eastmoneyFastNews, eastmoneyStockNews, eastmoneyReports, sinaReports, thsEpsForecast,
+  eastmoneyFastNews, eastmoneyStockNews, eastmoneyReports, eastmoneyScopeReports, sinaReports, thsEpsForecast,
 } from '../../lib/web-retriever/sources.js'
 import { createAnySearchClient } from '../../lib/web-retriever/engines.js'
 import { createWindRpc, WIND_BASE } from './wind-rpc.mjs'
@@ -117,7 +117,8 @@ function buildSources() {
 
 const abortSignal = () => new AbortController().signal
 
-function buildProbeTable() {
+/** Exported so the registry test can assert every probe entry has a runner implementation. */
+export function buildProbeTable() {
   const transport = createSourceTransport({ enabled: true, timeoutMs: 30_000, userAgent: USER_AGENT })
   // Same process-wide throttle and gated transport as production: the probe takes the user's path.
   const eastmoneyClient = createEastmoneyClient({
@@ -135,6 +136,8 @@ function buildProbeTable() {
     eastmoney_724: (p) => eastmoneyFastNews(eastmoneyClient, { ...p, signal: abortSignal() }),
     eastmoney_stock_news: (p) => eastmoneyStockNews(eastmoneyClient, { ...p, signal: abortSignal() }),
     eastmoney_reports: (p) => eastmoneyReports(eastmoneyClient, { ...p, signal: abortSignal() }),
+    eastmoney_industry_reports: (p) => eastmoneyScopeReports(eastmoneyClient, { ...p, scope: 'industry', signal: abortSignal() }),
+    eastmoney_macro_reports: (p) => eastmoneyScopeReports(eastmoneyClient, { ...p, scope: 'macro', signal: abortSignal() }),
     sina_reports: (p) => sinaReports(transport, { ...p, signal: abortSignal() }),
     ths_eps_forecast: (p) => thsEpsForecast(transport, { ...p, signal: abortSignal() }),
     anysearch_search: (p) => anysearch.search(p, abortSignal()),

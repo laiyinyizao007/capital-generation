@@ -111,7 +111,7 @@
 - **不受 `localFetch.enabled` 支配**（与 anysearch / wind 同侧）：那个开关的文案是"允许启动
   本地提取网页内容"，管的是 HTML 回退；把 `ocr` 挂上去等于违背用户同意时划下的边界。
   缺 token 只让调用响亮失败（`NO_CREDENTIAL`，指明卡片位置），工具**无条件注册**——
-  少一个 key 就少十六个工具名，而"按配置少注册"正是 2026-09-30 桌面端那个事故的形状（整场进程
+  少一个 key 就少十八个工具名，而"按配置少注册"正是 2026-09-30 桌面端那个事故的形状（整场进程
   少一整族、不重试）。D0 之后这一族由 `tools/retrieve-search` / `tools/retrieve-sources` /
   `tools/ocr` 三行带出来：注册只看行，开关只看调用期。
 - **根侧收敛的例外**：`ocr` **不进** `RETRIEVAL_DENIED_TOOLS`（主 Agent 要能解析用户

@@ -17,6 +17,7 @@ import {
   eastmoneyReports,
   eastmoneyScopeReports,
   eastmoneyStockNews,
+  REPORT_SCOPE_MAX_PAGE,
   normalizeAnnouncementCodes,
   sinaReports,
   sinaSymbol,
@@ -822,7 +823,6 @@ function scopeResponse(rows = SCOPE_ROWS, extra = {}) {
   return makeResponse(200, { 'content-type': 'text/plain;charset=UTF-8' },
     JSON.stringify({ hits: rows.length, TotalPage: 1, data: rows, ...extra }))
 }
-
 test('eastmoneyScopeReports：qType 决定分类，行业码与机构码走上游，标题关键词走本地过滤', async () => {
   const restore = installFetch(async () => scopeResponse())
   try {
@@ -858,7 +858,7 @@ test('eastmoneyScopeReports：宏观分类是 qType=2，条目带 pdf_url 直链
 })
 
 test('eastmoneyScopeReports：本地过滤后为空要说清是过滤所致，不是上游没有', async () => {
-  const restore = installFetch(async () => scopeResponse())
+  const restore = installFetch(async () => scopeResponse(SCOPE_ROWS, { hits: 2379, TotalPage: 397 }))
   try {
     const outcome = await eastmoneyScopeReports(makeEastmoneyClient(), {
       scope: 'industry', titleKeyword: '这个关键词不可能命中', pageSize: 20, pageNo: 1,
@@ -867,6 +867,95 @@ test('eastmoneyScopeReports：本地过滤后为空要说清是过滤所致，�
     assert.match(String(outcome.note), /本地过滤/, '必须写明关键词是本地过滤')
     assert.match(String(outcome.note), /不是上游没有研报/, '必须写明空结果不等于上游没有研报')
     assert.match(String(outcome.note), /3/, '必须写出过滤前本页有几条，否则无法判断漏了什么')
+    assert.match(String(outcome.note), /next_cursor=2/, '本页被过滤光时要给出翻页指引')
+  } finally {
+    restore.restore()
+  }
+})
+
+test('eastmoneyScopeReports：note 分开全库命中数与本次取回数，并写明上游总页数', async () => {
+  const restore = installFetch(async () => scopeResponse(SCOPE_ROWS, { hits: 2379, TotalPage: 397 }))
+  try {
+    const outcome = await eastmoneyScopeReports(makeEastmoneyClient(), { scope: 'industry', pageSize: 20, pageNo: 1 })
+    assert.match(String(outcome.note), /全库命中 2379 篇/, '全库命中数要单列，别和本次取回数混在一句里')
+    assert.match(String(outcome.note), /共 397 页/, '必须写出上游总页数，模型才知道翻页成本')
+    assert.match(String(outcome.note), /第 1 页 3 条/, '必须写明本次取回的是哪一页几条')
+  } finally {
+    restore.restore()
+  }
+})
+
+test('eastmoneyScopeReports：游标不越过工具自身的页数上限（否则工具发的游标自己收不了）', async () => {
+  // Upstream has thousands of pages; the tool caps at REPORT_SCOPE_MAX_PAGE.
+  const restore = installFetch(async () => scopeResponse(SCOPE_ROWS, { hits: 150651, TotalPage: 3014 }))
+  try {
+    const outcome = await eastmoneyScopeReports(makeEastmoneyClient(), {
+      scope: 'macro', pageSize: 50, pageNo: REPORT_SCOPE_MAX_PAGE,
+    })
+    assert.equal(outcome.next_cursor, undefined, '到上限页就不该再发游标')
+    assert.match(String(outcome.note), /最多翻到第 1000 页/, '必须写明本工具的翻页上限与上游总页数的差距')
+    assert.match(String(outcome.note), /start_date/, '要告诉模型怎么继续找更深的范围')
+  } finally {
+    restore.restore()
+  }
+})
+
+test('工具层：行业码与机构码必须是数字（填错码与「上游没有」在上游同形，只能在参数层拒）', async () => {
+  const definitions = registerSources()
+  const byName = new Map(definitions.map((definition) => [definition.name, definition]))
+  const exec = { signal: new AbortController().signal, agent: { session: { id: 'source-code-check' } } }
+  for (const [name, args, pattern] of [
+    ['eastmoney_industry_reports', { industry_code: 'abc' }, /industry_code must be a numeric/],
+    ['eastmoney_industry_reports', { org_code: 'abc' }, /org_code must be a numeric/],
+    ['eastmoney_macro_reports', { org_code: 'abc' }, /org_code must be a numeric/],
+    ['eastmoney_macro_reports', { org_code: '*' }, /org_code must be a numeric/],
+  ]) {
+    await assert.rejects(byName.get(name).execute(args, exec), (error) => {
+      assert.match(error.message, pattern, `${name} ${JSON.stringify(args)} 的错误信息要指名参数与形状`)
+      return true
+    })
+  }
+  // `*` is the upstream's whole-market marker for industry_code; it must stay accepted.
+  const restore = installFetch(async () => scopeResponse())
+  try {
+    const out = await byName.get('eastmoney_industry_reports').execute({ industry_code: '*' }, exec)
+    assert.equal(out.ok, true, 'industry_code="*" 是上游的全市场标记，必须被接受')
+  } finally {
+    restore.restore()
+  }
+})
+
+test('工具层：输出预算裁掉条目时游标不能前进（页码游标前进就永远丢了被裁的条目）', async () => {
+  const definitions = registerSources()
+  const byName = new Map(definitions.map((definition) => [definition.name, definition]))
+  const exec = { signal: new AbortController().signal, agent: { session: { id: 'source-cursor-check' } } }
+  // Wide rows blow the 6144-char budget, so the tail gets trimmed.
+  const wide = Array.from({ length: 40 }, (_, index) => ({
+    publishDate: '2026-11-09 00:00:00.000',
+    title: `研报标题 ${index} ${'x'.repeat(200)}`,
+    orgSName: '中邮证券',
+    infoCode: `AP20261109183156268${index}`,
+  }))
+  const restore = installFetch(async () => scopeResponse(wide, { hits: 120000, TotalPage: 2400 }))
+  try {
+    const out = await byName.get('eastmoney_industry_reports').execute({ page_size: 40, page: 3 }, exec)
+    assert.equal(out.ok, true)
+    assert.match(String(out.note), /输出预算/, '必须写明本次被输出预算裁剪')
+    assert.equal(out.next_cursor, '3', '页码游标不能因为裁剪而前进——被裁的条目否则永远拿不到')
+  } finally {
+    restore.restore()
+  }
+})
+
+test('工具层：纯空白关键词不算过滤（note 不能谎称做了本地过滤）', async () => {
+  const definitions = registerSources()
+  const byName = new Map(definitions.map((definition) => [definition.name, definition]))
+  const exec = { signal: new AbortController().signal, agent: { session: { id: 'source-blank-check' } } }
+  const restore = installFetch(async () => scopeResponse(SCOPE_ROWS, { hits: 2379, TotalPage: 397 }))
+  try {
+    const out = await byName.get('eastmoney_industry_reports').execute({ title_keyword: '   ' }, exec)
+    assert.equal(out.items.length, 3, '空白关键词不过滤，条目应原样返回')
+    assert.doesNotMatch(String(out.note), /本地过滤/, '空白关键词没有过滤，note 不能声称过滤过')
   } finally {
     restore.restore()
   }

@@ -119,7 +119,7 @@
   联动 → `chart-presentation.md` / `chart-delivery-events.md`）；② shell / `run_code` 闸门与 fs 写口
   （主 Agent shell 槽位、junior 的 PTC 程序面、升级 guard + `write`/`edit` 的根侧名单与全局 guard
   2026-10-15「开 read、同时保留 bash」，2026-10-23 junior 转 PTC → `bash-gate.md` §1.6）；③ 出网只有一个入口：`RETRIEVAL_DENIED_TOOLS`
-  （`src/agents/root-tool-policy.ts`，15 个检索 / 来源工具名的**唯一事实来源**，spread 进
+  （`src/agents/root-tool-policy.ts`，17 个检索 / 来源工具名的**唯一事实来源**，spread 进
   `ROOT_AGENT_DENIED_TOOLS`，**新增来源只改这一处**）+ 主 persona 禁直连
   文案；这批名字同时**只由 `capital-web-retriever` 挂的 `tools/retrieve-search` +
   `tools/retrieve-sources` 两行带出来**（§8.1 → `agent.patch.yml` 的组合与

@@ -9,7 +9,7 @@ description: Use in Capital mode when retrieving external material — the annou
 > 任务同时命中且该方法在本角色目录中可用时，按名加载对应 Skill（如 `10k-digest` / `earnings-call-analysis` / `fact-check`）；
 > 协议与方法正交：不要用本协议替代方法，也不要用方法改写本协议的来源纪律。
 `web_retriever` 子 Agent 的工作细则；主 Agent 呈现检索结论时同样按 `capital-web-evidence` §5 的回传格式保留来源标注。
-persona 只保留硬规则（先定来源再动手、只用这十六个工具、一次一个 URL、无来源不作证据）；
+persona 只保留硬规则（先定来源再动手、只用这十八个工具、一次一个 URL、无来源不作证据）；
 本文件是其余细节。
 
 本协议共两册，§编号跨册连续：**本册**管"去哪取、怎么调"（§1 来源边界 / §2 收敛 / §3 Wind 三要素 /
@@ -31,7 +31,7 @@ persona 只保留硬规则（先定来源再动手、只用这十六个工具、
 | `cls` | `cls_telegraph` | 来源查询（媒体） | 财联社 7×24 全市场快讯 |
 | `wscn` | `wscn_lives` | 来源查询（媒体） | 华尔街见闻 7×24 快讯，按 `channel` + `cursor` 翻页 |
 | `eastmoney` | `eastmoney_724` / `eastmoney_stock_news` / `eastmoney_reports` | 来源查询（媒体 / 券商研报） | 东财 7×24 快讯、个股新闻、个股研报列表 |
-| `eastmoney` | `eastmoney_industry_reports` / `eastmoney_macro_reports` | 来源查询（行业 / 宏观策略研报） | 行业研报（`qType=1`，带行业名）与宏观策略研报（`qType=2`，卖方策略周报、资产配置、量化与金工研究）。`industry_code` / `org_code` 走上游精确过滤；⚠️ 上游不支持关键词检索，`title_keyword` / `org_name` 是拉取后本地过滤，只作用于当前页，空结果不代表上游没有 |
+| `eastmoney` | `eastmoney_industry_reports` / `eastmoney_macro_reports` | 来源查询（行业 / 宏观策略研报） | 行业研报（`qType=1`，带行业名）与宏观策略研报（`qType=2`，宏观周报、卖方策略周报、资产配置报告）。⚠️ 卖方金工/量化研究基本不在东财研报库里（实测全年 3000 行无此类），找量化方法论研报要另找来源。`industry_code` / `org_code` 走上游精确过滤；⚠️ 上游不支持关键词检索，`title_keyword` / `org_name` 是拉取后本地过滤，只作用于当前页，空结果不代表上游没有 |
 | `sina` | `sina_reports` | 来源查询（研报第二来源） | 新浪研报列表（**不含评级与目标价**） |
 | `ths` | `ths_eps_forecast` | 来源查询（一致预期） | 同花顺机构一致预期 EPS（逐年：机构数 / 最小 / **均值** / 最大 / 行业平均） |
 | `cninfo_irm` | `cninfo_irm` | 来源查询（巨潮，**深市**） | 互动易投资者问答：公司怎么回应某传闻/关切 |

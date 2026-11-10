@@ -130,6 +130,11 @@ export declare function eastmoneyReports(client: EastmoneyClient, input: {
 }): Promise<SourceOutcome>;
 /** `qType` on the upstream report API: 0 = stock, 1 = industry, 2 = macro/strategy. */
 export type ReportScope = 'industry' | 'macro';
+/**
+ * Page ceiling shared by the tool layer and the cursor: the upstream has thousands of pages
+ * (qType=2 measured 3014), so the cursor must stop where the tool would refuse the page.
+ */
+export declare const REPORT_SCOPE_MAX_PAGE = 1000;
 export interface EastmoneyScopeReportInput {
     scope: ReportScope;
     /** Upstream industry filter; `*` is the whole market. Upstream applies it server-side. */
