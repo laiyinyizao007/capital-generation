@@ -54,7 +54,8 @@ const MIN_INSTRUCTION_CHARS = 120
 const MAX_INSTRUCTION_CHARS = 260
 
 test('十六个内置模板全部 dormant，指令只写覆盖范围与交付', () => {
-  assert.equal(BUILTIN_DEFINITIONS.length, 16)
+  // 本 fork 加了 4 个个人自动化模板（每日回顾/周回顾/同步巡检/每周项目巡检）→ 16 + 4
+  assert.equal(BUILTIN_DEFINITIONS.length, 20)
   assert.deepEqual(BUILTIN_DEFINITIONS.map((item) => item.id), [
     'us-close',
     'pre-open-filings',
@@ -72,6 +73,17 @@ test('十六个内置模板全部 dormant，指令只写覆盖范围与交付', 
     'week-ahead-calendar',
     'market-weekly',
     'portfolio-risk-monthly',
+    'pm-daily-review',
+    'pm-weekly-review',
+    'pm-sync-health',
+    'pm-project-audit',
+  ])
+  // 「描述要点名自选股」是投研模板的规矩；个人自动化模板没有自选股这回事。
+  const RESEARCH_TEMPLATE_IDS = new Set([
+    'us-close', 'pre-open-filings', 'morning-brief', 'midday-snapshot', 'post-close-filings',
+    'hk-close', 'daily-review', 'us-premarket', 'portfolio-weekly', 'watchlist-weekly',
+    'sector-weekly', 'research-topics', 'earnings-tracker', 'week-ahead-calendar',
+    'market-weekly', 'portfolio-risk-monthly',
   ])
   for (const definition of BUILTIN_DEFINITIONS) {
     const { instruction, description } = definition.defaults
@@ -87,7 +99,9 @@ test('十六个内置模板全部 dormant，指令只写覆盖范围与交付', 
     assert.doesNotMatch(instruction, /数据与来源纪律/, `${definition.id} 不应再复制自动模式的数据纪律`)
     assert.doesNotMatch(instruction, /无人值守执行策略/, `${definition.id} 不应再复制运行策略`)
     assert.doesNotMatch(instruction, /get_watchlist|anysearch|web_retriever|data_collector|data_junior/, `${definition.id} 不应点名工具或角色：工具面由运行模式决定`)
-    assert.match(description, /自选股/, `${definition.id} 的模板说明要点名自选股`)
+    if (RESEARCH_TEMPLATE_IDS.has(definition.id)) {
+      assert.match(description, /自选股/, `${definition.id} 的模板说明要点名自选股`)
+    }
     assert.ok(Array.from(description).length <= 100, `${definition.id} 的模板说明超过 100 字，页面会截断`)
   }
 })

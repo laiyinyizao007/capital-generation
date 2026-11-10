@@ -309,6 +309,73 @@ export const BUILTIN_DEFINITIONS = [
       notifications: { ...DEFAULT_NOTIFICATIONS },
     },
   },
+  // ── 个人自动化（本 fork 新增）────────────────────────────────────────────
+  // 这组任务跑的是「自己的工作台」：GitHub 看板 + Notion 镜像 + 回顾。
+  // 脚本负责取数（确定性），解读由 agent 会话写 —— 一天只走一次 LLM。
+  {
+    id: 'pm-daily-review',
+    version: 1,
+    category: 'review',
+    defaults: {
+      state: 'dormant',
+      category: 'review',
+      title: '每日回顾',
+      description: '汇总当天所有仓库的提交、看板任务变化与同步状态，给出完成、卡点与明日三件事。',
+      trigger: { ...SCHEDULE_COMMON, time: '21:30', tradingDaysOnly: false },
+      instruction: '读当天提交（my-project-management 的 git log --since=midnight --all --oneline 与 ~/Projects 其它仓）、Project #1 当天改过进度的任务、同步任务最近一次运行结果；取不到写「未取到」。输出：今天做完了什么（带仓库名与提交号）、卡在哪、明天先做哪三件。最后用 gh issue comment 发到 my-project-management 仓标题含「每日回顾」的未关闭 issue，不另开 issue、不改代码。',
+      cwdKind: 'profile',
+      limits: { ...DEFAULT_LIMITS },
+      notifications: { ...DEFAULT_NOTIFICATIONS, onSuccess: true },
+    },
+  },
+  {
+    id: 'pm-weekly-review',
+    version: 1,
+    category: 'review',
+    defaults: {
+      state: 'dormant',
+      category: 'review',
+      title: '周回顾',
+      description: '汇总本周的完成、遗留与下周建议，落到周报 issue 的评论里。',
+      trigger: { ...WEEKLY_TRIGGER, time: '09:00', weekdays: [1] },
+      instruction: '读本周提交（git log --since="7 days ago" --all --oneline 与 ~/Projects 其它仓）、Project #1 本周新建或状态变化的任务、my-project-management 仓标题含「周回顾」的未关闭 issue 现有内容。输出：本周完成（按项目归并）、遗留与卡点、下周建议 3-5 条；缺依据写「未取到」。用 gh issue comment 发到那条周回顾 issue，只发评论，不改代码与看板字段。',
+      cwdKind: 'profile',
+      limits: { ...DEFAULT_LIMITS },
+      notifications: { ...DEFAULT_NOTIFICATIONS, onSuccess: true },
+    },
+  },
+  {
+    id: 'pm-sync-health',
+    version: 1,
+    category: 'monitor',
+    defaults: {
+      state: 'dormant',
+      category: 'monitor',
+      title: '同步巡检',
+      description: '检查 Notion 看板同步、每日回顾与建组任务有没有失败或卡住，有问题才写内容。',
+      trigger: { ...SCHEDULE_COMMON, time: '09:00', tradingDaysOnly: false },
+      instruction: '只巡检不修：读 dsh-automations 的 rules.json 与 runs.json 里「Notion 看板同步」「每日回顾」「周回顾」「每周建组」四条规则最近一次运行结果，再看 /var/log/dsh-groups-setup.log 尾部与 Project #1 里 open 的 type: group 条目数。全正常就写一句「链路正常」加各环节最近成功时间；有异常逐条写环节、时间、错误、建议。不要重跑脚本、不改配置、不发评论。',
+      cwdKind: 'profile',
+      limits: { ...DEFAULT_LIMITS, runTimeoutMinutes: 10 },
+      notifications: { ...DEFAULT_NOTIFICATIONS },
+    },
+  },
+  {
+    id: 'pm-project-audit',
+    version: 1,
+    category: 'monitor',
+    defaults: {
+      state: 'dormant',
+      category: 'monitor',
+      title: '每周项目巡检',
+      description: '核对 GitHub 仓、看板项目组与 Notion 库三边是否还对得上，列出对不上的条目。',
+      trigger: { ...WEEKLY_TRIGGER, time: '23:00', weekdays: [7] },
+      instruction: '只读核对三边：gh repo list laiyinyizao007 的仓清单与归档/Issues 状态、Project #1 里 type: group 条目正文中的「组内仓」、Notion 项目库与仓库库的行数与「项目」关系（库 id 与 token 在 ~/.dsh/project-console/ 下）。输出三个数字与差异清单：哪些仓没有组、哪些组在 Notion 里不存在、归属不一致的仓。不要建仓建组、不改 Notion、不推 GitHub。',
+      cwdKind: 'profile',
+      limits: { ...DEFAULT_LIMITS, runTimeoutMinutes: 25 },
+      notifications: { ...DEFAULT_NOTIFICATIONS },
+    },
+  },
 ].map((definition) => parseStrict(BuiltinDefinitionSchema, definition, 'builtin definition'))
 
 export const BUILTIN_BY_ID = new Map(BUILTIN_DEFINITIONS.map((definition) => [definition.id, definition]))

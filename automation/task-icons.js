@@ -48,6 +48,11 @@ export const TASK_ICON_IDS = Object.keys(TASK_ICON_CATALOG)
 
 /** Builtin templates keep a fixed glyph; custom tasks store an icon id in their config. */
 export const BUILTIN_TASK_ICONS = Object.freeze({
+  'pm-daily-review': 'book',
+  'pm-weekly-review': 'flag',
+  'pm-sync-health': 'target',
+  'pm-project-audit': 'search',
+
   'us-close': 'moon-stars',
   'pre-open-filings': 'file-stack',
   'morning-brief': 'sunrise',
