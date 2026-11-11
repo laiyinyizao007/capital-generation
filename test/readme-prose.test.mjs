@@ -67,7 +67,7 @@ test('插件页详情文档是索引页：不写研发黑话，也不复制会�
     const counts = [...pageProse.matchAll(/\b(?:128|70|16)\s*(?:个|项|条|张)/gu)].map((match) => match[0])
     assert.deepEqual(counts, [],
       `${file} 写了会变的能力/模板/Skill 数量（${counts.join('、')}）：应链到能力表。`)
-    assert.ok(text.includes('https://github.com/v587d/capital-generation'),
+    assert.ok(text.includes('https://github.com/laiyinyizao007/capital-generation'),
       `${file} 缺少指向 README/CHANGELOG 的绝对链接`)
   }
 })

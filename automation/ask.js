@@ -212,7 +212,7 @@ export function createAskService(options) {
     })()
       .catch((error) => {
         if (error?.askError === true) throw error
-        logger?.warn?.(`capital-automation: 追问状态读取失败 ${record.id}：${String(error)}`)
+        logger?.warn?.(`automation-workbench: 追问状态读取失败 ${record.id}：${String(error)}`)
         return record
       })
       .finally(() => {
@@ -281,7 +281,7 @@ export function createAskService(options) {
       try {
         await settle(record, { status: 'failed', error: message, finishedAt: iso(now()) })
       } catch (settleError) {
-        logger?.warn?.(`capital-automation: 追问失败状态落盘失败 ${record.id}：${String(settleError)}`)
+        logger?.warn?.(`automation-workbench: 追问失败状态落盘失败 ${record.id}：${String(settleError)}`)
       }
       throw new AskError('ask_failed', message, 502, { askId: record.id })
     } finally {
@@ -307,7 +307,7 @@ export function createAskService(options) {
       if (preview.length === 0) return record
       return settle(record, { preview })
     } catch (error) {
-      logger?.warn?.(`capital-automation: 旧追问预览刷新失败 ${record.id}：${String(error)}`)
+      logger?.warn?.(`automation-workbench: 旧追问预览刷新失败 ${record.id}：${String(error)}`)
       return record
     }
   }

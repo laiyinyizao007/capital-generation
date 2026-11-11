@@ -4,6 +4,6 @@
  * `storageDomain` as `store_unavailable` disables it for the whole process.
  */
 import type { Context } from '@deepseek-ai/cordis';
-export declare const name = "capital-watchlist-tools";
+export declare const name = "automation-watchlist-tools";
 export declare const inject: string[];
 export declare function apply(ctx: Context): void;

@@ -280,7 +280,7 @@ export function registerDataCollectorTools(ctx: Context, hub: DataCollectorHub, 
         }),
     ] : []),
   ]
-  for (const definition of registrations) ctx.effect(() => tools.register(definition), `capital-generation.tool(${definition.name})`)
+  for (const definition of registrations) ctx.effect(() => tools.register(definition), `automation-workbench.tool(${definition.name})`)
 }
 
 /** Model-visible DatasetRef field whitelist (tests and host assertions). */

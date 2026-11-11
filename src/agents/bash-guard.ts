@@ -73,13 +73,13 @@ export function registerBashGuard(ctx: PolicyContext): void {
         if (!isCapitalPresetAgent(ctx, agent)) return
         const dispose = installAgentGuard(agent)
         if (dispose === undefined) {
-          ctx.logger?.warn('capital-generation: 执行工具闸门未生效（agent scope 上没有 tools.guard）：沙箱升级拦截只剩 persona 软约束')
+          ctx.logger?.warn('automation-workbench: 执行工具闸门未生效（agent scope 上没有 tools.guard）：沙箱升级拦截只剩 persona 软约束')
           return
         }
         const id = agentSessionId(agent)
         if (id !== undefined) guards.set(id, dispose)
       } catch (error) {
-        ctx.logger?.warn(`capital-generation: 执行工具闸门安装异常：${error instanceof Error ? error.message : String(error)}`)
+        ctx.logger?.warn(`automation-workbench: 执行工具闸门安装异常：${error instanceof Error ? error.message : String(error)}`)
       }
     })
     const stopDisposed = listenCtx.on?.('agent/disposed', (payload: AgentEventPayload) => {
@@ -107,7 +107,7 @@ export function registerBashGuard(ctx: PolicyContext): void {
       return () => {
         try { dispose() } finally { installedRoots.delete(listenCtx) }
       }
-    }, 'capital-generation.bash-guard()')
+    }, 'automation-workbench.bash-guard()')
     return
   }
   install()

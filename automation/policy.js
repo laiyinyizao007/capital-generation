@@ -62,7 +62,7 @@ export function installAutomationPolicy({ ctx, runner, logger }) {
       }
     }
     if (typeof ctx.effect === 'function') {
-      ctx.effect(() => cleanup, 'capital-automation: unattended policy')
+      ctx.effect(() => cleanup, 'automation-workbench: unattended policy')
       return
     }
     return cleanup
@@ -74,7 +74,7 @@ export function installAutomationPolicy({ ctx, runner, logger }) {
     tools = undefined
   }
   if (tools === undefined || typeof tools.guard !== 'function') {
-    logger?.warn?.('capital-automation: tools.guard 不可用，无人值守工具闸门未安装')
+    logger?.warn?.('automation-workbench: tools.guard 不可用，无人值守工具闸门未安装')
     return
   }
   const record = { runner, generation: 1, disposeGuard: undefined }
@@ -82,9 +82,9 @@ export function installAutomationPolicy({ ctx, runner, logger }) {
     try {
       record.disposeGuard = tools.guard((exec) => automationGuardReason(exec, record.runner))
       INSTALLED.set(root, record)
-      logger?.info?.('capital-automation: 无人值守工具闸门已安装（ask_user_question / write / edit / shell 提权）')
+      logger?.info?.('automation-workbench: 无人值守工具闸门已安装（ask_user_question / write / edit / shell 提权）')
     } catch (error) {
-      logger?.warn?.(`capital-automation: 无人值守工具闸门安装失败：${String(error)}`)
+      logger?.warn?.(`automation-workbench: 无人值守工具闸门安装失败：${String(error)}`)
       return undefined
     }
     const generation = record.generation
@@ -98,7 +98,7 @@ export function installAutomationPolicy({ ctx, runner, logger }) {
     }
   }
   if (typeof ctx.effect === 'function') {
-    ctx.effect(install, 'capital-automation: unattended policy')
+    ctx.effect(install, 'automation-workbench: unattended policy')
     return
   }
   return install()

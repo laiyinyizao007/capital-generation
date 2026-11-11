@@ -57,10 +57,10 @@ function factoryRequire(name) {
 
 test('客户端 bundle：登记 id 与包名一致，导出 apply / inject（不再需要 uiConversation）', () => {
   const entry = loadBundle()
-  assert.equal(entry.id, '@v587d/capital-charts')
+  assert.equal(entry.id, 'dsh-workbench-automation-charts')
   assert.equal(typeof entry.factory, 'function')
   const mod = entry.factory(factoryRequire)
-  assert.equal(mod.name, 'capital-charts')
+  assert.equal(mod.name, 'automation-charts')
   assert.deepEqual([...mod.inject], ['slots'], '只剩 toolview：图表呈现已交回官方交付通道')
   assert.equal(typeof mod.ChartView, 'function')
 })

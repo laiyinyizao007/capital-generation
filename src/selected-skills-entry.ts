@@ -12,7 +12,7 @@ import {
   SELECTED_SKILL_ENTRY_ROLES,
   type SelectedSkillRole,
 } from './agents/selected-skills-provider.js'
-import { readCapitalConfig } from './capital-settings.js'
+import { readAutomationConfig } from './automation-settings.js'
 import { dataContractSection } from './data-contract.js'
 import type { AgentLike, PolicyContext } from './agents/root-tool-policy.js'
 
@@ -28,8 +28,8 @@ const SECTION_NAME = 'capital:selected-skills'
 const SECTION_ORDER = 60
 
 const accessOf = (ctx: Context) => ({
-  selection: () => readCapitalConfig(ctx).selectedSkills ?? {},
-  mode: () => (readCapitalConfig(ctx).selectedSkillsMode === 'auto' ? 'auto' : 'manual'),
+  selection: () => readAutomationConfig(ctx).selectedSkills ?? {},
+  mode: () => (readAutomationConfig(ctx).selectedSkillsMode === 'auto' ? 'auto' : 'manual'),
 })
 
 export function apply(ctx: Context, config: Config = {}): void {
@@ -58,7 +58,7 @@ export function apply(ctx: Context, config: Config = {}): void {
           const message = error instanceof Error ? error.message : String(error)
           if (message !== lastRenderError) {
             lastRenderError = message
-            ctx.logger?.warn?.(`capital-generation: selected skill prompt unreadable (${message})`)
+            ctx.logger?.warn?.(`automation-workbench: selected skill prompt unreadable (${message})`)
           }
           return ''
         }
@@ -68,5 +68,5 @@ export function apply(ctx: Context, config: Config = {}): void {
       if (typeof dispose === 'function') dispose()
       if (typeof disposeContract === 'function') disposeContract()
     }
-  }, 'capital-generation.selected-skills()')
+  }, 'automation-workbench.selected-skills()')
 }

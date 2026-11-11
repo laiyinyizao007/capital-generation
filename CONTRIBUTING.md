@@ -126,7 +126,7 @@ npm run smoke:boot
   就点名缺哪颗仓库。
 - `test/persona.test.mjs` 钉 `status` 词表与"每条都必须带能力标签"，也钉 orchestrator 不进 catalog，
   以及 catalog 的 `key` / `name` 全局唯一与 frontmatter `name` 与目录一致。
-- `test/capital-config.test.mjs` 钉 zh/en 标签显示名齐平——新标签只写一种语言会红在这里。
+- `test/automation-config.test.mjs` 钉 zh/en 标签显示名齐平——新标签只写一种语言会红在这里。
 
 真机看一次最有价值：把插件装成你自己的 fork，新建 Capital 会话，在「配置」里只开你提的那一颗，
 问一个它该管的问题，确认它被用上、且没改变其他行为。

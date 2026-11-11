@@ -3,7 +3,7 @@
  * children. Listeners must live on `ctx.root`; tagged standing-scope listeners miss agent/created.
  */
 
-import { CAPITAL_PRESET_IDS, ROOT_PRESET_ID } from '../preset-ids.js'
+import { AUTOMATION_PRESET_IDS, ROOT_PRESET_ID } from '../preset-ids.js'
 import { readPresetClaim } from '../preset-claim.js'
 
 /** Outbound tools (search 2 + wind 2 + named sources 11); `ocr` is excluded because only its url form is restricted. */
@@ -39,7 +39,7 @@ export function ocrFormGuardReasonFor(ctx: PolicyContext): (exec: GuardedExecuti
     if (!ocrUrlFormRequested(exec)) return undefined
     const claim = readPresetClaim(ctx, exec?.agent)
     // Global guard sees every process call; only a confirmed Capital root is blocked.
-    if (claim.registryMissing || claim.failed || claim.claim !== CAPITAL_PRESET_ID) return undefined
+    if (claim.registryMissing || claim.failed || claim.claim !== AUTOMATION_PRESET_ID) return undefined
     return OCR_ROOT_URL_DENIED
   }
 }
@@ -59,7 +59,7 @@ export const ROOT_AGENT_DENIED_TOOLS = [
 // ⛔ `run_code` belongs nowhere in this list: it is a reserved PTC transport name, so `restrict()`
 // throws on it. The root stays native; deployment-level `dsh-tools.mode` must not be set to ptc.
 
-export const CAPITAL_PRESET_ID = ROOT_PRESET_ID
+export const AUTOMATION_PRESET_ID = ROOT_PRESET_ID
 interface ToolRestriction { allow?: readonly string[]; deny?: readonly string[] }
 /** `guard` only returns a deny string, so listener order can never turn a deny into an allow. */
 interface RestrictedToolRuntime {
@@ -103,14 +103,14 @@ export function isCapitalAgent(ctx: PolicyContext, agent: AgentLike | undefined)
   const claim = readPresetClaim(ctx, agent)
   // Registry missing: conservative claim, because per-name restrict rejects unknown names harmlessly.
   if (claim.registryMissing) return true
-  return claim.claim === CAPITAL_PRESET_ID
+  return claim.claim === AUTOMATION_PRESET_ID
 }
 
 /** Allows any Capital preset; guards for role children must use this, not the root id. */
 export function isCapitalPresetAgent(ctx: PolicyContext, agent: AgentLike | undefined): boolean {
   const claim = readPresetClaim(ctx, agent)
   if (claim.registryMissing) return true
-  return claim.claim !== undefined && CAPITAL_PRESET_IDS.includes(claim.claim)
+  return claim.claim !== undefined && AUTOMATION_PRESET_IDS.includes(claim.claim)
 }
 
 /** Diagnostic record surfaced via `dc_status`: silent convergence exits leave no other trace. */
@@ -195,7 +195,7 @@ export function registerRootOcrGuard(ctx: PolicyContext): void {
       return undefined
     }
     if (tools === undefined || typeof tools.guard !== 'function') {
-      ctx.logger?.warn('capital-generation: `ocr` 的 url 形态闸门没装上（guard 面不可用）：主模式人设仍可自己抓外部 PDF')
+      ctx.logger?.warn('automation-workbench: `ocr` 的 url 形态闸门没装上（guard 面不可用）：主模式人设仍可自己抓外部 PDF')
       return undefined
     }
     try {
@@ -215,7 +215,7 @@ export function registerRootOcrGuard(ctx: PolicyContext): void {
       return () => {
         try { dispose() } finally { installedOcrGuardRoots.delete(ref) }
       }
-    }, 'capital-generation.ocr-form-guard()')
+    }, 'automation-workbench.ocr-form-guard()')
     return
   }
   install()
@@ -240,7 +240,7 @@ export function fsWriteGuardReasonFor(ctx: PolicyContext): (execution: GuardedEx
     const claim = readPresetClaim(ctx, execution.agent)
     // One wrong denial would remove another preset's write access for the whole process.
     if (claim.registryMissing || claim.failed || claim.claim === undefined) return undefined
-    if (!CAPITAL_PRESET_IDS.includes(claim.claim)) return undefined
+    if (!AUTOMATION_PRESET_IDS.includes(claim.claim)) return undefined
     return FS_WRITE_READ_ONLY
   }
 }
@@ -260,7 +260,7 @@ export function registerFsWriteGuard(ctx: PolicyContext): void {
       return undefined
     }
     if (tools === undefined || typeof tools.guard !== 'function') {
-      ctx.logger?.warn('capital-generation: fs 写口闸门没装上（guard 面不可用）：`write` / `edit` 只剩 `tool-fs` 那行的行级开关在拦')
+      ctx.logger?.warn('automation-workbench: fs 写口闸门没装上（guard 面不可用）：`write` / `edit` 只剩 `tool-fs` 那行的行级开关在拦')
       return undefined
     }
     try {
@@ -283,7 +283,7 @@ export function registerFsWriteGuard(ctx: PolicyContext): void {
       return () => {
         try { dispose() } finally { installedFsGuardRoots.delete(ref) }
       }
-    }, 'capital-generation.fs-write-guard()')
+    }, 'automation-workbench.fs-write-guard()')
     return
   }
   install()
@@ -323,11 +323,11 @@ export function registerRootToolPolicy(ctx: PolicyContext, options: RootToolPoli
           const outcome = restrictRootAgentTools(agent, probe)
           if (probe !== undefined) probe.outcome = outcome
           if (outcome === 'unavailable') {
-            ctx.logger?.warn(`capital-generation: 根 Agent 工具收敛未生效（${outcome}）：主 Agent 仍会看到 ${ROOT_AGENT_DENIED_TOOLS.join(' / ')}`)
+            ctx.logger?.warn(`automation-workbench: 根 Agent 工具收敛未生效（${outcome}）：主 Agent 仍会看到 ${ROOT_AGENT_DENIED_TOOLS.join(' / ')}`)
           }
         }
       } catch (error) {
-        ctx.logger?.warn(`capital-generation: 根 Agent 工具收敛异常：${error instanceof Error ? error.message : String(error)}`)
+        ctx.logger?.warn(`automation-workbench: 根 Agent 工具收敛异常：${error instanceof Error ? error.message : String(error)}`)
       }
     })
     return () => {
@@ -340,7 +340,7 @@ export function registerRootToolPolicy(ctx: PolicyContext, options: RootToolPoli
       return () => {
         try { if (typeof dispose === 'function') dispose() } finally { installedPolicyRoots.delete(listenCtx) }
       }
-    }, 'capital-generation.root-tool-policy()')
+    }, 'automation-workbench.root-tool-policy()')
     return
   }
   install()

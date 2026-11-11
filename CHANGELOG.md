@@ -1,5 +1,17 @@
 # Changelog
 
+# Changelog
+
+## [1.0.0] —— fork 首版：自动化工作台（源自 Capital Generation 2.20.0）
+
+- 包名改为 `dsh-workbench-automation`；内置标识（preset / 存储 / 路由 / 服务名）同步改：
+  preset `dsh-workbench-automation`（角色 automation-data-* 等）、路由 `/automation-workbench`、
+  存储 `automation_workbench.json`、工作区目录 `automation-workbench-workspace/`
+- peerDependencies 放宽为 `>=0.2.1-rc.1 <0.3.0-0`（适配 dsh 0.2.1-rc.3，不再需要版本豁免）
+- 新增 4 个内置模板：每日回顾 / 周回顾 / 同步巡检 / 每周项目巡检（跑自己的工作台）
+- 投研功能原样保留（Capital 的 16 个模板、精选 Skills、五把密钥的数据源）
+
+
 本文件是 Capital Generation 的完整变更历史（README 只保留最近一版摘要，GitHub Release
 说明从这里对应段落复制）。
 
@@ -106,7 +118,7 @@
 
 ### Fixed
 
-- **顶部栏与滚动内容间距**：`.capital-automation-headinner` 下边距增加 5px，滚动时标题不再紧贴
+- **顶部栏与滚动内容间距**：`.automation-workbench-headinner` 下边距增加 5px，滚动时标题不再紧贴
   首屏内容。
 
 ## [2.19.0] - 2026-11-07
@@ -199,7 +211,7 @@ pin、探针与文档；本插件自己的工具与数据契约不变。
 - **任务简报生成**：每次成功运行追加一次无工具模型调用，把最终答复压成 40–200 字人话简报，
   并提取 TODO、标的与数据缺口；引用按最终答复的行号 block 取原文，不要求模型逐字复制。
 - **JSON 持久化**：固定 `capital_automation` 域新增 `briefs` 表；不引入 SQL，不扫描历史 run。
-- **看板接口**：`/capital-automation/board` 返回简报、待办、标的、缺口与运行健康；
+- **看板接口**：`/automation-workbench/board` 返回简报、待办、标的、缺口与运行健康；
   时间范围/分类筛选、简报重试与打开 session 都走同一路由。
 - **运行健康**：运行状态计数、简报状态、调度器与交易日历；异常行可打开对应 session。
 
@@ -274,12 +286,12 @@ pin、探针与文档；本插件自己的工具与数据契约不变。
 - **腾讯实时行情带 `quote_time`**：交易所当地时间（北京时间）的最后成交时刻，与 `captured_at`
   （抓取时刻）分开；时间戳不可解析时整批响亮失败，不把坏时间写成空值。
 - **投研自动化：统一默认工作区**：设置卡第二格顶部新增「默认工作区」下拉（宿主 `Menu` + 34px
-  胶囊触发器，空 = 专属默认工作区），选项来自新接口 `GET /capital-automation/workspaces`
+  胶囊触发器，空 = 专属默认工作区），选项来自新接口 `GET /automation-workbench/workspaces`
   （id / 标题 / 路径，路径按家目录缩写成 `~`）。任务自己保存的工作区仍然优先；默认工作区被删除
   或目录不可用时回退专属默认并 warn，不阻断运行。
 - **运行历史 12 个月热力图**：任务页与运行页的历史卡从 30 天点阵改为 53 周 × 7 天的热力图，
   按浏览器时区聚合每日运行数，失败描边、进行中脉冲、hover 显示当日成功/失败/进行中明细；
-  新接口 `GET /capital-automation/runs/history?days=371&tz=…` 拒绝非法天数与时区。
+  新接口 `GET /automation-workbench/runs/history?days=371&tz=…` 拒绝非法天数与时区。
 - **运行预算改用宿主时钟**：首条 prompt 增加「最晚结束」硬截止，并明确预算判断只能以
   `get_local_datetime` 的当前时间为准，不得用步数、等待次数或工具耗时估算。
 - **UI/UX 设计规章入库**：新增 `docs/dev/ui-design.md` 并在 `AGENTS.md` §13 挂索引——下拉/日期
@@ -291,7 +303,7 @@ pin、探针与文档；本插件自己的工具与数据契约不变。
   `<MM-DD> <任务名> <id 前 8 位>`（月-日取触发时区），侧栏按时间读得出来，也不再把 profile 名
   重复到每个会话上。
 - **专属默认工作区目录**：`<dsh home>/automation-workspace/<显示名>` →
-  `<dsh home>/CapGen-automation-workspace/<profile 名>`；换显示名不再换目录，已注册工作区仍按 id 使用。
+  `<dsh home>/automation-workbench-workspace/<profile 名>`；换显示名不再换目录，已注册工作区仍按 id 使用。
 - **默认标记跟随设置**：`/meta` 的工作区列表里 `default` 现在指「实际会用的工作区」（设置里选中的
   那个），专属默认工作区另带 `dedicated: true`，方便设置卡把它作为回退项固定列出。
 
@@ -299,7 +311,7 @@ pin、探针与文档；本插件自己的工具与数据契约不变。
 
 - 公告能力不再需要 Wind Key；已有 Wind Key 仍只影响深研调用，不调用不计费。习惯用 Wind 查公告的
   会话会在 persona / 协议里被引导到东财；要按语义找段落时仍可显式用 Wind。
-- 升级后首次运行任务或打开设置卡会注册新的 `CapGen-automation-workspace/<profile>` 目录；旧的
+- 升级后首次运行任务或打开设置卡会注册新的 `automation-workbench-workspace/<profile>` 目录；旧的
   `automation-workspace/<显示名>` 不会自动迁移，历史 session 仍在原工作区。想继续用旧目录，在
   「插件 → Capital Generation → 投研自动化 → 默认工作区」里选中它即可。
 - 已保存任务的工作区 id 优先于统一默认工作区；把默认工作区删掉或目录移走，下次运行自动回退专属
@@ -442,7 +454,7 @@ pin、探针与文档；本插件自己的工具与数据契约不变。
 - **本次必须换宿主版本**：先 `dsh --version` 确认为 `0.2.1-rc.5`，再安装或更新本插件。在 rc.3 上
   安装本版会被宿主的插件兼容预检直接拒绝；反过来，若先升宿主而插件仍是 2.14.1，启动时该插件行
   会被禁用（stderr 一行 `disabling profile plugin ...`，界面上模式与工具整体消失），执行
-  `dsh plugin --profile <profile> update @v587d/capital-generation` 后重启即可恢复。
+  `dsh plugin --profile <profile> update dsh-workbench-automation` 后重启即可恢复。
 - 升级宿主或插件后都需**重启宿主再新建会话**：已在内存里的旧客户端 bundle 与新宿主不混用。
 - 互动易时间列修复无需迁移：已存 Dataset 的列值不变，下一次 `sseinfo_qa` 取数按新解析写入。
 
@@ -501,7 +513,7 @@ pin、探针与文档；本插件自己的工具与数据契约不变。
   区分，未添加或暂停不再展示不会触发的下次运行日期；删除重复的整块「日程」；「最近 3 次运行」
   只保留摘要，链接「完整记录」留在本任务运行记录页签；错误条数移到「工具调用」之后，右侧改为
   「打开 session」主按钮并带外链图标；运行中保留「取消运行」。
-- **执行环境去内部化**：运行模式只显示「自动模式」，不再暴露 `capital-generation` 内部 preset id；
+- **执行环境去内部化**：运行模式只显示「自动模式」，不再暴露 `dsh-workbench-automation` 内部 preset id；
   概览移除执行策略长文与预算子树说明；技术信息直接展开、与上方信息用分隔线隔开，去掉版本号，
   并补充 profileKey / 工作区来源的说明。
 - **下拉统一为宿主设置同款**：投研自动化的触发频率、每月日期、工作区、分类、输出侧重等 8 个原生
@@ -519,7 +531,7 @@ pin、探针与文档；本插件自己的工具与数据契约不变。
   任务详情、运行页和通知中心统一版式。首次打开先显示与最终布局同轮廓的骨架屏，不再先闪
   「还没有任务」；模板用「添加」，与「立即运行」分开。
 - **交易日历改为深交所官方休市日历（无需 API Key）**：按月拉取并缓存
-  `<dsh home>/storages/capital-automation-calendar/szse.json`；已公布月份覆盖内置表，未公布月份
+  `<dsh home>/storages/automation-workbench-calendar/szse.json`；已公布月份覆盖内置表，未公布月份
   回退内置表，覆盖不足 30 天时页面提前告警。交易所公布新一年安排后自动接上，不再需要改代码补表；
   `tradingDaysOnly` 的 fail-closed 语义与 occurrence 计算不变。
 - **Wind EDB 取数改为中文问句优先**：已知指标直接走 `wind_edb_query` 的中文问句，不再要求先
@@ -554,7 +566,7 @@ pin、探针与文档；本插件自己的工具与数据契约不变。
 - **本次必须换宿主版本**：先 `dsh --version` 确认为 `0.2.1-rc.3`，再安装或更新本插件。在 rc.2 上
   安装本版会被宿主的插件兼容预检直接拒绝；反过来，若先升宿主而插件仍是 2.11.1，启动时该插件行
   会被禁用（stderr 一行 `disabling profile plugin ...`，界面上模式与工具整体消失），执行
-  `dsh plugin --profile <profile> update @v587d/capital-generation` 后重启即可恢复。
+  `dsh plugin --profile <profile> update dsh-workbench-automation` 后重启即可恢复。
 - rc.3 的 New Session 会复用 Workspace 里的空白会话：**更新插件后先重启宿主再新建会话**，
   否则复用到的空白会话仍保留创建时的 preset 组合。
 
@@ -967,12 +979,12 @@ pin、探针与文档；本插件自己的工具与数据契约不变。
 
 ## [2.7.11] - 2026-10-14
 
-内部整理：插件包里两颗 host 平面组件的目录与包名收短了——`capital-config/` → `config/`（`@v587d/config`）、
-`capital-watchlist/` → `watchlist/`（`@v587d/watchlist`）。**没有一项你看得见的东西跟着变**：设置卡片
+内部整理：插件包里两颗 host 平面组件的目录与包名收短了——`automation-config/` → `config/`（`@v587d/config`）、
+`automation-watchlist/` → `watchlist/`（`@v587d/watchlist`）。**没有一项你看得见的东西跟着变**：设置卡片
 还在老位置（「插件」→ Capital Generation → 顶部三格），「包含的组件」里那四行的名字仍是
-`capital-config` / `capital-charts` / `capital-watchlist` / `preset-capital-generation`，已保存的凭据引用名、
+`automation-config` / `automation-charts` / `automation-watchlist` / `preset-dsh-workbench-automation`，已保存的凭据引用名、
 已勾选的精选 Skills、自选股清单与你自己标的持仓比例**全部原样读得到**——那两行的身份、配置的命名空间、
-自选股的存储域名和 `/capital-watchlist` 路由都刻意没改，就是为了升级不产生迁移。
+自选股的存储域名和 `/automation-watchlist` 路由都刻意没改，就是为了升级不产生迁移。
 
 宿主要求与 2.7.10 相同（DSH`@0.2.0-rc.2`），不必换宿主版本。
 
@@ -982,17 +994,17 @@ pin、探针与文档；本插件自己的工具与数据契约不变。
 > **保存过这张卡片**的人，DSH 在 profile 文件里记那份设置时是**连同当时解析出的模块路径一起**记下
 > 的；目录一改名，宿主对这一行是整行跳过、也不提示，于是「精选 Skills」的勾选、附加人设与
 > 「本机直连」开关会**静默回到默认值**。两种恢复方式任选其一：① 在卡片里重新设一次并保存；
-> ② 打开 `~/.dsh/profiles/<你在用的 profile>/cordis.patch.yml`，把 `capital-config` 那一行的路径从
-> `…/capital-config/index.js` 改成 `…/config/index.js`，再重启宿主。首页常见问题已同步这一条。
+> ② 打开 `~/.dsh/profiles/<你在用的 profile>/cordis.patch.yml`，把 `automation-config` 那一行的路径从
+> `…/automation-config/index.js` 改成 `…/config/index.js`，再重启宿主。首页常见问题已同步这一条。
 
 ### Changed
 
 - **两颗嵌套包的目录与包名**（研发侧可见）：`config/` = `@v587d/config`、`watchlist/` = `@v587d/watchlist`；
   生成两份客户端 bundle 的脚本一并改名 `scripts/build-config-client.mjs` / `scripts/build-watchlist-client.mjs`。
-- **`npm run smoke:boot` 的 bundle 检查改成现读包名**。它原先在首页 HTML 里 grep `capital-config` 这一串
+- **`npm run smoke:boot` 的 bundle 检查改成现读包名**。它原先在首页 HTML 里 grep `automation-config` 这一串
   来确认客户端 bundle 进了启动图，而那串实际是**包名**（宿主按最近的 `package.json` 归属 bundle 身份）、
   不是行 id——改名之后这条会一直报 ⚠️ 且非零退出。现在三颗嵌套包的身份都从各自 `package.json` 现读，
-  下次再改名不必修探针。真机复核：三颗 bundle 均报告送达，四行组件、`capital-config` 命名空间与两条
+  下次再改名不必修探针。真机复核：三颗 bundle 均报告送达，四行组件、`automation-config` 命名空间与两条
   路由围栏照常通过。
 
 ## [2.7.10] - 2026-10-13
@@ -1055,7 +1067,7 @@ commit `03677d2`，2026-08-05）。这一份的收录口径与前七份不同，
 - **先建会话、再切到 Capital 模式，精选 Skills 也注入了**。用户可见症状：设置卡里 10 个开关全开，
   会话里却始终只有 preset 自带的 8 条 `capital-*`；直接从 Capital 建会话（或恢复旧会话）却正常。
   根因是 provider 只挂在 `agent/created` 一条监听上，而建会话的真实顺序是"先按默认预设把根 Agent
-  建好、随后才 `select` 到 `capital-generation`"——`agent/created` 在那次 select 之前就发完了，
+  建好、随后才 `select` 到 `dsh-workbench-automation`"——`agent/created` 在那次 select 之前就发完了，
   只挂一条时本插件的 `apply()` 是在**这次挂载里**才跑的，监听器出生就错过了自己这个 Agent。
   现在同时挂 `agent-preset/selected`（preset registry 在挂载完成后才发这条事件，一定赶得上），
   同一个 Agent 由 `WeakSet` 去重、注册失败撤登记以留下重试余地；子 Agent 与其他 preset 照旧不注册。
@@ -1211,7 +1223,7 @@ commit `03677d2`，2026-08-05）。这一份的收录口径与前七份不同，
 
 ### Added
 
-- **首页多一枚 npm 版本徽章**：`@v587d/capital-generation` 在 npm 上当前能装到的最新版本直接显示在
+- **首页多一枚 npm 版本徽章**：`dsh-workbench-automation` 在 npm 上当前能装到的最新版本直接显示在
   README 顶部，与仓库自己的 `version` 徽章并列——想知道"仓库写好的"和"发出去的"是否同一个版本，
   不用再翻包页面。
 - **「精选 Skills」新增一张收录边界表**：六份快照各收哪一类、几颗，逐行写清（Buffett Investment
@@ -1604,7 +1616,7 @@ DSH`@0.2.0-rc.2` 带的 `dsh-skill` 与 `dsh-skill-filesystem`（两颗精确版
 
 ### Changed
 
-- **README**：首页样例链接换成新报告；桌面端「添加插件」补上直接填 `v587d/capital-generation`
+- **README**：首页样例链接换成新报告；桌面端「添加插件」补上直接填 `v587d/dsh-workbench-automation`
   这一种写法（实测可用）；FAQ 新增「刚发布的新版本装不到」。原因有两条，此前只写了一条：
   ① 宿主侧包管理器有**发布冷却策略**（pnpm 的 `minimumReleaseAge`），刚发布的新版本会被跳过、
   静默装成上一版——实测**写全版本号也不能绕过**；② 国内镜像同步滞后。急着用最新代码走仓库地址。
@@ -1629,7 +1641,7 @@ DSH`@0.2.0-rc.2` 带的 `dsh-skill` 与 `dsh-skill-filesystem`（两颗精确版
 - 发版通道带两道 registry **自己不会报错**的闸门：① tag 与 `package.json` 版本不一致时，发出去的
   是旧代码而按 `#vX` 安装的用户拿到的也是旧代码；② 已在 registry 上的版本改为跳过，否则"手动发过
   再跑 CI"和任何一次 rerun 都会撞 `E409`，且红得看不出原因。
-- README 的「安装插件」补上 npm 那条路（`dsh plugin --profile web add @v587d/capital-generation`），
+- README 的「安装插件」补上 npm 那条路（`dsh plugin --profile web add dsh-workbench-automation`），
   与原有 `github:` 一条并列：前者取已发布版本，后者取仓库当前代码。两条装到的东西一致——构建是
   确定性的，仓库里已提交的 `lib/` 与 CI 现构建的结果逐字节相同（本版实测）。
 - `package.json` 补 `repository` / `homepage` / `bugs` 三项（此前全缺：npm 页面不显示仓库链接）。
@@ -1776,9 +1788,9 @@ DSH`@0.2.0-rc.2` 带的 `dsh-skill` 与 `dsh-skill-filesystem`（两颗精确版
 
 ### Changed
 
-- **⛔ 设置卡片的座位从行级搬到组合包级。**原先要「插件」→ 本包 →「包含的组件」里点 `capital-config`
+- **⛔ 设置卡片的座位从行级搬到组合包级。**原先要「插件」→ 本包 →「包含的组件」里点 `automation-config`
   那一行才看到表单（三跳），"设置藏得太深"是这一版收到的主要反馈。现在卡片坐在
-  `plugins.bundle.config`（key = 组合包名），打开插件主页就在描述与「包含的组件」之间。**`capital-config`
+  `plugins.bundle.config`（key = 组合包名），打开插件主页就在描述与「包含的组件」之间。**`automation-config`
   那一行没有删**：它仍是 settings 命名空间的来源（条目 id 四处同字那条链不变），只是不再充当座位。
   判据一句话：每深一跳就多一次"设置里没这个插件"。
 - **卡片话术与排布**：① 「官方文档」不再是提示里的一句话，而是贴在密钥名右侧的链接（新标签页打开、
@@ -1786,7 +1798,7 @@ DSH`@0.2.0-rc.2` 带的 `dsh-skill` 与 `dsh-skill-filesystem`（两颗精确版
   缺哪个只是对应能力不可用，其他照常；③ 五条提示统一收成"… 保存后新 Capital 模式会话生效"（原先写
   "新会话"，用户会去开一个普通会话，然后发现没生效）；④ 本机直连与 PaddleOCR 两段说明重写，只说
   开启之后会发生什么；⑤ 回退开关移到四个密钥之后——它不是密钥，夹在密钥行中间会被读成第五个 Key。
-- **插件在「插件」页有了中文名字**：卡片与详情页主标题从 `@v587d/capital-generation` 变成
+- **插件在「插件」页有了中文名字**：卡片与详情页主标题从 `dsh-workbench-automation` 变成
   「Capital Generation（证券研究）」（英文界面是 "Capital Generation"）。DSH 读显示名只有一个入口——
   `<裸包名>/locale/<语言>.json` 里的 `meta.title`，所以根包补了 `locale/{en,zh}.json` 与
   `exports["./locale/*.json"]`（`icon` 早就在生效，只是以前没人给它名字）。
@@ -1851,7 +1863,7 @@ review 里"错了不报错、只是话说错"的十二处一并收口。**模型
   进程）仍是最坏情形"后写的整份覆盖前写的"，这一版声明的是进程内边界，不是多窗口安全。
 - **上游标的名里的零宽与方向控制字符现在会被剥掉**，面板、悬停提示与递进输入框那句话读到的同一个名字
   ——这类字符肉眼看不见，却能让"你核对过的那句"和"实际发出去的那句"顺序不同。
-- **认证围栏接线有了回归**：`/capital-watchlist/*` 必须把宿主的请求拒绝面接上，否则它是本机任意进程
+- **认证围栏接线有了回归**：`/automation-watchlist/*` 必须把宿主的请求拒绝面接上，否则它是本机任意进程
   可读写的无认证端点；这条从此由测试钉在真实注册路径上，而不只是代码里写着。
 
 ## [2.5.2] - 2026-09-30
@@ -1907,13 +1919,13 @@ review 里"错了不报错、只是话说错"的十二处一并收口。**模型
 
 ### Fixed
 
-- **⛔ 插件页里 `capital-charts` 与 `capital-watchlist` 两行 异常**：`cannot get property "webServer" without inject`。
+- **⛔ 插件页里 `automation-charts` 与 `automation-watchlist` 两行 异常**：`cannot get property "webServer" without inject`。
   两行原先写的是"先 `ctx.get('webServer')` 探测，有值就直接调用"。`ctx.get` 能解析出值**不代表**属性访问
   合法——cordis 的属性代理只认"本层声明过 `inject`"（`ReflectService` 找不到就抛这句）。桌面端的 webServer
   在本行之前已就绪，于是走"直接调用"那条并当场炸；web profile 里它还没就绪，反而躲过了。两行现在一律
   `ctx.inject(['webServer'], registerRoute)`：已就绪立刻挂路由，还没出现就一直等（本行保持激活），
   两种装配顺序都对。回归把假 ctx 换成**会按真实规则抛错**的那一份（`test/cordis-fake.mjs`），并给
-  `capital-watchlist` 的 `apply()` 补上此前完全缺席的两条顺序断言——这条能漏过 699 个用例，缺的就是覆盖面。
+  `automation-watchlist` 的 `apply()` 补上此前完全缺席的两条顺序断言——这条能漏过 699 个用例，缺的就是覆盖面。
 - **⛔ 同花顺 61 颗能力在桌面端整场进程静默缺席**：注册那颗 effect 原先以"装配期读到 `FUYAO_API_KEY`"为
   准入门槛，读不到就 `return`——**不重试、不补注册**，于是能力目录只剩 8 颗。宿主凭据 provider 在
   `[Service.init]` 里**先 yield 把服务发布出去、之后才 `await loadInitial()` 装载快照**（实测
@@ -1971,8 +1983,8 @@ review 里"错了不报错、只是话说错"的十二处一并收口。**模型
 
 - 抬基线前先在**临时目录**装一份同号 dsh，用 `DSH_PACKAGE_DIR` 指着它跑，不碰本机全局安装：
   `check:dsh` **23 条全部通过**（并反证过给错路径会成片"读不到"，不是静默回落）；`smoke:boot` 用它
-  **真起了一个进程**——预设 `broken=null`，`persona` / 两条 subagent 行 / `capital-generation` 四行
-  `state=2`，三颗客户端 bundle 都在，`/capital-watchlist/list` 围栏匿名 401、带 cookie 200，重复声明
+  **真起了一个进程**——预设 `broken=null`，`persona` / 两条 subagent 行 / `dsh-workbench-automation` 四行
+  `state=2`，三颗客户端 bundle 都在，`/automation-watchlist/list` 围栏匿名 401、带 cookie 200，重复声明
   预设的反向对照命中。`dsh-persona` 的类型里 `prefix` / `suffix` / `complete` /
   `includeRuntimeContext` 都还在。
 - devDep `@deepseek-ai/dsh-system-prompt` 跟到 `^0.2.0-rc.2`：semver 对 `0.x` 的规则让 `^0.1.2-rc.1`
@@ -2004,15 +2016,15 @@ Windows 桌面端携带的就是这一版，**但本版的桌面端装配路径�
 
 ### Added
 
-- **自选股面板（`capital-watchlist/`，第三颗 host 平面行）**：一个用户侧资产，不是 Agent 能力。
+- **自选股面板（`automation-watchlist/`，第三颗 host 平面行）**：一个用户侧资产，不是 Agent 能力。
   入口是输入框 `/`（与 `+` 同一份菜单）「指令」小节的 `自选股` 一行，**只在 Capital 会话出现**
   （`available(session)` 读 `projectionValues.agentPreset`；极简 / 标准模式下这些会话常驻的 overlay
   组件必须 mount 零请求、关闭即 `return null`）。点开是官方 `Modal` 样式的面板：搜索、添加、删除、
   打开即刷新、手动「刷新报价」。
-- **清单跨 workspace**：走官方 `dsh-storage-domain`，域名 `capital_watchlist`，落盘
-  `~/.dsh/storages/capital_watchlist.json`——不在任何 workspace 目录内，在 A 目录加的票换到 B 目录
+- **清单跨 workspace**：走官方 `dsh-storage-domain`，域名 `automation_watchlist`，落盘
+  `~/.dsh/storages/automation_watchlist.json`——不在任何 workspace 目录内，在 A 目录加的票换到 B 目录
   的新会话仍然看得到。⚠️ 上游 unit name 规则 `^[a-z][a-z0-9_]*$` **拒连字符**，所以路由叫
-  `/capital-watchlist`、域却叫 `capital_watchlist`，这不是风格问题。
+  `/automation-watchlist`、域却叫 `automation_watchlist`，这不是风格问题。
 - **默认不空面板**：域首次创建时播种 4 条主要沪深指数（上证 / 深证成指 / 创业板指 / 沪深300，
   均已用真报文验证有值）；用户删空后**不重建**。清单上限 **10** 条，超出回 `list_full`
   并提示「先删一条再加」——这个上限同时也是 ETF 逐只扇出的规模约束。
@@ -2027,7 +2039,7 @@ Windows 桌面端携带的就是这一版，**但本版的桌面端装配路径�
   **无轮询、无自动重试**——全组件唯一的定时器是搜索防抖；同一时刻只允许一个 in-flight 刷新，
   期间按钮禁用。搜索那一路另有三条事件闸（尾部防抖 / IME 合成期不发 / 同词不重发）+ 单条在途。
 - **删除用面板内确认**，不用 `window.confirm`（原生弹窗在宿主样式体系之外）。
-- **浏览器只与 loopback 宿主路由对话**：`/capital-watchlist/*` 接官方
+- **浏览器只与 loopback 宿主路由对话**：`/automation-watchlist/*` 接官方
   `connection.requestRejection`（trusted-Host 403 + 签名 cookie 401）；**Fuyao 密钥永不进浏览器**，
   key 解析、信封判定与错误映射全在宿主半边。
 - **模型侧零变化**：不新增任何工具（**没有** `read_watchlist`），persona / skill / 能力目录一字不改
@@ -2076,11 +2088,11 @@ Windows 桌面端携带的就是这一版，**但本版的桌面端装配路径�
 ### 迁移
 
 从 2.4.0 升级**无迁移**：无工具改名、无入参变化、无新增密钥。唯一的安装动作是多了一颗 host 平面行，
-装完需**重启 DSH web profile** 才装配生效；自选股入口与设置卡片（`capital-config`）仍在老位置。
+装完需**重启 DSH web profile** 才装配生效；自选股入口与设置卡片（`automation-config`）仍在老位置。
 
 ## [2.4.0] - 2026-09-26
 
-本版是**跟随 DSH `0.1.7-rc.2` 的适配版**（[issue #3](https://github.com/v587d/capital-generation/issues/3)）。
+本版是**跟随 DSH `0.1.7-rc.2` 的适配版**（[issue #3](https://github.com/v587d/dsh-workbench-automation/issues/3)）。
 **破坏性**：本插件需要 **DSH ≥ 0.1.7**——装在 0.1.5 上会 `web boot: 1 entry did not activate`。
 工具入参、数据能力、图表呈现与会话日志格式**都没有变化**。
 
@@ -2088,13 +2100,13 @@ Windows 桌面端携带的就是这一版，**但本版的桌面端装配路径�
 
 | | 2.3.0（DSH 0.1.5-rc.2） | 2.4.0（DSH 0.1.7-rc.2） |
 |---|---|---|
-| 设置卡片 | `settings.register` 命名空间 + 客户端 `settingsScope.bind` + `settings.plugin.item` keyed 槽，坐在「设置 → 插件 → 插件配置 → Capital 模式」 | 条目 Config 里标 `.volatile()` 的字段由 DSH 自动投影成表单，**命名空间恒等于 profile 条目 id**；卡片坐在**「插件」页**该 bundle 的 `capital-config` 行详情里 |
+| 设置卡片 | `settings.register` 命名空间 + 客户端 `settingsScope.bind` + `settings.plugin.item` keyed 槽，坐在「设置 → 插件 → 插件配置 → Capital 模式」 | 条目 Config 里标 `.volatile()` 的字段由 DSH 自动投影成表单，**命名空间恒等于 profile 条目 id**；卡片坐在**「插件」页**该 bundle 的 `automation-config` 行详情里 |
 | 预设挂载 | registry 行 `config.roots` 指向 preset 目录 | 一颗 `@deepseek-ai/dsh-agent-preset` **声明行**（`config = { id, name, description, order, plugins }`）；registry 既不扫目录也不接受 `roots` |
 | 保存后何时生效 | 重启 profile | 新开的 Capital 会话即生效（`applies` 恒为 `live`，主插件在装配时读一次） |
 
 升级前若直接装本版到 0.1.5 上，症状是两条：`dsh web` 打开即失败
-（`@v587d/capital-config: pending (waiting for service: settingsScope)`），以及历史 Capital 会话恢复报
-`RemoteError: Unknown agent preset: capital-generation`。
+（`@v587d/automation-config: pending (waiting for service: settingsScope)`），以及历史 Capital 会话恢复报
+`RemoteError: Unknown agent preset: dsh-workbench-automation`。
 
 ### Changed
 
@@ -2103,15 +2115,15 @@ Windows 桌面端携带的就是这一版，**但本版的桌面端装配路径�
   四个密钥字段（Fuyao / AnySearch / Wind Alice / PaddleOCR）与「允许启动本地提取网页内容」开关
   **语义不变**；密钥仍只进 credentials 域，配置里只存引用名，值从不随响应出网。
   0.1.7 的 primitives 删掉了外链图标 ⇒ 「接口文档」链接改为纯文字。
-- **预设迁到声明行**：`preset/capital-generation/` 的装配从 `preset.yml` + `agent.cordis.yml`
+- **预设迁到声明行**：`preset/dsh-workbench-automation/` 的装配从 `preset.yml` + `agent.cordis.yml`
   合成一颗 `@deepseek-ai/dsh-agent-preset` 声明行 `agent.patch.yml`（`plugins` 就是原来的行数组）。
 - **运行期依赖**：`@deepseek-ai/schemastery` 抬到 `^3.18.4`（`.volatile()` 的最低版本）；
-  `capital-config` 的 `dsh.client.inject` 从 `dsh-client-ui-settings-plugins` 换到
+  `automation-config` 的 `dsh.client.inject` 从 `dsh-client-ui-settings-plugins` 换到
   `dsh-client-ui-plugin-manager`（插件页现在归它所有）。
 
 ### Fixed
 
-- **历史 Capital 会话恢复**：`capital-generation` 这个预设现在真的注册得上（旧写法在 0.1.7 下
+- **历史 Capital 会话恢复**：`dsh-workbench-automation` 这个预设现在真的注册得上（旧写法在 0.1.7 下
   静默不注册，只有打开历史会话才暴露）。
 - **可视化 gate 覆盖主 Agent 的「停在 profile」**：委派 prompt 写明「只到 profile」时，
   `data_junior` 仍给 `recommended` 结论但**不出图**，并把未出图标注为**委派收窄**（不是数据不支持、
@@ -2124,13 +2136,13 @@ Windows 桌面端携带的就是这一版，**但本版的桌面端装配路径�
   早已不消费，留着只会制造假失败）；**L12** 证据文件从 `dsh-agent-presets` 换到 `dsh-tool-subagent`。
   `npm run check:dsh` 16 → **17 条**。
 - **`npm run smoke:boot` 扩成两条腿**：正向在真实 boot graph 里挂一颗一次性探针行，读运行期的
-  `agentPresets.resolve('capital-generation').broken`、`settings.describe()` 的条目镜像，以及
-  `pluginManager.listBundles()` 里该 bundle **有没有 `capital-config` 那一行**（卡片座位）；
+  `agentPresets.resolve('dsh-workbench-automation').broken`、`settings.describe()` 的条目镜像，以及
+  `pluginManager.listBundles()` 里该 bundle **有没有 `automation-config` 那一行**（卡片座位）；
   反向另起一个 profile **重复声明**同一预设 id，确认这道闸门会失败而不是永远绿。
 
 ### 迁移
 
-- 先升级 DSH 到 `0.1.7-rc.2`（或更高），再 `dsh plugin --profile web add github:v587d/capital-generation`
+- 先升级 DSH 到 `0.1.7-rc.2`（或更高），再 `dsh plugin --profile web add github:v587d/dsh-workbench-automation`
   并重启 profile。留在 0.1.5 的话请继续用 2.3.0。
 - **API Key 不用重填**：值本来就存在 credentials 域（`~/.dsh/.credentials.yaml`），升级后卡片
   直接显示「已配置密钥」。
@@ -2376,7 +2388,7 @@ Windows 桌面端携带的就是这一版，**但本版的桌面端装配路径�
 
 ### Changed
 
-- 本机直连默认 User-Agent 由裸版本号改为产品标识 `@v587d/capital-generation`
+- 本机直连默认 User-Agent 由裸版本号改为产品标识 `dsh-workbench-automation`
   （裸版本号是 WAF 眼里的典型爬虫特征）；显式配置的 UA 不受影响。
 
 ## [2.1.0] - 2026-09-20
@@ -2418,4 +2430,4 @@ Windows 桌面端携带的就是这一版，**但本版的桌面端装配路径�
 
 ## 1.x（`v1-final`，2026-09-14）
 
-早期版本，无独立变更记录，见 [Git 历史](https://github.com/v587d/capital-generation/commits/master)。
+早期版本，无独立变更记录，见 [Git 历史](https://github.com/v587d/dsh-workbench-automation/commits/master)。

@@ -1,4 +1,4 @@
-# 投研自动化（`capital-automation`）
+# 投研自动化（`automation-workbench`）
 
 > 索引见仓库根 `AGENTS.md` §12；设计稿 `docs/design/automation-tasks-v0.4.md` 是任务/运行契约，
 > 看板见 `docs/design/automation-board-v0.2.md`。
@@ -6,10 +6,10 @@
 
 ## 12.1 边界与身份
 
-- **独立 host bundle**：`automation/` 是随主包携带的嵌套包，行 id `capital-automation`，行名保持
+- **独立 host bundle**：`automation/` 是随主包携带的嵌套包，行 id `automation-workbench`，行名保持
   字面量相对路径 `./automation/index.js`。它与官方 `ui-schedule` 平级共存，**不** disable 官方行，
   **不**注册 `schedules` main/sidebar id、`schedule-created` turnTail 或官方右侧 tab kind。
-- 页面身份是 Capital 自己的 `main` key 与 `sidebar.panellist` id，均为 `capital-automation`；
+- 页面身份是 Capital 自己的 `main` key 与 `sidebar.panellist` id，均为 `automation-workbench`；
   技术身份与用户文案分开维护，改名视为迁移。
 - 官方 schedule 记录不读、不写、不删；本页只在帮助区说明两套功能的关系。
 
@@ -32,7 +32,7 @@
 
 - Capital 自有 60 秒 tick（设置范围 30 秒–60 分钟）：tick 只做租约校验、读任务、算最近到期
   occurrence、投递与日历刷新，不在 tick 中等待模型运行；任务频率与 tick 无关。
-- 单 scheduler owner：`~/.dsh/storages/capital-automation-locks/` 下的目录锁用 `mkdir` 原子创建；
+- 单 scheduler owner：`~/.dsh/storages/automation-workbench-locks/` 下的目录锁用 `mkdir` 原子创建；
   过期租约由 `rename` 移走后重新竞争，owner 记录含 `ownerId`、`fencingToken`、`leaseExpiresAt`。
   每个 lease 使用独立 child 目录，旧 owner 不能写入接任者的 root；`renew`/`isCurrent` 每次同时校验
   child 与当前 root。拿不到租约时进入 `standby`，页面只读；手动运行同样先要 owner，standby 返回
@@ -48,7 +48,7 @@
 - `tradingDaysOnly` 的日历以深交所官方休市日历（`monthList` 月 JSON，无需 key）为准：按月拉取
   “今天 −62 天 … 今天 +400 天”，已拉取月份覆盖内置表，未公布月份回退内置表，两者都没有的日期
   fail-closed（`calendar_unavailable` → `skipped_calendar_unavailable`），**不**按 Mon–Fri 猜测。
-  缓存 `<dsh home>/storages/capital-automation-calendar/szse.json`，每天刷新；启动先等一次就绪，
+  缓存 `<dsh home>/storages/automation-workbench-calendar/szse.json`，每天刷新；启动先等一次就绪，
   刷新在途时 `pendingRefresh` 让调度顺延到下一 tick 再判定，不提前烧掉 occurrence。
 - 覆盖不足 30 天时页面提前告警；`/meta.calendar` 暴露 `source / through / coverageDays /
   fetchedAt / stale / lastError`。交易所公布新一年安排后自动接上，不再靠改代码补表。
@@ -56,9 +56,9 @@
 
 ## 12.4 运行与无人值守边界
 
-- 每次运行创建新 session（`agentPreset: capital-generation`，即 Capital 自动模式）。任务保存已注册工作区 id；
+- 每次运行创建新 session（`agentPreset: dsh-workbench-automation`，即 Capital 自动模式）。任务保存已注册工作区 id；
   未选择时按设置卡的统一默认工作区（`automation.defaultWorkspaceId`，须已注册且目录可用）启动，否则注册并使用
-  `<dsh home>/CapGen-automation-workspace/<profile>`（标题 `CapGen 投研自动化（<profile>）`）。创建 session 时传
+  `<dsh home>/automation-workbench-workspace/<profile>`（标题 `CapGen 投研自动化（<profile>）`）。创建 session 时传
   `workspaceId`、**不**传裸 `cwd`，让 session 进入对应工作区分组；只有 workspace registry 不可用时才退回受控目录并记 warn。
   标题是触发时区的 `<MM-DD> <task-title> <run-id-prefix>`（默认 8 位）。终态后不再追加消息；Phase 1 不做 compaction，也不继承上下文。
 - 工作区只接受 `workspaceRegistry` 中已注册的 id（保存时 `get` + `status()` 校验，运行前再校验一次）；客户端不能传路径、
@@ -91,7 +91,7 @@
 
 ## 12.5 API、页面与验收
 
-- 路由前缀 `/capital-automation`；所有 handler 第一步 `connection.requestRejection(req)`，
+- 路由前缀 `/automation-workbench`；所有 handler 第一步 `connection.requestRejection(req)`，
   被拒时不读 body、不碰 storage。提供 `/meta`（页面壳；`notifications.unread` 直接带任务通知未读数）、`/workspaces`（设置卡的下拉，带路径与专属默认标记）、`/tasks`（CRUD + activate/pause/hibernate/copy/run）、
   `/runs`（列表/详情/cancel）、`/runs/history`（按浏览器时区聚合的每日运行数）、`/notifications`（列表/已读）、`/board`（看板聚合）、`/board/briefs/:runId/retry`（只重试已入队的失败新简报）、`/board/briefs/:runId/ask`（POST `{ question, timeZone? }`，把追问追加到该 run 的 session，202 入队）、`/board/briefs/:runId/asks`（GET 按创建时间正序返回该 run 的全部追问）、`/board/asks/:id`（轮询追问状态与前 160 字预览）与 `/board/asks/:id/answer`（按需读取完整回答）、`/board/todos/confirm`（POST `{ id }` 确认单条 TODO，body 严格校验）；不提供 `/legacy`、`/catalog`、历史回填或条件接口。
 - 页面顶部只保留品牌与居中的「看板 / 任务 / 运行」页签，默认停在看板；右上角是任务通知中心与「新建任务」。看板无 brief 时只显示空态引导（去任务页手动运行 / 新建任务），不显示统计、右栏或历史占位；有数据时由任务简报、TODO、个股动态、数据体检、运行健康五块组成；TODO 默认只看今天/尽快，筛选只有今天/尽快、将来、已过期三档，未来日期进将来（有具体日期直接显示，没有则显示未定；到当天自动浮到今天），当天没有待办显示「今天暂无待办」，每行状态标签独占一行、标题在标签下方，待人工确认 / 已触发行内的勾选框写入 `todo_acks` 后显示「已确认」并保留该版本，后续运行再次提到同一项时重新出现（确认只覆盖已看到的版本），展开依据后来源行右侧的「打开 session」也是 30px 外链箭头（文字只留在 `title` / `aria-label`）；简报按完成时间倒序平铺、首行带任务身份图标（与任务页同源）、显示相对时间（完整时间在 `title`）；卡片不再显示「AI 简报」标识、「原文过长」截断标记或常驻输入框，右上角改为聊天 icon（与「打开 session」外链箭头同排）；点开后是 headless 的「对话」弹窗，顶部还原任务身份与简报原文，右上角可打开 session（与关闭按钮同款 30px 图标），底部输入问题；弹窗按创建时间正序列出该 run 的全部问答；卡片内只保留最新一轮问答（问题右对齐气泡、回复左侧强调线，不再显示「你问 / 回答」标签），回复默认显示前 160 字（最多三行），「查看更多」在卡内展开完整回答并可「收起」；卡片右上角的「打开 session」是 30px 方形图标按钮（`title` / `aria-label` 交代动作，窄屏仍留在标题行右侧），失败 / 跳过态卡内操作仍用文字按钮；右栏默认展开，TODO 与个股动态默认展开、数据体检与运行健康折叠，工具栏可整体收起；数据体检条目不再显示「能力缺口 / 本次未取到 / 口径冲突 / 数据质量」分类标签，展开后的「打开 session」与 TODO 依据行一致，只留 30px 外链箭头（`title` / `aria-label` 交代动作）；运行健康异常行右侧的「打开 session」同样只留 30px 外链箭头。顶部统计拆成当天与总量：`今天简报 / 总简报`、`今天 TODO : 人工 / 自动`、`个股动态 / 新增`、`数据能力缺口 / 新增`、`今天运行异常`；点“今天简报”的数字高亮当天简报卡 3 秒，总简报只读，其他数字先展开目标面板再滚到模块。TODO 的“人工 / 自动”按自动核验状态拆分，`watching` 计入自动，其余计入人工；“新增”按当天首次出现计数。个股动态按代码合并带 / 不带交易所后缀的同一只（`300803` 与 `300803.SZ` 不算两只），右上角计数改为「共 N 只」并接标签筛选（全部 / 持仓 / 风险 / 事件 / 关注）；首屏只显示 12 只，其余用「展开全部 N 只」加载完整列表。标签 hover 显示释义；「N 条待跟进」与展开条目共用服务端随个股返回的同一份列表，计数不会再超过实际能展开的条目数，也不受页面 TODO 50 条上限影响。条目 hover / 键盘聚焦走品牌蓝色，每条可整行点击直接打开来源 session，不再逐条放「打开 session」按钮。
@@ -142,7 +142,7 @@
   任务通知中心只展示任务级通知（`run_failed` / `run_timeout` / `run_succeeded` /
   `calendar_unavailable` / `todo_triggered` / `todo_needs_human`），默认按 `scope=task` 过滤并只统计这些未读；`/notifications?scope=system`
   仅供诊断查看旧的 `scheduler_standby` 记录。API 的 `scope` 默认 `task`，全部已读也默认只处理任务事件。
-- 设置默认值集中在 `automation/defaults.js`；用户级字段走现有 `capital-config` 条目的
+- 设置默认值集中在 `automation/defaults.js`；用户级字段走现有 `automation-config` 条目的
   `automation.*` volatile 字段，在插件设置卡片的「投研自动化」格集中编辑（与「数据源」平级），最上面是「默认工作区」下拉（空 = 专属默认工作区），其后才是调度 / 单次运行上限 / 通知；优先级固定为代码默认 → 部署行 → 当前 profile → 任务级覆盖：任务记录里的 `limits` 是可选覆盖层，省略即跟随 profile，只有显式保存过的值才盖过它；新建任务表单也以 profile 值为初始值。默认工作区 id 同样按这个顺序解析，任务显式保存的 `workspaceId` 仍优先。
 - 回归：`test/automation-*.test.mjs`（schema/时区/DST/owner/store/route/scheduler/policy/runner/
   calendar-source/组合）+ `test/packaging.test.mjs`。日历上游形状用 `npm run smoke:calendar` 实测，

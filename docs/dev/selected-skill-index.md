@@ -17,7 +17,7 @@
 
 | 角色键 | 会话 preset | 能加载什么 | 典型工作 |
 |---|---|---|---|
-| `main` | `capital-generation` | 研究框架、组合/交易流程、写作、教学、税务 | 组织证据、最终答复、用户决策 |
+| `main` | `dsh-workbench-automation` | 研究框架、组合/交易流程、写作、教学、税务 | 组织证据、最终答复、用户决策 |
 | `data_junior` | `capital-data-junior` | 估值、会计、财务质量、风险、筛选、技术/期权/ETF、取证 | `run_code` 计算、表格、统计 |
 | `web_retriever` | `capital-web-retriever` | 10-K 深读、电话会纪要、逐条核验 | 取证、文档阅读、来源核对 |
 | `data_analyst` | `capital-data-analyst`（未启用） | 与 `data_junior` 同一方法集 | 预留的独立分析角色 |
@@ -57,7 +57,7 @@ frontmatter 的 `description` 只作溯源，不再直接进模型目录（provi
 
 - manual 只列**该角色已启用且有快照文件**的方法，全关时正文为空、零成本；auto 列该角色的全部方法，
   仍只展示 12 条，完整目录在宿主技能目录里。
-- 模式来自 `capital-config.selectedSkillsMode`：`manual`（默认）只给勾选，`auto` 按角色开放全部方法、
+- 模式来自 `automation-config.selectedSkillsMode`：`manual`（默认）只给勾选，`auto` 按角色开放全部方法、
   运行期忽略勾选。`agent/pre-step` 的指纹包含模式，切换在下一轮生效。
 - 规则是**强制检查**：进入分析/取证前逐条判断，匹配的先用 `skill` 加载 1–2 条，再按正文执行；
   加载后不得把摘要当全文，不得声称用过未加载的条目；全不匹配就不提。
@@ -92,7 +92,7 @@ frontmatter 的 `description` 只作溯源，不再直接进模型目录（provi
 ### 注册边界
 
 - `tools/selected-skills` 行带 `config.role`，按角色挂进 `capital-data-junior` / `-web-retriever` /
-  `-data-analyst` / 根 `capital-generation`；`data_collector` 与 `visualization_specialist` 不挂。
+  `-data-analyst` / 根 `dsh-workbench-automation`；`data_collector` 与 `visualization_specialist` 不挂。
 - provider 只在 **Agent 自己的 scope** 注册（`agent.ctx.inject(['skills'])`），并要求
   `agentPresets.composedPreset(agent.ctx) === 该角色 preset id`；不注册到 preset standing scope 或
   Host scope。`agent/created` 与 `agent-preset/selected` 两条路径都接（GUI 先建后切是真实顺序）。

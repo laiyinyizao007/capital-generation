@@ -11,8 +11,8 @@ const read = (path) => readFileSync(join(ROOT, path), 'utf8')
 test('host 行与官方 ui-schedule 共存：不 disabled、不注册官方身份', () => {
   const patch = yamlLoad(read('cordis.patch.yml').replace(/!!js\s+/g, ''))
   const rows = patch.flatMap((entry) => entry?.insert ?? [])
-  const automation = rows.find((row) => row?.id === 'capital-automation')
-  assert.ok(automation, 'cordis.patch.yml 必须有 capital-automation 行')
+  const automation = rows.find((row) => row?.id === 'automation-workbench')
+  assert.ok(automation, 'cordis.patch.yml 必须有 automation-workbench 行')
   assert.equal(automation.name, './automation/index.js', 'host 行必须是字面量相对路径')
   assert.ok(!rows.some((row) => row?.id === 'ui-schedule' && row?.disabled === true), '官方 ui-schedule 不得被 disabled')
   const text = read('cordis.patch.yml')
@@ -23,7 +23,7 @@ test('host 行与官方 ui-schedule 共存：不 disabled、不注册官方身�
 
 test('automation/package.json 声明 web client、immediately、产物在 files 里', () => {
   const manifest = JSON.parse(read('automation/package.json'))
-  assert.equal(manifest.name, '@v587d/capital-automation')
+  assert.equal(manifest.name, 'dsh-workbench-automation')
   assert.equal(manifest.dsh.client.platform, 'web')
   assert.equal(manifest.dsh.client.immediately, true)
   assert.deepEqual(manifest.dsh.client.inject, [
@@ -48,8 +48,8 @@ test('client 产物是 ModuleLoader 包，只注册 Capital 自己的 main / sid
   const client = read('automation/client.js')
   const source = read('automation/client.src.cjs')
   assert.match(client, /window\.__ModuleLoader__\.load\(/)
-  assert.match(client, /id: ["']@v587d\/capital-automation["']/)
-  assert.match(source, /const PANEL_ID = 'capital-automation'/)
+  assert.match(client, /id: ["']dsh-workbench-automation["']/)
+  assert.match(source, /const PANEL_ID = 'automation-workbench'/)
   assert.match(source, /key: PANEL_ID/)
   assert.match(source, /id: PANEL_ID/)
   assert.doesNotMatch(client, /schedule-created/)

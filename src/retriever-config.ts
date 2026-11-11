@@ -44,7 +44,7 @@ export const LOCAL_FETCH_DEFAULTS: Required<LocalFetchConfig> = {
   maxBytes: 524_288,
   maxContentChars: 100_000,
   maxRedirects: 5,
-  userAgent: '@v587d/capital-generation',
+  userAgent: 'dsh-workbench-automation',
 }
 
 /** Empty endpoint/model defer to `src/ocr/client.ts`; pollBudgetMs 0 defers to its DEFAULT_WAIT_BUDGET_MS. */

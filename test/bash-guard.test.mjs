@@ -145,9 +145,9 @@ test('registerBashGuard：注册在 Root context 的 agent/created 上（scoped 
   const tools = { guard: (guard) => { installs.push(guard); return () => {} } }
   const created = rootListeners[0].listener
   // Role presets compose a different id; matching only the root id installed no guard at all on real machines.
-  created({ agent: childAgent({ ctx: { preset: 'capital-data-junior', tools } }) })
+  created({ agent: childAgent({ ctx: { preset: 'automation-data-junior', tools } }) })
   assert.equal(installs.length, 1, '角色 preset 的子 Agent 也必须装上 guard')
-  created({ agent: rootAgent({ ctx: { preset: 'capital-generation', tools } }) })
+  created({ agent: rootAgent({ ctx: { preset: 'dsh-workbench-automation', tools } }) })
   assert.equal(installs.length, 2, '主 Agent 也保留 guard（升级走正常 ask 审批）')
   assert.equal(installs[0], bashGuardReason, '装的就是同一个判定函数（单一实现）')
 
@@ -162,12 +162,12 @@ test('registerBashGuard：agent scope 没有 tools.guard 时留诊断但不抛�
   const rootListeners = []
   const warnings = []
   const ctx = {
-    get: () => ({ composedPreset: () => 'capital-generation' }),
+    get: () => ({ composedPreset: () => 'dsh-workbench-automation' }),
     on: (event, listener) => { rootListeners.push({ event, listener }); return () => {} },
     logger: { warn: (message) => warnings.push(message) },
   }
   registerBashGuard(ctx)
-  assert.doesNotThrow(() => rootListeners[0].listener({ agent: childAgent({ ctx: { preset: 'capital-generation', tools: {} } }) }))
+  assert.doesNotThrow(() => rootListeners[0].listener({ agent: childAgent({ ctx: { preset: 'dsh-workbench-automation', tools: {} } }) }))
   assert.equal(warnings.length, 1)
   assert.match(warnings[0], /执行工具闸门未生效/)
 })
@@ -176,14 +176,14 @@ test('registerBashGuard：agent/disposed 释放该 agent 的 guard（不跨实�
   const rootListeners = []
   const disposed = []
   const ctx = {
-    get: () => ({ composedPreset: () => 'capital-generation' }),
+    get: () => ({ composedPreset: () => 'dsh-workbench-automation' }),
     on: (event, listener) => { rootListeners.push({ event, listener }); return () => {} },
     effect: (callback) => callback(),
     logger: { warn() {} },
   }
   registerBashGuard(ctx)
   const [created, agentDisposed] = rootListeners.map((entry) => entry.listener)
-  created({ agent: childAgent({ ctx: { preset: 'capital-generation', tools: { guard: () => () => disposed.push('guard') } } }) })
+  created({ agent: childAgent({ ctx: { preset: 'dsh-workbench-automation', tools: { guard: () => () => disposed.push('guard') } } }) })
   agentDisposed({ agent: childAgent() })
   assert.deepEqual(disposed, ['guard'])
   // Repeated dispose / unknown agent must not throw.

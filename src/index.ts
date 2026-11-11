@@ -2,7 +2,7 @@ import { Context } from '@deepseek-ai/cordis'
 // Type-only: loads the `systemPrompt` service augmentation, emits no runtime import.
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import z from '@deepseek-ai/schemastery'
-import { capitalSharedRuntime, type RuntimeContext } from './runtime.js'
+import { automationSharedRuntime, type RuntimeContext } from './runtime.js'
 import { createCollectorRuntime } from './collector-runtime.js'
 import { registerDataCollectorTools } from './data-collector/tools.js'
 import { registerTimeTool } from './time/tools.js'
@@ -13,7 +13,7 @@ import { registerChartTool } from './chart/tool.js'
 import { createChartEventPublisher } from './chart/events.js'
 import { chartEventContextOf } from './chart/event-context.js'
 import { SELECTED_SKILL_CATALOG, type SelectedSkillSelection, type SelectedSkillsMode } from './agents/selected-skills-provider.js'
-import { CAPITAL_CONFIG_ENTRY_ID, readCapitalEntry } from './capital-settings.js'
+import { AUTOMATION_CONFIG_ENTRY_ID, readAutomationEntry } from './automation-settings.js'
 import { registerChartSourceTool } from './chart/source-token.js'
 import { registerSourceTools, registerWebRetrieverTools } from './web-retriever/tools.js'
 import {
@@ -37,8 +37,8 @@ export {
 } from './retriever-config.js'
 export { resolveUserCustomizationSection } from './user-customization.js'
 
-export const name = 'capital-generation'
-export { CAPITAL_CONFIG_ENTRY_ID }
+export const name = 'dsh-workbench-automation'
+export { AUTOMATION_CONFIG_ENTRY_ID }
 
 const WindDocsSchema = z.object({
   endpoint: z.string().default('').description('可选：覆盖 Wind 文档检索端点'),
@@ -141,7 +141,7 @@ export type CapitalSettingsSource = 'settings-describe' | 'config-editor' | 'pre
 /** Fallback order: settings.describe → configEditor.entries → boot preset, so unreadable never
  * reads as "all toggles off". Resolve services per call: boot fibers apply in parallel. */
 export function readCapitalSettings(ctx: Context, bootConfig: Config): { config: Config; source: CapitalSettingsSource } {
-  const entry = readCapitalEntry(ctx)
+  const entry = readAutomationEntry(ctx)
   if (entry.value !== undefined) {
     // Re-parse through this plugin's schema: fills defaults and surfaces schema drift.
     return { config: Config(entry.value as Config), source: entry.source ?? 'settings-describe' }
@@ -160,7 +160,7 @@ export function apply(ctx: Context, config: Config) {
     if (source !== lastSettingsSource) {
       // Warn only on state flips; a silent fallback looks exactly like "all toggles off".
       if (source === 'preset' && (ctx.get('settings') !== undefined || ctx.get('configEditor') !== undefined)) {
-        ctx.logger?.warn?.('capital-generation: capital-config 设置暂不可读，回落 preset 配置（精选 Skills 按默认全关；恢复后下一轮自动刷新）')
+        ctx.logger?.warn?.('automation-workbench: automation-config 设置暂不可读，回落 preset 配置（精选 Skills 按默认全关；恢复后下一轮自动刷新）')
       }
       lastSettingsSource = source
     }
@@ -182,16 +182,16 @@ export function apply(ctx: Context, config: Config) {
   registerWatchlistTool(ctx)
   // Root policy denies render_chart; delivery must use first-party `deliverables/presented` (custom types break cold load).
   // chart_source_ref is a short-lived capability token shared across presets via ctx.root.
-  const { sourceTokens: chartSourceTokens, artifacts: chartArtifacts } = capitalSharedRuntime(ctx as unknown as RuntimeContext)
+  const { sourceTokens: chartSourceTokens, artifacts: chartArtifacts } = automationSharedRuntime(ctx as unknown as RuntimeContext)
   registerChartSourceTool(ctx, { store, tokens: chartSourceTokens })
-  // Host-plane capitalCharts resolves lazily per render; absent means the tool returns the chart file path.
+  // Host-plane automationCharts resolves lazily per render; absent means the tool returns the chart file path.
   // Never assemble with `{ ...ctx }`: cordis get/on/effect live on the prototype, so spreading silently drops publishing.
   const chartEventContext = chartEventContextOf(ctx)
   registerChartTool(ctx, {
     store,
     sourceTokens: chartSourceTokens,
     artifacts: chartArtifacts,
-    charts: () => ctx.get('capitalCharts') as { publish(input: { chartId: string; filePath: string }): string | null } | undefined,
+    charts: () => ctx.get('automationCharts') as { publish(input: { chartId: string; filePath: string }): string | null } | undefined,
     chartEvents: () => createChartEventPublisher(chartEventContext),
   })
   // Convergence and shell/fs guards live in host-plane/role entries; retriever client construction is shared.
@@ -213,5 +213,5 @@ export function apply(ctx: Context, config: Config) {
     const section = resolveUserCustomizationSection(effectiveConfig.customPersona)
     if (!section) return () => {}
     return ctx.systemPrompt.section(section)
-  }, 'capital-generation.user-customization()')
+  }, 'automation-workbench.user-customization()')
 }

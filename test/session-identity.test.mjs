@@ -83,7 +83,7 @@ function chartSourceTools(ctxOptions) {
 
 test('判据集合：主 Agent 不在任何授权集合里（§8.4 结构件）', () => {
   for (const set of [DATA_COLLECTION_PRESET_IDS, DATASET_READING_PRESET_IDS, CHART_SOURCE_PRESET_IDS]) {
-    assert.ok(!set.includes('capital-generation'), 'capital-generation 一旦进集合，"主 Agent 禁止直连"就退了')
+    assert.ok(!set.includes('dsh-workbench-automation'), 'dsh-workbench-automation 一旦进集合，"主 Agent 禁止直连"就退了')
   }
 })
 
@@ -91,34 +91,34 @@ test('身份确证 + 角色人设：没有 parentSession 的独立模式放行',
   resetSessionIdentityDecisions()
   const { ctx, saves } = collectorTools()
   const request = toolNamed(ctx.definitions, 'request_data')
-  const result = await request.execute({ capability: 'quote', params: {}, task_id: 'task_1' }, exec(STANDALONE_ROLE, 'capital-data-collector'))
+  const result = await request.execute({ capability: 'quote', params: {}, task_id: 'task_1' }, exec(STANDALONE_ROLE, 'automation-data-collector'))
   assert.equal(result.dataset_id, 'ds_1', '闸门放行后应真的落一份 Dataset')
   assert.equal(saves.length, 1)
   const [record] = sessionIdentityDecisions()
-  assert.deepEqual(record, { tool: 'request_data', via: 'preset', presetId: 'capital-data-collector', allowed: true })
+  assert.deepEqual(record, { tool: 'request_data', via: 'preset', presetId: 'automation-data-collector', allowed: true })
 })
 
 test('身份确证 + 主 Agent：根会话仍被拒，且文案点名人设与须委派', async () => {
   resetSessionIdentityDecisions()
   const { ctx, saves } = collectorTools()
   const list = toolNamed(ctx.definitions, 'list_capabilities')
-  await assert.rejects(() => list.execute({}, exec(ROOT_CAPITAL, 'capital-generation')), (error) => {
+  await assert.rejects(() => list.execute({}, exec(ROOT_CAPITAL, 'dsh-workbench-automation')), (error) => {
     assert.equal(error.code, 'dataset_session_mismatch')
-    assert.match(error.message, /capital-generation/)
+    assert.match(error.message, /dsh-workbench-automation/)
     assert.match(error.message, /主 Agent 请委派/)
     return true
   })
   assert.equal(saves.length, 0)
-  assert.deepEqual(sessionIdentityDecisions(), [{ tool: 'list_capabilities', via: 'preset', presetId: 'capital-generation', allowed: false }])
+  assert.deepEqual(sessionIdentityDecisions(), [{ tool: 'list_capabilities', via: 'preset', presetId: 'dsh-workbench-automation', allowed: false }])
 })
 
 test('⛔ 身份确证优先于拓扑：被委派的资讯子 Agent 也拿不到取数工具', async () => {
   // Bought by the preset predicate: the old topology rule let this delegated child through.
   const { ctx, saves } = collectorTools()
   const request = toolNamed(ctx.definitions, 'request_data')
-  await assert.rejects(() => request.execute({ capability: 'quote', params: {}, task_id: 'task_1' }, exec(DELEGATED_CHILD, 'capital-web-retriever')), (error) => {
+  await assert.rejects(() => request.execute({ capability: 'quote', params: {}, task_id: 'task_1' }, exec(DELEGATED_CHILD, 'automation-web-retriever')), (error) => {
     assert.equal(error.code, 'dataset_session_mismatch')
-    assert.match(error.message, /capital-web-retriever/)
+    assert.match(error.message, /automation-web-retriever/)
     return true
   })
   assert.equal(saves.length, 0, '取数一份都不该发生')
@@ -150,7 +150,7 @@ test('composedPreset 抛错按"确证不了"处理：不因此放行根会话', 
   const hub = new DataCollectorHub({ store })
   registerDataCollectorTools(ctx, hub, { probeApiKey: async () => ({ present: true, source: null, error: null }) })
   const list = toolNamed(ctx.definitions, 'list_capabilities')
-  await assert.rejects(() => list.execute({}, exec(ROOT_CAPITAL, 'capital-data-collector')), /delegated data agents/)
+  await assert.rejects(() => list.execute({}, exec(ROOT_CAPITAL, 'automation-data-collector')), /delegated data agents/)
   assert.equal(saves.length, 0)
 })
 
@@ -165,7 +165,7 @@ test('Dataset 读面：独立开启的数据人设能读，主 Agent 不能', as
   assert.deepEqual(sessionIdentityDecisions().map(({ tool, presetId, allowed }) => ({ tool, presetId, allowed })),
     DATASET_READING_PRESET_IDS.map((presetId) => ({ tool: 'inspect_dataset', presetId, allowed: true })),
     '挂了 dataset-read 的 preset 必须在授权集合里，否则工具可见但一调用就拒绝')
-  await assert.rejects(() => inspect.execute({ dataset_id: 'ds_1' }, exec(ROOT_CAPITAL, 'capital-generation')), (error) => error.code === 'dataset_session_mismatch')
+  await assert.rejects(() => inspect.execute({ dataset_id: 'ds_1' }, exec(ROOT_CAPITAL, 'dsh-workbench-automation')), (error) => error.code === 'dataset_session_mismatch')
   assert.equal(reads.length, DATASET_READING_PRESET_IDS.length, '主 Agent 那次不该落到 store')
 })
 
@@ -173,12 +173,12 @@ test('出图签发面：身份确证即签发，报错形状留在 chart 域', a
   resetSessionIdentityDecisions()
   const { ctx, issued } = chartSourceTools()
   const prepare = toolNamed(ctx.definitions, 'prepare_chart_source')
-  const result = await prepare.execute({ dataset_id: 'ds_1', task_id: 'task_1' }, exec(STANDALONE_ROLE, 'capital-data-junior'))
+  const result = await prepare.execute({ dataset_id: 'ds_1', task_id: 'task_1' }, exec(STANDALONE_ROLE, 'automation-data-junior'))
   assert.equal(result.chart_source_ref, 'cs_test')
   assert.equal(issued.length, 1)
   // The decision shows up uniformly for all three entry points (via=preset), not only on the data side.
-  assert.deepEqual(sessionIdentityDecisions(), [{ tool: 'prepare_chart_source', via: 'preset', presetId: 'capital-data-junior', allowed: true }])
-  await assert.rejects(() => prepare.execute({ dataset_id: 'ds_1', task_id: 'task_1' }, exec(ROOT_CAPITAL, 'capital-generation')), (error) => {
+  assert.deepEqual(sessionIdentityDecisions(), [{ tool: 'prepare_chart_source', via: 'preset', presetId: 'automation-data-junior', allowed: true }])
+  await assert.rejects(() => prepare.execute({ dataset_id: 'ds_1', task_id: 'task_1' }, exec(ROOT_CAPITAL, 'dsh-workbench-automation')), (error) => {
     assert.equal(error.code, 'chart_source_scope_mismatch', 'code 不许被共用判定冲掉')
     return true
   })
@@ -188,9 +188,9 @@ test('dc_status 的 session_identity：形状无损且满足自己声明的 outp
   resetSessionIdentityDecisions()
   const { ctx } = collectorTools()
   const list = toolNamed(ctx.definitions, 'list_capabilities')
-  await assert.rejects(() => list.execute({}, exec(ROOT_CAPITAL, 'capital-generation')))
+  await assert.rejects(() => list.execute({}, exec(ROOT_CAPITAL, 'dsh-workbench-automation')))
   const status = toolNamed(ctx.definitions, 'dc_status')
-  const value = await status.execute({}, exec(DELEGATED_CHILD, 'capital-data-collector'))
+  const value = await status.execute({}, exec(DELEGATED_CHILD, 'automation-data-collector'))
   assert.ok(Array.isArray(value.session_identity), 'session_identity 必须是数组')
   for (const record of value.session_identity) {
     assert.equal(typeof record.tool, 'string')

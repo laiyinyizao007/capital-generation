@@ -7,7 +7,7 @@ import type { Context } from '@deepseek-ai/cordis'
 
 import { provideDataCollectorHub } from './data-collector/hub.js'
 import { registerDataCollectorTools, type DataCollectorDiagnostics } from './data-collector/tools.js'
-import { capitalDatasetStore, type RuntimeContext } from './runtime.js'
+import { automationDatasetStore, type RuntimeContext } from './runtime.js'
 import { rootPolicyProbes } from './agents/root-tool-policy.js'
 import { rolePolicyProbes } from './agents/role-tool-policy.js'
 import { createTencentSources } from './sources/tencent-http.js'
@@ -25,7 +25,7 @@ export interface CollectorConfig {
 }
 
 export interface CollectorRuntime {
-  store: ReturnType<typeof capitalDatasetStore>
+  store: ReturnType<typeof automationDatasetStore>
   hub: ReturnType<typeof provideDataCollectorHub>
   /** Injected into `dc_status` by the caller that owns the `tools/collect` row. */
   diagnostics: DataCollectorDiagnostics
@@ -74,42 +74,42 @@ function registerSources(ctx: Context, hub: CollectorRuntime['hub'], config: Col
   ctx.effect(() => {
     const sources = createTencentSources()
     const disposers = sources.map((dataSource) => hub.registerSource(dataSource))
-    ctx.logger.info(`capital-generation: 已注册 ${disposers.length} 个腾讯数据源（tencent_*）`)
+    ctx.logger.info(`automation-workbench: 已注册 ${disposers.length} 个腾讯数据源（tencent_*）`)
     return () => { for (const dispose of disposers) dispose() }
-  }, 'capital-generation.tencent-sources()')
+  }, 'automation-workbench.tencent-sources()')
 
   ctx.effect(() => {
     const sources = createEastmoneySources()
     const disposers = sources.map((dataSource) => hub.registerSource(dataSource))
-    ctx.logger.info(`capital-generation: 已注册 ${disposers.length} 个东方财富数据源（eastmoney_*）`)
+    ctx.logger.info(`automation-workbench: 已注册 ${disposers.length} 个东方财富数据源（eastmoney_*）`)
     return () => { for (const dispose of disposers) dispose() }
-  }, 'capital-generation.eastmoney-sources()')
+  }, 'automation-workbench.eastmoney-sources()')
 
   ctx.effect(() => {
     const sources = createFuyaoRestSources(() => resolveFuyaoApiKey(ctx, config.fuyaoCredentialRef || 'FUYAO_API_KEY'))
     const disposers = sources.map((dataSource) => hub.registerSource(dataSource))
-    ctx.logger.info(`capital-generation: 已注册 ${disposers.length} 个同花顺数据源（key 每次调用现取）`)
+    ctx.logger.info(`automation-workbench: 已注册 ${disposers.length} 个同花顺数据源（key 每次调用现取）`)
     return () => { for (const dispose of disposers) dispose() }
-  }, 'capital-generation.fuyao-sources()')
+  }, 'automation-workbench.fuyao-sources()')
 
   ctx.effect(() => {
     const sources = createFtshareSources(() => resolveFtshareApiKey(ctx, config.ftshareCredentialRef || 'FTSHARE_API_KEY'))
     const disposers = sources.map((dataSource) => hub.registerSource(dataSource))
-    ctx.logger.info(`capital-generation: 已注册 ${disposers.length} 个 FTShare 数据源（ftshare_*，key 每次调用现取）`)
+    ctx.logger.info(`automation-workbench: 已注册 ${disposers.length} 个 FTShare 数据源（ftshare_*，key 每次调用现取）`)
     return () => { for (const dispose of disposers) dispose() }
-  }, 'capital-generation.ftshare-sources()')
+  }, 'automation-workbench.ftshare-sources()')
 
   const wind = createWindCredentialResolver(ctx, config.windCredentialRef)
   ctx.effect(() => {
     const sources = createWindSources(wind.resolve)
     const disposers = sources.map((dataSource) => hub.registerSource(dataSource))
-    ctx.logger.info(`capital-generation: 已注册 ${disposers.length} 个 Wind 数据源（wind_*，与 wind_docs 共用 ${wind.credentialRef}）`)
+    ctx.logger.info(`automation-workbench: 已注册 ${disposers.length} 个 Wind 数据源（wind_*，与 wind_docs 共用 ${wind.credentialRef}）`)
     return () => { for (const dispose of disposers) dispose() }
-  }, 'capital-generation.wind-sources()')
+  }, 'automation-workbench.wind-sources()')
 }
 
 export function createCollectorRuntime(ctx: Context, config: CollectorConfig = {}): CollectorRuntime {
-  const store = capitalDatasetStore(ctx as unknown as RuntimeContext)
+  const store = automationDatasetStore(ctx as unknown as RuntimeContext)
   // The collector preset isolates these services; keep them in the realm to avoid
   // process-wide name collisions across presets.
   ctx.provide('datasetStore', store)

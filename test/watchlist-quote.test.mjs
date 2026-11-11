@@ -1,7 +1,7 @@
 /**
  * Quote routing, concurrency bounds and "single implementation" probes: the host half must share one
  * `fuyao-core` instance (a second copy breaks `instanceof` silently and degrades every error to the
- * fallback code), and the credential ref must come from the `capital-config` card, not a hard-coded key.
+ * fallback code), and the credential ref must come from the `automation-config` card, not a hard-coded key.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -180,13 +180,13 @@ test('没配 A 股密钥：那一路 credential_missing 且一笔都不发，港
   }
 })
 
-test('credential ref 从 capital-config 卡片读，不是硬编码 FUYAO_API_KEY', async () => {
-  const card = fakeCtx({ settings: { describe: () => [{ ns: 'capital-config', value: { fuyaoCredentialRef: 'CUSTOM_FUYAO' } }] } })
+test('credential ref 从 automation-config 卡片读，不是硬编码 FUYAO_API_KEY', async () => {
+  const card = fakeCtx({ settings: { describe: () => [{ ns: 'automation-config', value: { fuyaoCredentialRef: 'CUSTOM_FUYAO' } }] } })
   assert.equal(readCredentialRef(card), 'CUSTOM_FUYAO')
 
   const bare = fakeCtx({})
   assert.equal(readCredentialRef(bare), 'FUYAO_API_KEY', '没有卡片/条目的载体回退默认名')
-  assert.equal(readCredentialRef(fakeCtx({ settings: { describe: () => [{ ns: 'capital-config', value: {} }] } })), 'FUYAO_API_KEY')
+  assert.equal(readCredentialRef(fakeCtx({ settings: { describe: () => [{ ns: 'automation-config', value: {} }] } })), 'FUYAO_API_KEY')
 
   const seen = []
   const stub = stubFuyao()

@@ -4,7 +4,7 @@ import { createChartStore, createRouteHandler, apply, ROUTE_PATH } from '../char
 import { fakeCtx } from './cordis-fake.mjs'
 
 /**
- * Contract for the host half of `@v587d/capital-charts` (plain JS nested package, no types).
+ * Contract for the host half of `dsh-workbench-automation-charts` (plain JS nested package, no types).
  * The route serves only registered files (no path components in the URL), and a profile without
  * webServer must still activate and wait rather than become a dead row.
  */
@@ -152,14 +152,14 @@ test('路由：authorize 返回 undefined（已认证）时照常 200', async ()
 
 
 
-test('apply()：提供 capitalCharts 服务并注册 prefix 路由', () => {
+test('apply()：提供 automationCharts 服务并注册 prefix 路由', () => {
   const routes = []
   const webServer = { register: (route) => { routes.push(route); return () => {} } }
   const harness = fakeCtx({ webServer })
   apply(harness.ctx)
 
-  const service = harness.provided.get('capitalCharts')
-  assert.ok(service, '必须提供 capitalCharts 服务给 preset 半边登记序列')
+  const service = harness.provided.get('automationCharts')
+  assert.ok(service, '必须提供 automationCharts 服务给 preset 半边登记序列')
   assert.equal(typeof service.publish, 'function')
 
   assert.equal(routes.length, 1, '只应注册图表序列路由（报告旁路已删除）')
@@ -168,14 +168,14 @@ test('apply()：提供 capitalCharts 服务并注册 prefix 路由', () => {
   assert.equal(typeof routes[0].handler, 'function')
   assert.equal(harness.injected.length, 1, '取 webServer 只能经 inject——探测后直接拿属性会在桌面端炸')
   assert.deepEqual(harness.injected[0].deps, ['webServer'])
-  assert.equal(service.publishReport, undefined, 'capitalCharts 不应再有 publishReport')
+  assert.equal(service.publishReport, undefined, 'automationCharts 不应再有 publishReport')
 })
 
 test('apply()：没有 webServer 的 profile 仍激活并等待（不是死行）', () => {
   const harness = fakeCtx({})
   apply(harness.ctx)
 
-  const service = harness.provided.get('capitalCharts')
+  const service = harness.provided.get('automationCharts')
   assert.ok(service, '无 Web 载体时服务仍要提供')
   assert.equal(harness.injected.length, 1, '应通过 ctx.inject 等 webServer 出现')
   assert.deepEqual(harness.injected[0].deps, ['webServer'])
@@ -203,7 +203,7 @@ test('apply()：路由接上 connection 的认证围栏（无 cookie → 401，�
   apply(harness.ctx)
 
   const handler = routes[0].handler
-  const service = harness.provided.get('capitalCharts')
+  const service = harness.provided.get('automationCharts')
   service.publish({ chartId: CHART_ID, filePath: '/tmp/x.json' })
 
   const rejected = await call(handler, `${ROUTE_PATH}/${CHART_ID}.json`)
@@ -223,7 +223,7 @@ test('apply()：没有 connection 的组合退化成旧行为（无认证面时�
   const webServer = { register: (route) => { routes.push(route); return () => {} } }
   const harness = fakeCtx({ webServer })
   apply(harness.ctx)
-  harness.provided.get('capitalCharts').publish({ chartId: CHART_ID, filePath: '/tmp/x.json' })
+  harness.provided.get('automationCharts').publish({ chartId: CHART_ID, filePath: '/tmp/x.json' })
 
   const res = await call(routes[0].handler, `${ROUTE_PATH}/${CHART_ID}.json`)
   // Fake store readFile throws, so the data side is a 404; the point is it is not a 401.

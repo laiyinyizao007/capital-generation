@@ -27,7 +27,7 @@ import {
 export { ISSUE_VERDICTS }
 
 /** Same value as `LOCAL_FETCH_DEFAULTS.userAgent` in src/index.ts: probes take the user's path. */
-const USER_AGENT = '@v587d/capital-generation'
+const USER_AGENT = 'dsh-workbench-automation'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 

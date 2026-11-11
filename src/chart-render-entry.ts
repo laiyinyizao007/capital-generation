@@ -7,18 +7,18 @@
 import type { Context } from '@deepseek-ai/cordis'
 
 import { registerChartTool, type ChartPublisher } from './chart/tool.js'
-import { capitalDatasetStore, type RuntimeContext } from './runtime.js'
-import { capitalSharedRuntimeOf } from './chart-source-entry.js'
+import { automationDatasetStore, type RuntimeContext } from './runtime.js'
+import { automationSharedRuntimeOf } from './chart-source-entry.js'
 
-export const name = 'capital-chart-render-tools'
+export const name = 'automation-chart-render-tools'
 export const inject = ['tools']
 
 export function apply(ctx: Context): void {
-  const shared = capitalSharedRuntimeOf(ctx)
+  const shared = automationSharedRuntimeOf(ctx)
   registerChartTool(ctx, {
-    store: capitalDatasetStore(ctx as unknown as RuntimeContext),
+    store: automationDatasetStore(ctx as unknown as RuntimeContext),
     sourceTokens: shared.sourceTokens,
     artifacts: shared.artifacts,
-    charts: () => ctx.get('capitalCharts') as ChartPublisher | undefined,
+    charts: () => ctx.get('automationCharts') as ChartPublisher | undefined,
   })
 }

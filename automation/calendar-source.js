@@ -22,7 +22,7 @@ const MAX_BODY_CHARS = 256 * 1024
 const OFFSET_SHANGHAI_MS = 8 * 60 * 60_000
 const MONTH_PATTERN = /^\d{4}-(?:0[1-9]|1[0-2])$/
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-const USER_AGENT = '@v587d/capital-generation'
+const USER_AGENT = 'dsh-workbench-automation'
 
 function shanghaiDate(instant) {
   return new Date(instant + OFFSET_SHANGHAI_MS).toISOString().slice(0, 10)
@@ -217,7 +217,7 @@ export function createCalendarSource(options = {}) {
       try {
         text = await readFile(cacheFile, 'utf8')
       } catch (error) {
-        if (error?.code !== 'ENOENT') logger?.warn?.(`capital-automation: 交易日历缓存读取失败：${sanitizeMessage(String(error))}`)
+        if (error?.code !== 'ENOENT') logger?.warn?.(`automation-workbench: 交易日历缓存读取失败：${sanitizeMessage(String(error))}`)
         return
       }
       let data
@@ -260,7 +260,7 @@ export function createCalendarSource(options = {}) {
       await writeFile(temporary, JSON.stringify({ version: CACHE_VERSION, savedAt: new Date(now()).toISOString(), months }), 'utf8')
       await rename(temporary, cacheFile)
     } catch (error) {
-      logger?.warn?.(`capital-automation: 交易日历缓存写入失败：${sanitizeMessage(String(error))}`)
+      logger?.warn?.(`automation-workbench: 交易日历缓存写入失败：${sanitizeMessage(String(error))}`)
     }
   }
 
@@ -316,7 +316,7 @@ export function createCalendarSource(options = {}) {
       if (changed) {
         await writeCache()
         const snapshot = status()
-        logger?.info?.(`capital-automation: 交易日历已刷新（${snapshot.source}，覆盖至 ${snapshot.through ?? '未知'}）`)
+        logger?.info?.(`automation-workbench: 交易日历已刷新（${snapshot.source}，覆盖至 ${snapshot.through ?? '未知'}）`)
       }
       return status()
     })().finally(() => { refreshing = undefined })

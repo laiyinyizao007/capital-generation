@@ -8,7 +8,7 @@ import { CANCEL_GRACE_MS, MAX_ERRORS_PER_RUN, QUIET_SETTLE_MS, SETTLED_RUN_STATU
 import { sanitizeMessage } from './redact.js'
 import { localPartsAt } from './time.js'
 
-const PRESET_ID = 'capital-generation'
+const PRESET_ID = 'dsh-workbench-automation'
 const POLICY_ID = 'automation-v1'
 const MAX_SESSION_LINEAGE = 32
 const MAX_COUNTED_EVENT_KEYS = 12_000
@@ -83,7 +83,7 @@ export function buildRunPrompt({ task, run, trigger, profileName, now }) {
   const local = formatLocal(now)
   const deadline = formatLocal(Number(now) + task.limits.runTimeoutMinutes * 60_000)
   const reason = trigger === 'manual' ? '手动运行' : '定时触发'
-  return `【CapGen 投研自动化】
+  return `【自动化工作台】
 运行: ${run.id}
 任务: ${promptData(task.title)}（${task.id}）
 触发: ${reason}
@@ -264,7 +264,7 @@ export function createRunRunner(options) {
     }
     void store.updateRun(entry.run.id, patch)
       .then((updated) => { if (updated !== undefined) entry.run = updated })
-      .catch((error) => logger?.warn?.(`capital-automation: turn checkpoint failed: ${String(error)}`))
+      .catch((error) => logger?.warn?.(`automation-workbench: turn checkpoint failed: ${String(error)}`))
   }
 
   function settledStatusOf(entry) {
@@ -321,13 +321,13 @@ export function createRunRunner(options) {
     try {
       await notify(entry, finalRun)
     } catch (error) {
-      logger?.warn?.(`capital-automation: run notification failed: ${String(error)}`)
+      logger?.warn?.(`automation-workbench: run notification failed: ${String(error)}`)
     }
     if (finalRun.status === 'succeeded' && typeof onRunSucceeded === 'function') {
       try {
         await onRunSucceeded({ run: finalRun, task: entry.task })
       } catch (error) {
-        logger?.warn?.(`capital-automation: brief enqueue failed: ${String(error)}`)
+        logger?.warn?.(`automation-workbench: brief enqueue failed: ${String(error)}`)
       }
     }
   }
@@ -607,7 +607,7 @@ export function createRunRunner(options) {
         try { dispose() } catch { /* best effort */ }
       }
       listenersInstalled = false
-      logger?.warn?.(`capital-automation: 运行监听器安装失败：${String(error)}`)
+      logger?.warn?.(`automation-workbench: 运行监听器安装失败：${String(error)}`)
     }
   }
 

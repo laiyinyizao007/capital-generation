@@ -224,5 +224,5 @@ export function registerPresentChartsTool(ctx: Context, input: PresentChartsInpu
       render: (_args: unknown, value: unknown) => [{ type: 'text' as const, text: JSON.stringify(value) }],
     },
   }
-  ctx.effect(() => tools.register(definition), 'capital-generation.tool(present_charts)')
+  ctx.effect(() => tools.register(definition), 'automation-workbench.tool(present_charts)')
 }

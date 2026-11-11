@@ -4,7 +4,7 @@
 不是模型可见内容：`skill-filesystem` 只扫 `skills/`，本文件既不会进 skill 目录，也不会被注入上下文。
 组合文件里只留"就地必需"的一行注（realm、`!!js`、disabled 行），其余设计理由都在这里。
 
-- 本目录由 `@v587d/capital-generation` 随包分发，`agent.patch.yml` 走 `package.json` 的
+- 本目录由 `dsh-workbench-automation` 随包分发，`agent.patch.yml` 走 `package.json` 的
   `dsh.bundle.patch`（**数组**：主 patch + 这一份 yml，六颗声明行都在里面）以 `trust=system`
   挂载；**不要**手抄进 `~/.dsh/.agent-presets`。
 - 长协议在 `skills/`（同目录），由本 preset 自己的 `skill-filesystem` 行发现；`capital-visualization-protocol` 同时供 data_junior 的 gate 和 visualization_specialist 按需加载。
@@ -69,7 +69,7 @@
 
 ## 4. realm 与服务归属
 
-- `capital-generation-scope`（`cordis:group` + `isolate: { dataCollectorHub: true,
+- `automation-workbench-scope`（`cordis:group` + `isolate: { dataCollectorHub: true,
   datasetStore: true }`）：插件 `apply` 里 `ctx.provide` 的两个服务是进程级名字，
   必须按 session 隔离，否则第二个 Capital 会话注册时冲突。
 - `compaction` 组（`isolate: { compaction: true, toolResultPruner: true }`）：
@@ -77,7 +77,7 @@
   `tokenMeter` 留在宿主平面。
 - skills 注册表在 **host 平面并按 scope 分层**：`skill-filesystem` / `tool-skill` 只注册进
   本 preset 那一层，**不需要** realm。
-- **图表前端组件（`capital-charts` 行）刻意在 host 平面、且不在任何 realm 里**：
+- **图表前端组件（`automation-charts` 行）刻意在 host 平面、且不在任何 realm 里**：
   客户端 bundle 必须在页面启动时就存在（boot graph 在 index.html 渲染时确定），
   所以它不能是本 preset 的行。反过来，本插件的 `apply` 通过 `ctx.get('capitalCharts')`
   消费它——`isolate` 只重映射**列出**的服务名（`cordis-plugin-loader/src/config/isolate.ts`：
@@ -102,7 +102,7 @@
 - **工具面 = preset 挂的行**（D0，2026-10-19）：`toolFilter` 已从委派行删除，上游报错原文指明的
   替代是「persona 与工具插件改住 Agent Preset，委派行只用 `agentPreset` 选它」——这一条我们做到底：
   本仓当前由 preset 族行暴露的 29 颗模型工具，按族拆成
-  `@v587d/capital-generation/tools/<family>` 的 subpath 入口行
+  `dsh-workbench-automation/tools/<family>` 的 subpath 入口行
   （`package.json` 的 `exports`），每颗 preset 只挂自己那几族，**不再有运行期名字级 allow 名单**。
   行契约（那一行注册哪些名字）只有一份，住 `test/family-rows.mjs`：`test/family-entries.test.mjs`
   拿它实测每个入口注册了什么，`test/persona.test.mjs` 拿它核对 YAML 的组合结果。
@@ -218,5 +218,5 @@
    （`test/family-rows.mjs` 的行契约 + `test/persona.test.mjs` 的组合表；只有同行焊死的兄弟才写
    `src/agents/role-tool-policy.ts` 那份逐名 deny）、`skills/<name>/SKILL.md`、主 persona 的路由与复用规则、
    `docs/dev/data-roles.md` §1.1 的角色边界、测试断言。
-3. `npm test` 全绿 + `agentPresets.resolve('capital-generation')` 结果里没有 `broken`（挂载成功），
+3. `npm test` 全绿 + `agentPresets.resolve('dsh-workbench-automation')` 结果里没有 `broken`（挂载成功），
    再开一个 Capital 会话确认工具表、首轮预检，以及子 Agent 是否真的按第一条 duty 先加载 skill。

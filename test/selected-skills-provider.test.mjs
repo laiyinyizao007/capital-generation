@@ -62,7 +62,7 @@ function makeHarness() {
     effect(callback) { rootCleanup = callback() },
     logger: { warn(message) { warnings.push(message) } },
   }
-  function makeAgent({ preset = 'capital-generation', parentSession, sessionId = 'session', lateSnapshot = false, injectFails = 0 } = {}) {
+  function makeAgent({ preset = 'dsh-workbench-automation', parentSession, sessionId = 'session', lateSnapshot = false, injectFails = 0 } = {}) {
     const agent = { session: { id: sessionId, header: { parentSession } }, ctx: undefined }
     const preStepListeners = []
     const eventListeners = new Map()
@@ -252,19 +252,19 @@ test('selected skill provider: 数据侧与检索侧各自拿到自己的方法�
   const selection = { buffettFramework: true, financialHealth: true, factCheck: true, tenKDigest: true }
   registerSelectedSkills(harness.ctx, 'data_junior', selection, harness.createFilesystemProvider)
   const created = harness.listeners.get('agent/created')
-  const junior = harness.makeAgent({ preset: 'capital-data-junior', parentSession: 'root' })
+  const junior = harness.makeAgent({ preset: 'automation-data-junior', parentSession: 'root' })
   await created({ agent: junior.agent })
   assert.deepEqual((await harness.provider.list({})).map(({ name }) => name), ['financial-health'])
 
   const retrieverHarness = makeHarness()
   registerSelectedSkills(retrieverHarness.ctx, 'web_retriever', selection, retrieverHarness.createFilesystemProvider)
-  const retriever = retrieverHarness.makeAgent({ preset: 'capital-web-retriever', parentSession: 'root' })
+  const retriever = retrieverHarness.makeAgent({ preset: 'automation-web-retriever', parentSession: 'root' })
   await retrieverHarness.listeners.get('agent/created')({ agent: retriever.agent })
   assert.deepEqual((await retrieverHarness.provider.list({})).map(({ name }) => name), ['fact-check', '10k-digest'])
 
   const analystHarness = makeHarness()
   registerSelectedSkills(analystHarness.ctx, 'data_analyst', selection, analystHarness.createFilesystemProvider)
-  const analyst = analystHarness.makeAgent({ preset: 'capital-data-analyst', parentSession: 'root' })
+  const analyst = analystHarness.makeAgent({ preset: 'automation-data-analyst', parentSession: 'root' })
   await analystHarness.listeners.get('agent/created')({ agent: analyst.agent })
   assert.deepEqual((await analystHarness.provider.list({})).map(({ name }) => name), ['financial-health'],
     'data_analyst 是保留角色，启用前与 data_junior 共用方法集')
@@ -272,9 +272,9 @@ test('selected skill provider: 数据侧与检索侧各自拿到自己的方法�
 
 test('selected skill provider: auto 模式按角色开放全部方法，勾选不参与过滤', async () => {
   const cases = [
-    { role: 'main', preset: 'capital-generation', count: 39, included: 'buffett-investment-framework', excluded: 'china-dcf' },
-    { role: 'data_junior', preset: 'capital-data-junior', count: 40, included: 'china-dcf', excluded: 'buffett-investment-framework' },
-    { role: 'web_retriever', preset: 'capital-web-retriever', count: 8, included: 'fact-check', excluded: 'china-dcf' },
+    { role: 'main', preset: 'dsh-workbench-automation', count: 39, included: 'buffett-investment-framework', excluded: 'china-dcf' },
+    { role: 'data_junior', preset: 'automation-data-junior', count: 40, included: 'china-dcf', excluded: 'buffett-investment-framework' },
+    { role: 'web_retriever', preset: 'automation-web-retriever', count: 8, included: 'fact-check', excluded: 'china-dcf' },
   ]
   for (const item of cases) {
     const harness = makeHarness()
@@ -327,13 +327,13 @@ test('selected skill provider: 预设不匹配时一颗都不注册', async () =
   const harness = makeHarness()
   registerSelectedSkills(harness.ctx, 'data_junior', { financialHealth: true }, harness.createFilesystemProvider)
   const created = harness.listeners.get('agent/created')
-  const mainAgent = harness.makeAgent({ preset: 'capital-generation' })
+  const mainAgent = harness.makeAgent({ preset: 'dsh-workbench-automation' })
   await created({ agent: mainAgent.agent })
   assert.equal(harness.providerRegistrationCount, 0, 'junior 的行不许给主 Agent 注册')
   const otherPreset = harness.makeAgent({ preset: 'standard' })
   await created({ agent: otherPreset.agent })
   assert.equal(harness.providerRegistrationCount, 0, '其他 preset 一律不碰')
-  const inheritedRoot = harness.makeAgent({ preset: 'capital-generation', parentSession: 'root' })
+  const inheritedRoot = harness.makeAgent({ preset: 'dsh-workbench-automation', parentSession: 'root' })
   await created({ agent: inheritedRoot.agent })
   assert.equal(harness.providerRegistrationCount, 0, 'main 方法只留根 Agent：继承 root preset 的 generic child 也不许注册')
 })
@@ -343,18 +343,18 @@ test('selected skill provider: 先建会话再切 preset（GUI 顺序）也必�
   registerSelectedSkills(harness.ctx, 'data_junior', { financialHealth: true }, harness.createFilesystemProvider)
   const selected = harness.listeners.get('agent-preset/selected')
   assert.equal(typeof selected, 'function', '必须挂 agent-preset/selected：先建后切是 GUI 的真实顺序')
-  const child = harness.makeAgent({ preset: 'capital-data-junior', parentSession: 'root' })
+  const child = harness.makeAgent({ preset: 'automation-data-junior', parentSession: 'root' })
   harness.agents.set('session-child', child.agent)
 
-  await selected('session-child', 'capital-generation')
+  await selected('session-child', 'dsh-workbench-automation')
   assert.equal(harness.providerRegistrationCount, 0, '别的 preset 的切换不许碰')
-  await selected('session-missing', 'capital-data-junior')
+  await selected('session-missing', 'automation-data-junior')
   assert.equal(harness.providerRegistrationCount, 0, '活 Agent 表里没有的会话静默跳过')
-  await selected('session-child', 'capital-data-junior')
+  await selected('session-child', 'automation-data-junior')
   assert.equal(harness.providerRegistrationCount, 1, '切到该角色 preset 必须注册 provider')
   assert.deepEqual((await harness.provider.list({})).map(({ name }) => name), ['financial-health'])
 
-  await selected('session-child', 'capital-data-junior')
+  await selected('session-child', 'automation-data-junior')
   await harness.listeners.get('agent/created')({ agent: child.agent })
   assert.equal(harness.providerRegistrationCount, 1, '同一个 Agent 只许注册一次')
   harness.disposeRoot()
@@ -476,7 +476,7 @@ test('selected skill usage：原生 skill / PTC / 用户 /name 都记账，失�
 
     const juniorHarness = makeHarness()
     registerSelectedSkills(juniorHarness.ctx, 'data_junior', { financialHealth: true }, juniorHarness.createFilesystemProvider)
-    const junior = juniorHarness.makeAgent({ preset: 'capital-data-junior', parentSession: 'session-root', sessionId: 'session-junior' })
+    const junior = juniorHarness.makeAgent({ preset: 'automation-data-junior', parentSession: 'session-root', sessionId: 'session-junior' })
     await juniorHarness.listeners.get('agent/created')({ agent: junior.agent })
     junior.emitSession({ id: 'session-junior' }, {
       type: 'tool/ptc-dispatch',

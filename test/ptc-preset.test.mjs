@@ -9,10 +9,10 @@ import { ROOT_AGENT_DENIED_TOOLS } from '../lib/agents/root-tool-policy.js'
 import { CAPITAL_ROW_TOOLS } from './family-rows.mjs'
 
 const PRESENTATION = '@deepseek-ai/dsh-tool-executor-ptc'
-const JUNIOR = 'capital-data-junior'
+const JUNIOR = 'automation-data-junior'
 const SHELL_ROWS = /^@deepseek-ai\/dsh-tool-(bash|pwsh)$/
 
-const SKILL = (name) => fileURLToPath(new URL(`../preset/capital-generation/skills/${name}/SKILL.md`, import.meta.url))
+const SKILL = (name) => fileURLToPath(new URL(`../preset/dsh-workbench-automation/skills/${name}/SKILL.md`, import.meta.url))
 const readSkill = (name) => readFileSync(SKILL(name), 'utf8')
 const compact = (value) => value.replace(/\s+/g, '')
 const assertRule = (text, pattern, message) =>

@@ -1,12 +1,12 @@
 import { Context } from '@deepseek-ai/cordis';
 import z from '@deepseek-ai/schemastery';
 import { type SelectedSkillSelection, type SelectedSkillsMode } from './agents/selected-skills-provider.js';
-import { CAPITAL_CONFIG_ENTRY_ID } from './capital-settings.js';
+import { AUTOMATION_CONFIG_ENTRY_ID } from './automation-settings.js';
 import { type RetrieverConfig } from './retriever-config.js';
 export { LOCAL_FETCH_DEFAULTS, PADDLE_OCR_DEFAULTS, resolveLocalFetchConfig, type LocalFetchConfig, type PaddleOcrConfig, type RetrieverConfig, type WindDocsConfig, } from './retriever-config.js';
 export { resolveUserCustomizationSection } from './user-customization.js';
-export declare const name = "capital-generation";
-export { CAPITAL_CONFIG_ENTRY_ID };
+export declare const name = "dsh-workbench-automation";
+export { AUTOMATION_CONFIG_ENTRY_ID };
 export interface Config {
     customPersona?: string;
     selectedSkills?: SelectedSkillSelection;

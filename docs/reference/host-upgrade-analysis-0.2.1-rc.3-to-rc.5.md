@@ -37,7 +37,7 @@
 | `engines` | **未声明** | 预检逐个查 dsh peer |
 | `devDependencies` | `dsh-skill` / `dsh-skill-filesystem` / `dsh-system-prompt` = `^0.2.1-rc.3` | 仅类型侧与本地回归，随基线一起升 |
 | 本机全局宿主 | `@deepseek-ai/dsh@0.2.1-rc.3` | `~/.npm-global` |
-| 本机 profile | `web` / `capital` 均 `link:/home/shawn/projects/capital-generation` | 改工作区即改插件，无需重装 npm 包 |
+| 本机 profile | `web` / `capital` 均 `link:/home/shawn/projects/dsh-workbench-automation` | 改工作区即改插件，无需重装 npm 包 |
 
 升级后（2.15.0）：两个 dsh peer 精确 pin `0.2.1-rc.5`；三颗 devDependency 与 lockfile 同步到 rc.5
 （lockfile 里 15 颗 `@deepseek-ai/dsh*` 一起抬，见 §4）。
@@ -116,7 +116,7 @@ semver 实测（`includePrerelease: true`）：
 | `README.md` | 基线徽章与 NOTE、版本徽章、FAQ 的版本示例 |
 | `CONTRIBUTING.md` | 开发环境准备的基线句 |
 | `.github/workflows/test.yml` | `npm install -g @deepseek-ai/dsh@0.2.1-rc.5` |
-| `preset/capital-generation/README.md` | "实测 dsh 0.2.1-rc.5" |
+| `preset/dsh-workbench-automation/README.md` | "实测 dsh 0.2.1-rc.5" |
 | `docs/dev/preset-persona.md` | §8.1 标题里的实测版本 |
 | `CHANGELOG.md` | 新增 2.15.0 段与迁移说明 |
 | `src/web-retriever/local-fetch.ts` / `wind-client.ts` | 两个客户端版本常量 → `2.15.0`（测试钉住与 package.json 一致） |
@@ -128,7 +128,7 @@ semver 实测（`includePrerelease: true`）：
 ### 4.3 用户侧的升级顺序
 
 先升宿主，再更新插件（2.15.0 要求 rc.5）。反过来做，插件先被禁用，需要再执行一次
-`dsh plugin --profile <profile> update @v587d/capital-generation` 才能恢复；缺少 stderr 的桌面端尤其
+`dsh plugin --profile <profile> update dsh-workbench-automation` 才能恢复；缺少 stderr 的桌面端尤其
 容易卡住。应急通道是 `dsh plugin allow-version`，但它只豁免 manifest 检查，运行时导入仍跨版本。
 
 ## 5. 验证结果（2026-10-31，本机）
@@ -140,7 +140,7 @@ semver 实测（`includePrerelease: true`）：
 |---|---|
 | `npm run check:dsh`（对 rc.5） | **37 / 37 条**账本通过（L15/L19/L22/L23/L24/L26/L27/L28 因 primitives 编进 `dsh-web-frontend/dist` 按设计为 n/a） |
 | `npm test`（对 rc.5） | **1316 / 1317** 通过；唯一红项是 `test/release-version.test.mjs` 的"README 链接必须被 git 跟踪"，命中的是工作树里**既有的未跟踪** `docs/sample/指南针Q3暴跌探因.md`（README 的样例链接在本轮之前就已改到它），与宿主升级无关 |
-| `npm run smoke:boot`（对 rc.5） | 通过：预设 `broken=null`、选择器三模式、20/20 族行 ACTIVE、12 行 bundle 组件、`/capital-watchlist` / `/capital-automation` / `/capital-skills` 的 401/200 围栏、PTC、3 颗身份闸门全部在场 |
+| `npm run smoke:boot`（对 rc.5） | 通过：预设 `broken=null`、选择器三模式、20/20 族行 ACTIVE、12 行 bundle 组件、`/automation-watchlist` / `/automation-workbench` / `/automation-skills` 的 401/200 围栏、PTC、3 颗身份闸门全部在场 |
 | 兼容预检 | `evaluatePluginCompatibility(package.json)` → `undefined` |
 | 时序 | 升级后第一次 `smoke:boot` 与全量 `npm test` 并发运行，探针先于族行收敛打印（"never started"）；随后单独连跑 3 次全绿。按 CPU 争用下的时序抖动记录，不当作功能面异常 |
 

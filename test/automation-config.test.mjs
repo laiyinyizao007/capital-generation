@@ -7,7 +7,7 @@ import { runInNewContext } from 'node:vm'
 import { load as yamlLoad } from 'js-yaml'
 import { apply as hostApply, Config as CapitalConfig, SETTINGS_ENTRY_ID } from '../config/index.js'
 import { fakeCtx as hostFakeCtx } from './cordis-fake.mjs'
-import { CAPITAL_CONFIG_ENTRY_ID, Config as MainConfig, LOCAL_FETCH_DEFAULTS, resolveLocalFetchConfig } from '../lib/index.js'
+import { AUTOMATION_CONFIG_ENTRY_ID, Config as MainConfig, LOCAL_FETCH_DEFAULTS, resolveLocalFetchConfig } from '../lib/index.js'
 import { LOCAL_FETCH_CLIENT_VERSION } from '../lib/web-retriever/local-fetch.js'
 import { SELECTED_SKILL_CATALOG, SELECTED_SKILL_TAG_LABELS } from '../selected-skills/catalog.js'
 import {
@@ -35,7 +35,7 @@ const CLIENT = join(ROOT, 'config', 'client.js')
 const CLIENT_SRC = join(ROOT, 'config', 'client.src.cjs')
 
 // Config and card are two lists: compare resolved credential refs, so an omitted or extra ref fails.
-test('capital-config：条目 Config 里每个凭据引用名，卡片都必须有一行密钥', () => {
+test('automation-config：条目 Config 里每个凭据引用名，卡片都必须有一行密钥', () => {
   const names = []
   const walk = (value) => {
     for (const [key, item] of Object.entries(value ?? {})) {
@@ -55,9 +55,9 @@ test('capital-config：条目 Config 里每个凭据引用名，卡片都必须�
 test('条目 id 四处一致 + 槽 key = 组合包包名：settings 命名空间与卡片座位各自同字', () => {
   const patch = yamlLoad(readFileSync(join(ROOT, 'cordis.patch.yml'), 'utf8').replace(/!!js\s+/g, ''))
   const row = patch.flatMap((entry) => entry?.insert ?? []).find((item) => item?.name === './config/index.js')
-  assert.ok(row, 'cordis.patch.yml 必须有 capital-config 这颗 host 平面行')
+  assert.ok(row, 'cordis.patch.yml 必须有 automation-config 这颗 host 平面行')
   assert.equal(row.id, SETTINGS_ENTRY_ID, 'settings 命名空间就是 profile 条目 id：行 id 必须等于 SETTINGS_ENTRY_ID')
-  assert.equal(SETTINGS_ENTRY_ID, CAPITAL_CONFIG_ENTRY_ID, '主插件读配置用的条目 id 必须与 host 半边一致')
+  assert.equal(SETTINGS_ENTRY_ID, AUTOMATION_CONFIG_ENTRY_ID, '主插件读配置用的条目 id 必须与 host 半边一致')
 
   const source = readFileSync(CLIENT_SRC, 'utf8')
   const entryId = source.match(/^const ENTRY_ID = '([^']+)'/m)?.[1]
@@ -88,7 +88,7 @@ function volatilePaths(schema, path = []) {
   return Object.entries(schema.dict ?? {}).flatMap(([key, child]) => volatilePaths(child, [...path, key]))
 }
 
-test('capital-config Host：可编辑面全靠 Config 的 .volatile() 字段，注册通道已退休', () => {
+test('automation-config Host：可编辑面全靠 Config 的 .volatile() 字段，注册通道已退休', () => {
   const flags = volatilePaths(CapitalConfig)
   for (const path of [
     'customPersona', 'fuyaoCredentialRef', 'ftshareCredentialRef',
@@ -244,7 +244,7 @@ function loadClient({ scope, primitives = {}, fetchImpl = defaultFetch } = {}) {
 
 function bundlesWith(rowCount) {
   const rows = Array.from({ length: rowCount }, (unused, index) => ({ rowId: `row-${index}` }))
-  return { ok: true, value: [{ name: '@v587d/capital-generation', rows }] }
+  return { ok: true, value: [{ name: 'dsh-workbench-automation', rows }] }
 }
 
 function fakeCtx({ scope, served = true, writes = [], listBundles = async () => bundlesWith(4) } = {}) {
@@ -299,10 +299,10 @@ const readyScope = (value = {}) => ({
   mutate: async () => true,
 })
 
-test('capital-config Client：只依赖 slots/locale/remote/configForms，注册进 plugins.bundle.config 且用 shell React', () => {
+test('automation-config Client：只依赖 slots/locale/remote/configForms，注册进 plugins.bundle.config 且用 shell React', () => {
   const scope = readyScope()
   const { mod, model } = loadClient({ scope })
-  assert.equal(mod.name, 'capital-config')
+  assert.equal(mod.name, 'automation-config')
   assert.deepEqual(
     [...mod.inject],
     ['slots', 'locale', 'remote', 'remote.credentials', 'remote.pluginManager', 'configForms'],
@@ -319,7 +319,7 @@ test('capital-config Client：只依赖 slots/locale/remote/configForms，注册
   assert.equal(registrations.length, 2)
   const { declaration, component } = registrationFor(registrations, 'plugins.bundle.config')
   assert.equal(declaration.name, 'plugins.bundle.config')
-  assert.equal(declaration.key, '@v587d/capital-generation', '组合包级座位按**包名**寻址，不是 `<包名>#<行 id>`')
+  assert.equal(declaration.key, 'dsh-workbench-automation', '组合包级座位按**包名**寻址，不是 `<包名>#<行 id>`')
   assert.equal(typeof declaration.locale, 'string', '卡片文案自registered locale 命名空间')
   assert.equal(typeof component, 'function')
 
@@ -340,7 +340,7 @@ function collect(node, type, out = []) {
 }
 
 function skillNameButtons(page) {
-  return collect(page, 'button').filter((button) => button.props.className === 'capital-config-skill-name')
+  return collect(page, 'button').filter((button) => button.props.className === 'automation-config-skill-name')
 }
 
 function cardProps(injected) {
@@ -372,7 +372,7 @@ function cardRenderer(registrations) {
 // Drain one macrotask: async fetches in handlers expose no awaitable handle.
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0))
 
-test('capital-config Client：五个密钥按序渲染，本机回退与 selected skill 开关依次收尾', () => {
+test('automation-config Client：五个密钥按序渲染，本机回退与 selected skill 开关依次收尾', () => {
   const scope = readyScope()
   const { mod } = loadClient({ scope })
   const { ctx, registrations } = fakeCtx({ scope })
@@ -383,7 +383,7 @@ test('capital-config Client：五个密钥按序渲染，本机回退与 selecte
   assert.deepEqual(titles, [], '标题体系交给 tab 条：卡片不再自绘 h4（h4/h5 两级曾把精选 Skills 压成数据源的子项）')
   const [tabs] = collect(card, 'SegmentedControl')
   assert.ok(tabs, '四格切换必须走官方 tab 件，不自造 tablist')
-  assert.equal(tabs.props.id, 'capital-config-tabs')
+  assert.equal(tabs.props.id, 'automation-config-tabs')
   assert.equal(tabs.props.value, 'sources', '默认停在数据源')
   assert.equal(tabs.props.label, 'tabsLabel', 'tablist 的名字走字典')
   assert.deepEqual(Array.from(tabs.props.options, (option) => option.value), ['sources', 'automation', 'skills', 'components'])
@@ -400,11 +400,11 @@ test('capital-config Client：五个密钥按序渲染，本机回退与 selecte
   assert.ok(page, '表单必须走官方框（自带只读提示与保存控件）')
   const secrets = collect(page, 'SettingsSecretField').map((node) => node.props.id)
   assert.deepEqual(secrets, [
-    'capital-config-fuyao-key',
-    'capital-config-ftshare-key',
-    'capital-config-anysearch-key',
-    'capital-config-wind-key',
-    'capital-config-paddleocr-key',
+    'automation-config-fuyao-key',
+    'automation-config-ftshare-key',
+    'automation-config-anysearch-key',
+    'automation-config-wind-key',
+    'automation-config-paddleocr-key',
   ], '五个密钥行的顺序与 CREDENTIAL_FIELDS 一致')
   const switches = collect(card, 'Switch')
   assert.equal(switches.length, SELECTED_SKILL_CATALOG.length + 3, '本机回退、通知与精选模式各一颗，catalog 每项各一颗')
@@ -416,7 +416,7 @@ test('capital-config Client：五个密钥按序渲染，本机回退与 selecte
   assert.equal(skillButtons.length, SELECTED_SKILL_CATALOG.length, '每行技能名本身就是开原文的按钮')
   assert.ok(skillButtons.every((button) => button.props['aria-haspopup'] === 'dialog'),
     '点名字弹出对话框，无障碍树要先把形状说出来')
-  assert.deepEqual(collect(card, 'button').filter((button) => button.props.className === 'capital-config-skill-action'), [],
+  assert.deepEqual(collect(card, 'button').filter((button) => button.props.className === 'automation-config-skill-action'), [],
     '复制技能名与「详情」按钮都已移除，不再和名字抢同一行')
   const order = []
   const walk = (node) => {
@@ -429,16 +429,16 @@ test('capital-config Client：五个密钥按序渲染，本机回退与 selecte
           : node.props.label === 'selectedSkillsModeLabel' ? 'selected-skills-mode' : 'selected-skill')
     }
     if (node?.type === 'input' && node.props.type === 'number') order.push('automation-number')
-    if (node?.type === 'button' && node.props.className === 'capital-config-select') order.push('automation-workspace')
+    if (node?.type === 'button' && node.props.className === 'automation-config-select') order.push('automation-workspace')
     for (const child of node?.children ?? []) walk(child)
   }
   walk(card)
   assert.deepEqual(order, [
-    'capital-config-fuyao-key',
-    'capital-config-ftshare-key',
-    'capital-config-anysearch-key',
-    'capital-config-wind-key',
-    'capital-config-paddleocr-key',
+    'automation-config-fuyao-key',
+    'automation-config-ftshare-key',
+    'automation-config-anysearch-key',
+    'automation-config-wind-key',
+    'automation-config-paddleocr-key',
     'save',
     'local-fetch',
     'automation-workspace',
@@ -449,7 +449,7 @@ test('capital-config Client：五个密钥按序渲染，本机回退与 selecte
   ], '数据源格内只剩五个密钥 → 保存 → 回退开关；第二格先默认工作区，再五个上限与通知开关，精选 Skills 随后')
 })
 
-test('capital-config Client：catalog 用到的每个能力标签都有中英两套显示名', () => {
+test('automation-config Client：catalog 用到的每个能力标签都有中英两套显示名', () => {
   // Filter tags derive from the catalog; a missing label silently renders the raw tag.
   const used = [...new Set(SELECTED_SKILL_CATALOG.flatMap((entry) => entry.tags))].sort()
   assert.ok(used.length >= 3, `catalog 只用到 ${used.length} 个能力标签，这条闸门多半被架空了`)
@@ -464,7 +464,7 @@ test('capital-config Client：catalog 用到的每个能力标签都有中英两
   for (const locale of ['zh', 'en']) assert.ok(SELECTED_SKILL_TAG_LABELS[locale].all, `${locale} 的筛选条缺「全部」`)
 })
 
-test('capital-config Client：精选 Skills 以名称开原文，标签与适用预设同排展示', async () => {
+test('automation-config Client：精选 Skills 以名称开原文，标签与适用预设同排展示', async () => {
   const scope = readyScope({ selectedSkills: { buffettFramework: true } })
   const { mod } = loadClient({ scope })
   const { ctx, registrations, dictionaries } = fakeCtx({ scope })
@@ -472,7 +472,7 @@ test('capital-config Client：精选 Skills 以名称开原文，标签与适用
   const { render } = cardRenderer(registrations)
   const page = render()
   const links = collect(page, 'a')
-  const docsLinks = links.filter((link) => link.props['data-capital-config-doc'] === 'true')
+  const docsLinks = links.filter((link) => link.props['data-automation-config-doc'] === 'true')
   assert.equal(docsLinks.length, 5, '五个密钥行各一个文档链接')
   for (const link of docsLinks) {
     assert.equal(link.props.target, '_blank', '文档链接新标签打开')
@@ -497,7 +497,7 @@ test('capital-config Client：精选 Skills 以名称开原文，标签与适用
     assert.equal(button.props.title, 'selectedSkillsOpenDetail', '悬停说明点下去会发生什么')
     assert.equal(button.props['aria-haspopup'], 'dialog', '无障碍树先说明打开的是对话框')
   }
-  assert.deepEqual(collect(page, 'button').filter((button) => button.props.className === 'capital-config-skill-action'), [],
+  assert.deepEqual(collect(page, 'button').filter((button) => button.props.className === 'automation-config-skill-action'), [],
     '复制技能名与「详情」按钮都已移除')
   assert.equal(collect(page, 'Modal').length, SELECTED_SKILL_CATALOG.length, '每行一颗详情对话框（关着时由官方组件自己收起）')
   assert.ok(collect(page, 'Pill').some((pill) => pill.props['aria-pressed'] === 'true'), '两个筛选维度都有可见的选中态')
@@ -505,35 +505,35 @@ test('capital-config Client：精选 Skills 以名称开原文，标签与适用
   assert.deepEqual(collect(page, 'h5'), [], '精选 Skills 不再是数据源底下的 h5：它与数据源平级，如今各占一格')
   const [tabs] = collect(page, 'SegmentedControl')
   assert.equal(tabs.props.options[2].label, 'selectedSkillsTitle', '第三格不再带已开启数或「自动」后缀')
-  const skillsPanel = collect(page, 'section').find((node) => node.props.id === 'capital-config-tabs-skills-panel')
+  const skillsPanel = collect(page, 'section').find((node) => node.props.id === 'automation-config-tabs-skills-panel')
   assert.equal(skillsPanel.props.hidden, true, '不在屏的那格 hidden 收起（仍在渲染树上，所以以上断言量的是真内容）')
-  assert.equal(collect(page, 'p').filter((node) => node.props.className === 'capital-config-skill-description').length,
+  assert.equal(collect(page, 'p').filter((node) => node.props.className === 'automation-config-skill-description').length,
     SELECTED_SKILL_CATALOG.length, '只展示技能简述，不渲染额外风险提示')
-  assert.equal(collect(page, 'dl').filter((node) => node.props.className === 'capital-config-skill-meta').length,
+  assert.equal(collect(page, 'dl').filter((node) => node.props.className === 'automation-config-skill-meta').length,
     SELECTED_SKILL_CATALOG.length, '简述、触发条件与关键词共用一套元信息排版')
   assert.equal(collect(page, 'dt').filter((node) => node.children[0] === 'selectedSkillsWhen').length,
     SELECTED_SKILL_CATALOG.length, '每行展示路由触发句（useWhen），不只给一段主题摘要')
   assert.equal(collect(page, 'dt').filter((node) => node.children[0] === 'selectedSkillsKeywords').length,
     SELECTED_SKILL_CATALOG.length, '关键词从触发句里拆出来，和 when 同一字号、同一行高')
-  const [heading] = collect(page, 'div').filter((node) => node.props.className === 'capital-config-skill-heading')
+  const [heading] = collect(page, 'div').filter((node) => node.props.className === 'automation-config-skill-heading')
   const headingParts = heading.children.filter((child) => child.type !== 'Modal')
   assert.deepEqual(headingParts.map((node) => (node.type === 'button' ? 'name' : node.props.className)),
-    ['name', 'capital-config-skill-tags', 'capital-config-skill-presets'],
+    ['name', 'automation-config-skill-tags', 'automation-config-skill-presets'],
     '名称 → Skill 特点 → 适用预设排在同一行；标签不再单独占下面一行')
-  const traitTags = collect(heading, 'Tag').filter((node) => node.props.className === 'capital-config-skill-tag')
+  const traitTags = collect(heading, 'Tag').filter((node) => node.props.className === 'automation-config-skill-tag')
   assert.equal(traitTags.length, SELECTED_SKILL_CATALOG[0].tags.length, 'Skill 特点标签跟着标题')
   assert.ok(traitTags.every((node) => node.props.tone === 'neutral'), '特点标签用中性色')
-  const presetTags = collect(heading, 'Tag').filter((node) => node.props.className === 'capital-config-skill-preset')
+  const presetTags = collect(heading, 'Tag').filter((node) => node.props.className === 'automation-config-skill-preset')
   assert.deepEqual(presetTags.map((node) => node.children[1]), ['自动模式'], '角色徽标改用预设名，排在特点标签右边')
   assert.ok(presetTags.every((node) => node.props.tone === 'info'), '适用预设用信息色，和特点标签一眼分得开')
-  assert.equal(collect(page, 'span').some((node) => node.props.className === 'capital-config-skill-role'), false,
+  assert.equal(collect(page, 'span').some((node) => node.props.className === 'automation-config-skill-role'), false,
     '旧的「主 Agent / 数据分析」角色徽标不再出现')
   assert.equal(collect(page, 'p').some((node) => /实验中|观察中|最近提交|下次复查/.test(JSON.stringify(node.children))), false)
 
-  const dict = dictionaries.get('settings.capital')
+  const dict = dictionaries.get('settings.automation')
   assert.ok(dict, '卡片文案来自自己注册的 bilingual 字典')
   assert.equal(dict.zh.title, '数据源')
-  assert.equal(dict.zh.automationTitle, '投研自动化', '第二格与「数据源」「精选 Skills」平级')
+  assert.equal(dict.zh.automationTitle, '自动化', '第二格与「数据源」「精选 Skills」平级')
   assert.equal(dict.en.automationTitle, 'Research automation')
   assert.equal(dict.zh.automationTick, '自动检查间隔（毫秒）', '把 tick 这类内部说法换成用户能懂的词')
   assert.equal(dict.zh.automationRunTimeout, '最长运行时间（分钟）', 'wall-clock 同样不面向用户')
@@ -578,20 +578,20 @@ test('capital-config Client：精选 Skills 以名称开原文，标签与适用
   assert.equal(typeof dict.zh.selectedSkillsDocFailed, 'string', '原文取不到时要有一句人话')
 })
 
-test('capital-config Client：筛选器在清单上方，两个维度各带"点它会显示几行"', () => {
+test('automation-config Client：筛选器在清单上方，两个维度各带"点它会显示几行"', () => {
   const scope = readyScope()
   const { mod } = loadClient({ scope })
   const { ctx, registrations } = fakeCtx({ scope })
   mod.apply(ctx)
   const { render } = cardRenderer(registrations)
   const page = render()
-  const [browser] = collect(page, 'div').filter((node) => node.props.className === 'capital-config-skills-browser')
+  const [browser] = collect(page, 'div').filter((node) => node.props.className === 'automation-config-skills-browser')
   assert.ok(browser, '筛选器与清单同属一组，排在上方而不是左列')
   const [filters, list] = browser.children
-  assert.equal(filters.props.className, 'capital-config-filters', '筛选条在清单上方')
-  assert.equal(list.props.className, 'capital-config-selected-list', '清单跟在筛选条下面')
+  assert.equal(filters.props.className, 'automation-config-filters', '筛选条在清单上方')
+  assert.equal(list.props.className, 'automation-config-selected-list', '清单跟在筛选条下面')
   assert.equal(filters.props['aria-label'], 'selectedSkillsFilterLabel')
-  const rows = collect(filters, 'div').filter((node) => node.props.className === 'capital-config-filter-row')
+  const rows = collect(filters, 'div').filter((node) => node.props.className === 'automation-config-filter-row')
   assert.equal(rows.length, 2, '两个筛选维度各一行')
   assert.deepEqual(rows.map((row) => row.children[0].children[0]),
     ['selectedSkillsTraitGroup', 'selectedSkillsPresetGroup'], '群组名逐字对应「Skill 特点」与「适用预设」')
@@ -607,7 +607,7 @@ test('capital-config Client：筛选器在清单上方，两个维度各带"点�
   }
   assert.deepEqual(traitPills.map((pill) => Number(pill.children[1].children[0])),
     traits.map((tag) => traitTotals.get(tag)), '数字 = catalog 里带这个特点的条数')
-  assert.ok(traitPills.every((pill) => pill.children[1].props.className === 'capital-config-filter-count'),
+  assert.ok(traitPills.every((pill) => pill.children[1].props.className === 'automation-config-filter-count'),
     '数字是自己的元素，不拼在名字里')
 
   const presetPills = collect(rows[1], 'Pill')
@@ -625,12 +625,12 @@ test('capital-config Client：筛选器在清单上方，两个维度各带"点�
   assert.equal(traitPills[0].props['aria-pressed'], 'true', '默认特点维度是全部')
   assert.equal(presetPills[0].props['aria-pressed'], 'true', '默认预设维度也是全部')
   assert.equal(Number(traitPills[0].children[1].children[0]),
-    collect(list, 'div').filter((node) => node.props.className === 'capital-config-skill-item').length,
+    collect(list, 'div').filter((node) => node.props.className === 'automation-config-skill-item').length,
     '「全部」那个数与清单当场渲染的行数必须相等')
 })
 
 // Enabled skills sort first, and the order is frozen on tab entry so toggling does not move a row under the cursor.
-test('capital-config Client：已开启的 Skill 置顶，但只在进入那一格时定顺序', () => {
+test('automation-config Client：已开启的 Skill 置顶，但只在进入那一格时定顺序', () => {
   const enabled = { financialHealth: true, valuationInvestmentStrategy: true }
   const scope = readyScope({ selectedSkills: enabled })
   const { mod } = loadClient({ scope })
@@ -647,7 +647,7 @@ test('capital-config Client：已开启的 Skill 置顶，但只在进入那一�
 })
 
 // Opening must be a click: HoverCard only times pointerenter and closes on anchor click.
-test('capital-config Client：点击 Skill 名称开对话框、悬停预热原文，成功才缓存', async () => {
+test('automation-config Client：点击 Skill 名称开对话框、悬停预热原文，成功才缓存', async () => {
   const scope = readyScope()
   const { mod, docRequests } = loadClient({ scope })
   const { ctx, registrations } = fakeCtx({ scope })
@@ -670,7 +670,7 @@ test('capital-config Client：点击 Skill 名称开对话框、悬停预热原�
   assert.equal(docRequests.length, 0, '没悬停也没点击就一份都不取')
   names[0].props.onPointerEnter({})
   await settle()
-  assert.deepEqual(docRequests.map((item) => item.url), [`/capital-skills/${SELECTED_SKILL_CATALOG[0].name}.md`])
+  assert.deepEqual(docRequests.map((item) => item.url), [`/automation-skills/${SELECTED_SKILL_CATALOG[0].name}.md`])
   assert.equal(docRequests[0].init.cache, 'no-store')
   assert.equal(docRequests[0].init.credentials, 'same-origin', '本机旁路要带着宿主的 cookie，不带就是匿名请求本地文件')
   names[0].props.onPointerEnter({})
@@ -679,10 +679,10 @@ test('capital-config Client：点击 Skill 名称开对话框、悬停预热原�
   names[1].props.onClick()
   await settle()
   assert.equal(docRequests.length, 2, '另一行的原文是另一份')
-  assert.equal(docRequests[1].url, `/capital-skills/${SELECTED_SKILL_CATALOG[1].name}.md`)
+  assert.equal(docRequests[1].url, `/automation-skills/${SELECTED_SKILL_CATALOG[1].name}.md`)
 })
 
-test('capital-config Client：原文读不到不写缓存，再点一次还会重试，且两种读不到分得开', async () => {
+test('automation-config Client：原文读不到不写缓存，再点一次还会重试，且两种读不到分得开', async () => {
   const scope = readyScope()
   let fail = true
   const { mod, docRequests, warnings } = loadClient({
@@ -708,7 +708,7 @@ test('capital-config Client：原文读不到不写缓存，再点一次还会�
   assert.match(warnings.join('\n'), /skill_doc_unreadable/)
 })
 
-test('capital-config Client：宿主还没这条路由时，分类落 route_missing 而不是"快照读不到"', async () => {
+test('automation-config Client：宿主还没这条路由时，分类落 route_missing 而不是"快照读不到"', async () => {
   const scope = readyScope()
   const { mod, warnings } = loadClient({
     scope,
@@ -724,14 +724,14 @@ test('capital-config Client：宿主还没这条路由时，分类落 route_miss
   const dict = (() => {
     const { ctx: other, dictionaries } = fakeCtx({ scope })
     loadClient({ scope }).mod.apply(other)
-    return dictionaries.get('settings.capital')
+    return dictionaries.get('settings.automation')
   })()
   assert.notEqual(dict.zh.selectedSkillsDocStale, dict.zh.selectedSkillsDocFailed, '两句必须说不同的动作')
   assert.match(dict.zh.selectedSkillsDocStale, /重启/, 'stale 那句要点名"重启宿主"')
   assert.match(dict.zh.selectedSkillsDocStale, /刷新页面也没有用/, '并且要说清刷新不管用（不然用户会一直刷）')
 })
 
-test('capital-config Client：Host 不服务该条目时不注册卡片', () => {
+test('automation-config Client：Host 不服务该条目时不注册卡片', () => {
   const scope = readyScope()
   const { mod } = loadClient({ scope })
   const { ctx, registrations } = fakeCtx({ scope, served: false })
@@ -743,7 +743,7 @@ test('capital-config Client：Host 不服务该条目时不注册卡片', () => 
 })
 
 // SegmentedControl always emits aria-controls, so all four panels must exist; a dangling id fails silently.
-test('capital-config Client：四块面板各有 tabpanel 身份，第四块也真的存在', () => {
+test('automation-config Client：四块面板各有 tabpanel 身份，第四块也真的存在', () => {
   const scope = readyScope()
   const { mod } = loadClient({ scope })
   const { ctx, registrations } = fakeCtx({ scope })
@@ -752,25 +752,25 @@ test('capital-config Client：四块面板各有 tabpanel 身份，第四块也�
   const card = render()
   const panels = collect(card, 'section').filter((node) => node.props.role === 'tabpanel')
   assert.deepEqual(panels.map((node) => node.props.id), [
-    'capital-config-tabs-sources-panel',
-    'capital-config-tabs-automation-panel',
-    'capital-config-tabs-skills-panel',
-    'capital-config-tabs-components-panel',
+    'automation-config-tabs-sources-panel',
+    'automation-config-tabs-automation-panel',
+    'automation-config-tabs-skills-panel',
+    'automation-config-tabs-components-panel',
   ], '面板 id 必须逐字跟着官方 <id>-<value>-panel 方案')
   assert.deepEqual(panels.map((node) => node.props['aria-labelledby']), [
-    'capital-config-tabs-sources',
-    'capital-config-tabs-automation',
-    'capital-config-tabs-skills',
-    'capital-config-tabs-components',
+    'automation-config-tabs-sources',
+    'automation-config-tabs-automation',
+    'automation-config-tabs-skills',
+    'automation-config-tabs-components',
   ], '面板的名字就是 tab 上那几个字')
   const root = card
-  assert.equal(root.props['data-capital-config-tab'], 'sources', '收起/放行宿主段落的判据挂在卡片根上')
-  assert.deepEqual(panels.map((node) => node.props['data-capital-config-panel']), ['sources', 'automation', 'skills', 'components'],
+  assert.equal(root.props['data-automation-config-tab'], 'sources', '收起/放行宿主段落的判据挂在卡片根上')
+  assert.deepEqual(panels.map((node) => node.props['data-automation-config-panel']), ['sources', 'automation', 'skills', 'components'],
     '样式表按这一格挂的属性摆间距（第四格那句 padding 认的就是它）')
   const componentsPanel = panels[3]
   assert.equal(collect(componentsPanel, 'p').length, 0,
     '第四格画面里没有那行"清单由 DSH 绘制"——点这一格看到的就是清单，多余的一行字只是噪音')
-  assert.ok(collect(componentsPanel, 'span').some((node) => node.props.className === 'capital-config-sr-only'
+  assert.ok(collect(componentsPanel, 'span').some((node) => node.props.className === 'automation-config-sr-only'
     && node.children[0] === 'componentsHint'),
     '但 aria-controls 指的这块面板不许是空的：那句话改挂在读屏侧，零布局贡献')
   const automationPanel = panels[1]
@@ -781,7 +781,7 @@ test('capital-config Client：四块面板各有 tabpanel 身份，第四块也�
   assert.equal(workspaceMenu.props.selectedId, workspaceMenu.props.items[0].id, '空值落在专属默认项')
   const workspaceTrigger = workspaceMenu.props.anchor
   assert.equal(workspaceTrigger.type, 'button')
-  assert.equal(workspaceTrigger.props.className, 'capital-config-select', '下拉触发器必须复用自动化页的胶囊按钮，不是原生 select')
+  assert.equal(workspaceTrigger.props.className, 'automation-config-select', '下拉触发器必须复用自动化页的胶囊按钮，不是原生 select')
   assert.equal(workspaceTrigger.props['aria-haspopup'], 'menu')
   assert.equal(workspaceTrigger.props['aria-expanded'], 'false')
   assert.equal(workspaceTrigger.props['aria-describedby'], undefined, '没有路径可读时不指向空 id')
@@ -809,14 +809,14 @@ test('capital-config Client：四块面板各有 tabpanel 身份，第四块也�
   assert.equal(collect(automationPanel, 'span').some((node) => node.children[0] === 'automationTitle'), false,
     'tab 就是这一格的标题，格内不再重复一遍「投研自动化」')
   assert.deepEqual(
-    collect(automationPanel, 'p').filter((node) => node.props.className === 'capital-config-hint').map((node) => node.children[0]),
+    collect(automationPanel, 'p').filter((node) => node.props.className === 'automation-config-hint').map((node) => node.children[0]),
     ['automationInAppHint'],
     '顶部那段「调度器与无人值守运行的默认上限…」已删；工作区说明句也删，只剩通知开关短说明',
   )
 })
 
 // Enabled count is live snapshot state; row count comes only from listBundles(), and an unknown count is never drawn as 0.
-test('capital-config Client：精选格不报数，组件格取不到行数时宁可不画', async () => {
+test('automation-config Client：精选格不报数，组件格取不到行数时宁可不画', async () => {
   const scope = readyScope({ selectedSkills: { financialHealth: true, valuationInvestmentStrategy: true } })
   const { mod } = loadClient({ scope })
   const { ctx, registrations, listBundlesCalls } = fakeCtx({ scope })
@@ -837,7 +837,7 @@ test('capital-config Client：精选格不报数，组件格取不到行数时�
   assert.equal(listBundlesCalls(), calls, '已取到 ⇒ 不再重取')
 })
 
-test('capital-config Client：行数读不到（拒答 / 抛错 / 清单里没我们）都不落成 0，且下次会重试', async () => {
+test('automation-config Client：行数读不到（拒答 / 抛错 / 清单里没我们）都不落成 0，且下次会重试', async () => {
   for (const [name, listBundles] of [
     ['拒答', async () => ({ ok: false, error: { message: 'nope' } })],
     ['抛错', async () => { throw new Error('connection lost') }],
@@ -855,7 +855,7 @@ test('capital-config Client：行数读不到（拒答 / 抛错 / 清单里没�
   }
 })
 
-test('capital-config Client：一次失败的读数会被下一次取数补上（失败不留痕）', async () => {
+test('automation-config Client：一次失败的读数会被下一次取数补上（失败不留痕）', async () => {
   const scope = readyScope()
   let serve = async () => ({ ok: false })
   const { mod } = loadClient({ scope })
@@ -870,7 +870,7 @@ test('capital-config Client：一次失败的读数会被下一次取数补上�
     '把一次抢跑失败缓存成永久"无数字"= 钉到进程结束')
 })
 
-test('capital-config Client：plugin-manager/changed 与 connection/reset 都会重取行数', async () => {
+test('automation-config Client：plugin-manager/changed 与 connection/reset 都会重取行数', async () => {
   const scope = readyScope()
   let rowCount = 4
   const { mod } = loadClient({ scope })
@@ -894,7 +894,7 @@ test('capital-config Client：plugin-manager/changed 与 connection/reset 都会
   assert.equal(collect(render(), 'SegmentedControl')[0].props.options[3].label, 'componentsTitle 3')
 })
 
-test('capital-config Client：密钥草稿还在时 tab 点名未保存（保存按钮此刻看不见）', () => {
+test('automation-config Client：密钥草稿还在时 tab 点名未保存（保存按钮此刻看不见）', () => {
   const scope = readyScope()
   const { mod, model } = loadClient({ scope })
   const { ctx, registrations } = fakeCtx({ scope })
@@ -905,7 +905,7 @@ test('capital-config Client：密钥草稿还在时 tab 点名未保存（保存
   assert.equal(collect(render(), 'SegmentedControl')[0].props.options[0].label, 'titleUnsaved')
 })
 
-test('capital-config Client：条目还没就绪时退回一根列，不写 tab 属性（宿主段落因此藏不掉）', () => {
+test('automation-config Client：条目还没就绪时退回一根列，不写 tab 属性（宿主段落因此藏不掉）', () => {
   const scope = {
     getSnapshot: () => ({ status: 'loading', writable: false, value: {}, user: {}, base: {}, revision: 0 }),
     subscribe: () => () => {},
@@ -917,12 +917,12 @@ test('capital-config Client：条目还没就绪时退回一根列，不写 tab 
   const { render } = cardRenderer(registrations)
   const card = render()
   assert.deepEqual(collect(card, 'SegmentedControl'), [], '没有可编辑面时不画三格：那时"精选 Skills""包含的组件"都是空话')
-  assert.equal(card.props['data-capital-config-tab'], undefined,
+  assert.equal(card.props['data-automation-config-tab'], undefined,
     '属性缺席是 fail-open 的开关：installStyles 那两条 :has() 认不出卡片 ⇒ 宿主的组件段照常可见')
 })
 
 // Collapse rule for the host components section: a reversed direction hides user rows silently, so mismatches fall on the visible side.
-test('capital-config Client：宿主组件段的收起规则只认自家 tab，失配一律落在"照常可见"', () => {
+test('automation-config Client：宿主组件段的收起规则只认自家 tab，失配一律落在"照常可见"', () => {
   const scope = readyScope()
   const { mod, styles } = loadClient({ scope })
   const { ctx } = fakeCtx({ scope })
@@ -934,34 +934,34 @@ test('capital-config Client：宿主组件段的收起规则只认自家 tab，�
   for (const rule of hideRules) {
     assert.ok(rule.includes(`[data-plugin-detail="${bundleName}"]`),
       '规则必须限定在**我们这个包**的详情页里：插在别的包页面上 = 在别人的页面藏宿主的段落')
-    assert.match(rule, /:has\(\.capital-config-card\[data-capital-config-tab="(?:sources|automation|skills)"\]\)/,
+    assert.match(rule, /:has\(\.automation-config-card\[data-automation-config-tab="(?:sources|automation|skills)"\]\)/,
       '只从**正面**认出"我们的卡片 + 这三个 tab"才动手')
     assert.match(rule, /section\[data-plugin-rows\]\s*\{\s*display: none/, '动的只有宿主那一格')
     assert.ok(!rule.includes(':not('), '否定式收起 = 一个拼错的属性值就把用户数据藏了起来')
   }
-  assert.doesNotMatch(css, /:not\(\[data-capital-config-tab="components"\]\)/, '禁用否定式判据')
+  assert.doesNotMatch(css, /:not\(\[data-automation-config-tab="components"\]\)/, '禁用否定式判据')
   assert.doesNotMatch(css, /^[ \t]*section\[data-plugin-rows\]\s*\{/m, '不存在"默认就藏起来"的裸规则')
   assert.doesNotMatch(css, /\[data-plugin-config\]\s*\+/, '不拿 data-plugin-config 当锚点：行详情页那格是 div，同名不同形')
   // Author display overrides [hidden]{display:none}, leaving invisible but tabbable controls.
-  assert.doesNotMatch(css, /\.capital-config-panel\s*\{[^}]*display:/, '面板类自身不许声明 display')
-  assert.match(css, /\.capital-config-panel:not\(\[hidden\]\)\s*\{\s*display: flex/, 'display 只在非 hidden 时声明')
-  assert.match(css, /\.capital-config-panel\[hidden\]\s*\{\s*display: none/, 'hidden 一侧单独钉死')
+  assert.doesNotMatch(css, /\.automation-config-panel\s*\{[^}]*display:/, '面板类自身不许声明 display')
+  assert.match(css, /\.automation-config-panel:not\(\[hidden\]\)\s*\{\s*display: flex/, 'display 只在非 hidden 时声明')
+  assert.match(css, /\.automation-config-panel\[hidden\]\s*\{\s*display: none/, 'hidden 一侧单独钉死')
 })
 
-test('capital-config Client：只隐藏两颗内部角色卡片，委派注册仍在宿主侧', () => {
+test('automation-config Client：只隐藏两颗内部角色卡片，委派注册仍在宿主侧', () => {
   const scope = readyScope()
   const { mod, styles } = loadClient({ scope })
   const { ctx } = fakeCtx({ scope })
   mod.apply(ctx)
   const css = styles.map((node) => String(node.textContent)).join('\n').replace(/\/\*[\s\S]*?\*\//g, '')
   const hiddenIds = Array.from(css.matchAll(/\[data-agent-preset-id="([^"]+)"\]/g), (match) => match[1])
-  assert.deepEqual(hiddenIds, ['capital-data-junior', 'capital-visualization-specialist'],
+  assert.deepEqual(hiddenIds, ['automation-data-junior', 'automation-visualization-specialist'],
     '只隐藏分析师与绘图专员；自动模式、行情专家、资讯专员必须仍可选')
-  assert.match(css, /\[data-agent-preset-id="capital-data-junior"\][\s\S]{0,100}\[data-agent-preset-id="capital-visualization-specialist"\][\s\S]{0,100}\{\s*display:\s*none\s*!important/,
+  assert.match(css, /\[data-agent-preset-id="automation-data-junior"\][\s\S]{0,100}\[data-agent-preset-id="automation-visualization-specialist"\][\s\S]{0,100}\{\s*display:\s*none\s*!important/,
     '两张内部角色卡片都由同一条 display:none !important 收起')
 })
 
-test('capital-config Client：筛选条在清单上方、四格首行等距，且不许冒出第二个滚动容器', () => {
+test('automation-config Client：筛选条在清单上方、四格首行等距，且不许冒出第二个滚动容器', () => {
   const scope = readyScope()
   const { mod, styles } = loadClient({ scope })
   const { ctx } = fakeCtx({ scope })
@@ -973,78 +973,78 @@ test('capital-config Client：筛选条在清单上方、四格首行等距，�
     assert.ok(match, `样式表里没有 ${selector} 这条：布局纪律靠它，掉了就是页面自己变样`)
     return match[1]
   }
-  assert.match(rule('.capital-config-filters'), /display:\s*flex/, '两个筛选维度在清单上方成组')
-  assert.match(rule('.capital-config-filter-row'), /align-items:\s*flex-start/, '群组名与标签顶端对齐')
-  assert.match(rule('.capital-config-filter-options'), /flex-wrap:\s*wrap/, '标签多了换行，不做横向滚动')
-  assert.match(rule('.capital-config-filter-label'), /min-width:/, '两行群组名对齐成一列')
-  assert.match(rule('.capital-config-filter-pill'), /height:\s*22px/, '筛选 chip 比正式按钮矮一档')
-  assert.match(rule('.capital-config-filter-pill:disabled'), /opacity:/, '不加载方法的预设要看出不可选')
+  assert.match(rule('.automation-config-filters'), /display:\s*flex/, '两个筛选维度在清单上方成组')
+  assert.match(rule('.automation-config-filter-row'), /align-items:\s*flex-start/, '群组名与标签顶端对齐')
+  assert.match(rule('.automation-config-filter-options'), /flex-wrap:\s*wrap/, '标签多了换行，不做横向滚动')
+  assert.match(rule('.automation-config-filter-label'), /min-width:/, '两行群组名对齐成一列')
+  assert.match(rule('.automation-config-filter-pill'), /height:\s*22px/, '筛选 chip 比正式按钮矮一档')
+  assert.match(rule('.automation-config-filter-pill:disabled'), /opacity:/, '不加载方法的预设要看出不可选')
   // No second scroll container: the filters belong to the page, not to a nested scroller.
-  for (const selector of ['.capital-config-filters', '.capital-config-selected-list']) {
+  for (const selector of ['.automation-config-filters', '.automation-config-selected-list']) {
     assert.doesNotMatch(rule(selector), /overflow:/, `${selector} 不许开第二个滚动容器`)
   }
-  assert.match(rule('.capital-config-selected-mode'), /border:/, '智能装载开关单独成卡，与下面的清单分开')
-  assert.match(rule('.capital-config-field'), /padding:\s*12px\s+0/, '数据源行的上内边距仍是一档 12px')
-  assert.match(rule('.capital-config-automation'), /padding-top:\s*12px/, '第二格首行也要与另格等距：面板 gap 12 + 自身 12')
-  assert.match(rule('.capital-config-automation'), /display:\s*flex/, '默认工作区 + 三个设置组纵向排布')
-  assert.match(rule('.capital-config-number'), /display:\s*flex/, '数字框的标题与输入框上下成组')
-  assert.match(rule('.capital-config-automation-group > .capital-config-group-label'), /font-size:\s*12px/,
+  assert.match(rule('.automation-config-selected-mode'), /border:/, '智能装载开关单独成卡，与下面的清单分开')
+  assert.match(rule('.automation-config-field'), /padding:\s*12px\s+0/, '数据源行的上内边距仍是一档 12px')
+  assert.match(rule('.automation-config-automation'), /padding-top:\s*12px/, '第二格首行也要与另格等距：面板 gap 12 + 自身 12')
+  assert.match(rule('.automation-config-automation'), /display:\s*flex/, '默认工作区 + 三个设置组纵向排布')
+  assert.match(rule('.automation-config-number'), /display:\s*flex/, '数字框的标题与输入框上下成组')
+  assert.match(rule('.automation-config-automation-group > .automation-config-group-label'), /font-size:\s*12px/,
     '分组标题比正文轻一档，不再抢 tab 条')
-  assert.match(rule('.capital-config-automation input[type="number"]'), /width:\s*100%/,
+  assert.match(rule('.automation-config-automation input[type="number"]'), /width:\s*100%/,
     '数字框的框线 / 底色 / 字号仍挂在自动化格里（换了父节点最容易掉的就是这条）')
-  assert.match(rule('.capital-config-select'), /height:\s*34px/, '工作区下拉跟自动化页同款 34px 胶囊')
-  assert.match(rule('.capital-config-select'), /border-radius:\s*10px/)
-  assert.match(rule('.capital-config-select'), /background:\s*var\(--dsw-alias-bg-module-platform\)/,
+  assert.match(rule('.automation-config-select'), /height:\s*34px/, '工作区下拉跟自动化页同款 34px 胶囊')
+  assert.match(rule('.automation-config-select'), /border-radius:\s*10px/)
+  assert.match(rule('.automation-config-select'), /background:\s*var\(--dsw-alias-bg-module-platform\)/,
     '填充色只认宿主 token，别自造蓝底')
-  assert.match(rule('.capital-config-select:focus-visible'), /outline:/, '键盘焦点必须可见')
-  assert.match(rule('.capital-config-select:disabled'), /cursor:\s*not-allowed/)
-  assert.doesNotMatch(css, /\.capital-config-automation select/,
+  assert.match(rule('.automation-config-select:focus-visible'), /outline:/, '键盘焦点必须可见')
+  assert.match(rule('.automation-config-select:disabled'), /cursor:\s*not-allowed/)
+  assert.doesNotMatch(css, /\.automation-config-automation select/,
     '原生 select 的旧样式不许留：它已经换成宿主 Menu + 触发器')
-  assert.doesNotMatch(css, /\.capital-config-field input\[type="number"\]/,
+  assert.doesNotMatch(css, /\.automation-config-field input\[type="number"\]/,
     '旧选择器不许留：数字输入已经搬去第二格，留在数据源格里就是一条永远不命中的死规则')
-  assert.match(rule('.capital-config-skill-row'), /display:\s*flex/)
-  assert.match(rule('.capital-config-skill-row'), /padding:\s*14px\s+2px/, '每行靠一致的上下留白分隔')
-  assert.match(rule('.capital-config-skill-name'), /font-size:\s*13px/, '技能名比正文大一档')
-  assert.match(rule('.capital-config-skill-description'), /font-size:\s*12px/)
-  assert.match(rule('.capital-config-skill-description'), /line-height:\s*18px/)
-  assert.match(rule('.capital-config-skill-meta'), /font-size:\s*12px/, '何时使用 / 关键词与简述同一字号')
-  assert.match(rule('.capital-config-skill-meta'), /line-height:\s*18px/, '三块正文同一行高')
-  assert.match(rule('.capital-config-skill-meta'), /grid-template-columns:/, '标签列与内容列对齐')
-  assert.match(rule('.capital-config-skill-tag'), /font-weight:\s*400/, 'Skill 特点读起来更轻')
-  assert.match(rule('.capital-config-skill-preset'), /font-weight:\s*500/, '适用预设比特点再重一档（颜色另由 Tag tone 区分）')
-  assert.match(rule('.capital-config-panel[data-capital-config-panel="components"]'), /margin-bottom:\s*-\d+px/,
+  assert.match(rule('.automation-config-skill-row'), /display:\s*flex/)
+  assert.match(rule('.automation-config-skill-row'), /padding:\s*14px\s+2px/, '每行靠一致的上下留白分隔')
+  assert.match(rule('.automation-config-skill-name'), /font-size:\s*13px/, '技能名比正文大一档')
+  assert.match(rule('.automation-config-skill-description'), /font-size:\s*12px/)
+  assert.match(rule('.automation-config-skill-description'), /line-height:\s*18px/)
+  assert.match(rule('.automation-config-skill-meta'), /font-size:\s*12px/, '何时使用 / 关键词与简述同一字号')
+  assert.match(rule('.automation-config-skill-meta'), /line-height:\s*18px/, '三块正文同一行高')
+  assert.match(rule('.automation-config-skill-meta'), /grid-template-columns:/, '标签列与内容列对齐')
+  assert.match(rule('.automation-config-skill-tag'), /font-weight:\s*400/, 'Skill 特点读起来更轻')
+  assert.match(rule('.automation-config-skill-preset'), /font-weight:\s*500/, '适用预设比特点再重一档（颜色另由 Tag tone 区分）')
+  assert.match(rule('.automation-config-panel[data-automation-config-panel="components"]'), /margin-bottom:\s*-\d+px/,
     '第四格自己不留内容，靠这条把它的首行文字顶到与另三格等距（负数：宿主那段本来就离得远）')
-  assert.match(rule('div.capital-config-skill-modal'), /width:\s*min\(\d{3,}px/, '详情对话框要宽过官方默认的 380px')
-  assert.match(rule('div.capital-config-skill-modal'), /max-height:\s*100%/, '高度只封顶：.dialog 自己 overflow hidden')
-  assert.ok(/^[ \t]*div\.capital-config-skill-modal\b/m.test(css),
+  assert.match(rule('div.automation-config-skill-modal'), /width:\s*min\(\d{3,}px/, '详情对话框要宽过官方默认的 380px')
+  assert.match(rule('div.automation-config-skill-modal'), /max-height:\s*100%/, '高度只封顶：.dialog 自己 overflow hidden')
+  assert.ok(/^[ \t]*div\.automation-config-skill-modal\b/m.test(css),
     '宽度那条要挂在 div. 上：光一个类名与官方散列类同权重，靠"我们的样式后注入"赢是押注不是设计')
-  assert.match(rule('.capital-config-skill-doc'), /overflow:\s*auto/, '原文在对话框里自己滚（一份有 34 KB）')
-  assert.match(rule('.capital-config-skill-doc'), /max-height:/, '封顶的是正文那一块，标题与关闭按钮因此留在原位')
+  assert.match(rule('.automation-config-skill-doc'), /overflow:\s*auto/, '原文在对话框里自己滚（一份有 34 KB）')
+  assert.match(rule('.automation-config-skill-doc'), /max-height:/, '封顶的是正文那一块，标题与关闭按钮因此留在原位')
   // Only reference tokens the theme defines; an undefined var() falls back to inherited color.
   assert.doesNotMatch(css, /--dsw-alias-label-error/, '主题里不存在的 token 不许引用')
-  assert.match(rule('.capital-config-write-failed'), /color:\s*var\(--dsw-alias-state-error-primary\)/,
+  assert.match(rule('.automation-config-write-failed'), /color:\s*var\(--dsw-alias-state-error-primary\)/,
     '写失败红字用 error-primary：同一个坏 token 的另一处，一并钉住')
   for (const retired of [
-    'capital-config-title',
-    'capital-config-selected-layout',
-    'capital-config-selected-filter',
-    'capital-config-selected-filter-button',
-    'capital-config-selected-filter-count',
-    'capital-config-skill-action',
-    'capital-config-skill-roles',
-    'capital-config-skill-role',
-    'capital-config-skill-when',
-    'capital-config-skill-slug',
-    'capital-config-skill-copy',
-    'capital-config-selected-filter-label',
-    'capital-config-cap-hint',
-    'capital-config-selected-cap-count',
+    'automation-config-title',
+    'automation-config-selected-layout',
+    'automation-config-selected-filter',
+    'automation-config-selected-filter-button',
+    'automation-config-selected-filter-count',
+    'automation-config-skill-action',
+    'automation-config-skill-roles',
+    'automation-config-skill-role',
+    'automation-config-skill-when',
+    'automation-config-skill-slug',
+    'automation-config-skill-copy',
+    'automation-config-selected-filter-label',
+    'automation-config-cap-hint',
+    'automation-config-selected-cap-count',
   ]) {
     assert.ok(!css.includes(`.${retired}`), `.${retired} 已经从渲染树上 retire 了，样式表里不许留死规则`)
   }
 })
 
-test('capital-config Client：回退开关即时写嵌套路径，写被拒不翻转且给出提示；只读存储不发写', async () => {
+test('automation-config Client：回退开关即时写嵌套路径，写被拒不翻转且给出提示；只读存储不发写', async () => {
   const doc = { value: {} } // Missing section defaults to enabled.
   let writable = true
   let landed = true
@@ -1095,7 +1095,7 @@ test('capital-config Client：回退开关即时写嵌套路径，写被拒不�
   assert.equal(writes.length, 2, 'settings 只读时不得发起 mutate（前两次尝试之外不应有第三次写入）')
 })
 
-test('capital-config Client：投研自动化按叶子路径写 automation.*，非法值在标题旁报错并回填、写被拒不落值', async () => {
+test('automation-config Client：投研自动化按叶子路径写 automation.*，非法值在标题旁报错并回填、写被拒不落值', async () => {
   const automation = {
     tickMs: 60_000,
     runTimeoutMinutes: 30,
@@ -1151,24 +1151,24 @@ test('capital-config Client：投研自动化按叶子路径写 automation.*，�
   assert.equal(tickTarget.value, '60000', '失焦后把保存值填回去，输入框不留空壳')
   const [clearedInput] = collect(render(), 'input').filter((node) => node.props.type === 'number')
   assert.equal(clearedInput.props['aria-invalid'], 'true', '读屏也要知道这一格当前有错')
-  assert.equal(clearedInput.props['aria-describedby'], 'capital-config-automation-tickMs-error',
+  assert.equal(clearedInput.props['aria-describedby'], 'automation-config-automation-tickMs-error',
     '错误提示与输入框通过 id 关联，读屏能顺出来')
   // The card's convention: an error sits on the title row, not under the control.
-  const tickCell = collect(render(), 'label').find((node) => node.props.className === 'capital-config-number'
+  const tickCell = collect(render(), 'label').find((node) => node.props.className === 'automation-config-number'
     && collect(node, 'input').some((child) => child.props.type === 'number' && child.props.defaultValue === 60_000))
-  const tickHead = tickCell.children.find((node) => node.props.className === 'capital-config-number-head')
+  const tickHead = tickCell.children.find((node) => node.props.className === 'automation-config-number-head')
   assert.ok(tickHead, '标题与错误同住一行')
   assert.deepEqual(tickHead.children.filter(Boolean).map((node) => node.children[0]),
     ['automationTick', 'automationInvalid'], '错误紧跟在标题右边，而不是压在输入框下面')
-  const rangeError = tickHead.children.find((node) => node.props.id === 'capital-config-automation-tickMs-error')
+  const rangeError = tickHead.children.find((node) => node.props.id === 'automation-config-automation-tickMs-error')
   assert.equal(rangeError.props.role, 'alert')
   assert.equal(rangeError.children[0], 'automationInvalid', '文案走字典，并带上这一格的上下限')
 
   const [tickInput] = collect(render(), 'input').filter((node) => node.props.type === 'number')
   tickInput.props.onFocus()
   assert.equal(store.getSnapshot().automation.tickMs.invalid, false, '重新聚焦后收起这条错误')
-  assert.equal(collect(render(), 'p').some((node) => node.props.id === 'capital-config-automation-tickMs-error'), false)
-  assert.equal(collect(render(), 'span').some((node) => node.props.id === 'capital-config-automation-tickMs-error'), false)
+  assert.equal(collect(render(), 'p').some((node) => node.props.id === 'automation-config-automation-tickMs-error'), false)
+  assert.equal(collect(render(), 'span').some((node) => node.props.id === 'automation-config-automation-tickMs-error'), false)
 
   await numbers()[0].props.onBlur({ target: { value: '1' } })
   await settle()
@@ -1187,7 +1187,7 @@ test('capital-config Client：投研自动化按叶子路径写 automation.*，�
   assert.equal(store.getSnapshot().automation.idleTimeoutMinutes.failed, true)
 })
 
-test('capital-config Client：默认工作区读 /capital-automation/workspaces，选中项写 automation.defaultWorkspaceId', async () => {
+test('automation-config Client：默认工作区读 /automation-workbench/workspaces，选中项写 automation.defaultWorkspaceId', async () => {
   const doc = { value: { automation: { defaultWorkspaceId: '' } } }
   const writes = []
   const scope = {
@@ -1203,14 +1203,14 @@ test('capital-config Client：默认工作区读 /capital-automation/workspaces�
   const { mod, docRequests } = loadClient({
     scope,
     fetchImpl: async (url) => {
-      if (String(url) === '/capital-automation/workspaces') {
+      if (String(url) === '/automation-workbench/workspaces') {
         return {
           ok: true,
           status: 200,
           json: async () => ({
             workspaces: [
-              { id: 'ws_default', title: 'CapGen 投研自动化（web）', path: '/home/shawn/.dsh/CapGen-automation-workspace/web', displayPath: '~/.dsh/CapGen-automation-workspace/web', default: true, dedicated: true },
-              { id: 'ws_duplicate', title: 'CapGen 投研自动化（web）', path: '/home/shawn/old-automation', displayPath: '~/old-automation', default: false, dedicated: false },
+              { id: 'ws_default', title: '自动化工作台（web）', path: '/home/shawn/.dsh/automation-workbench-workspace/web', displayPath: '~/.dsh/automation-workbench-workspace/web', default: true, dedicated: true },
+              { id: 'ws_duplicate', title: '自动化工作台（web）', path: '/home/shawn/old-automation', displayPath: '~/old-automation', default: false, dedicated: false },
               { id: 'ws_project', title: '研究项目', path: '/home/shawn/project', displayPath: '~/project', default: false, dedicated: false },
             ],
             defaultWorkspaceId: 'ws_default',
@@ -1226,14 +1226,14 @@ test('capital-config Client：默认工作区读 /capital-automation/workspaces�
   const store = injected.hooks.capitalCard
   await injected.ensureWorkspaces()
   const menu = collect(render(), 'Menu')[0]
-  assert.deepEqual(docRequests.map((item) => item.url), ['/capital-automation/workspaces'], '只读一次工作区列表')
+  assert.deepEqual(docRequests.map((item) => item.url), ['/automation-workbench/workspaces'], '只读一次工作区列表')
   assert.deepEqual(Array.from(menu.props.items, (item) => item.label), [
-    'CapGen 投研自动化（web）',
-    'CapGen 投研自动化（web） · ~/old-automation',
+    '自动化工作台（web）',
+    '自动化工作台（web） · ~/old-automation',
     '研究项目',
   ], '专属默认工作区是首项；同名但不同路径的工作区用路径消歧')
   assert.equal(menu.props.selectedId, menu.props.items[0].id, '空值先落在专属默认项，不落到别的 id 上')
-  assert.equal(menu.props.anchor.props['aria-describedby'], 'capital-config-automation-workspace-path', '路径存在时触发器关联路径说明')
+  assert.equal(menu.props.anchor.props['aria-describedby'], 'automation-config-automation-workspace-path', '路径存在时触发器关联路径说明')
   assert.equal(collect(render(), 'select').length, 0, '不再有原生 select')
   assert.equal(
     collect(render(), 'p').filter((node) => node.children[0] === 'automationDefaultWorkspaceHint').length,
@@ -1253,7 +1253,7 @@ test('capital-config Client：默认工作区读 /capital-automation/workspaces�
   assert.equal(store.getSnapshot().workspace.current.path, '~/project', '路径跟着选中的工作区换')
 })
 
-test('capital-config Client：selected skill 开关只写允许的 volatile 路径且默认关闭', async () => {
+test('automation-config Client：selected skill 开关只写允许的 volatile 路径且默认关闭', async () => {
   const doc = { value: { selectedSkills: { buffettFramework: false } } }
   let writable = true
   const writes = []
@@ -1283,7 +1283,7 @@ test('capital-config Client：selected skill 开关只写允许的 volatile 路�
   assert.equal(writes.length, 1, '只读设置不得发起写入')
 })
 
-test('capital-config Client：打开智能装载后清单与筛选条一起收起，切换只写 selectedSkillsMode', async () => {
+test('automation-config Client：打开智能装载后清单与筛选条一起收起，切换只写 selectedSkillsMode', async () => {
   const doc = { value: { selectedSkillsMode: 'auto', selectedSkills: { buffettFramework: false } } }
   const writes = []
   const scope = {
@@ -1310,10 +1310,10 @@ test('capital-config Client：打开智能装载后清单与筛选条一起收�
   assert.deepEqual(switches.map((node) => node.props.label),
     ['localFetchLabel', 'automationInApp', 'selectedSkillsModeLabel'], 'auto 下只留本机回退、通知与智能装载三颗开关')
   assert.equal(switches[2].props.checked, true, '模式开关必须反映 auto')
-  assert.equal(collect(card, 'div').filter((node) => node.props.className === 'capital-config-skills-browser').length, 0,
+  assert.equal(collect(card, 'div').filter((node) => node.props.className === 'automation-config-skills-browser').length, 0,
     '智能装载打开后，筛选条与逐项清单一起隐藏')
   assert.equal(collect(card, 'Pill').length, 0, '筛选 chip 不在屏')
-  assert.equal(collect(card, 'button').filter((node) => node.props.className === 'capital-config-skill-name').length, 0,
+  assert.equal(collect(card, 'button').filter((node) => node.props.className === 'automation-config-skill-name').length, 0,
     '技能名称入口也不在屏')
   assert.equal(collect(card, 'button')
     .filter((button) => String(button.props['aria-label'] ?? '').startsWith('selectedSkillsCopyName')).length, 0,
@@ -1325,7 +1325,7 @@ test('capital-config Client：打开智能装载后清单与筛选条一起收�
   assert.equal(store.getSnapshot().selectedSkillsMode.auto, false)
 })
 
-test('capital-config Host：schema 默认值必须与主插件 Config 完全一致（两处 schema 不能漂移）', () => {
+test('automation-config Host：schema 默认值必须与主插件 Config 完全一致（两处 schema 不能漂移）', () => {
   assert.deepEqual(plainConfig(CapitalConfig({})), MainConfig({}))
   assert.deepEqual(MainConfig({}).selectedSkills, Object.fromEntries(SELECTED_SKILL_CATALOG.map(({ key }) => [key, false])), 'selected skill 默认必须全部关闭')
   assert.deepEqual(plainConfig(CapitalConfig({})).selectedSkills, MainConfig({}).selectedSkills,
@@ -1335,15 +1335,15 @@ test('capital-config Host：schema 默认值必须与主插件 Config 完全一�
     'Host 设置与主插件运行期的模式默认值必须一致')
 })
 
-test('capital-config Host：localFetch 默认值两处一致且消费点独立生效', () => {
+test('automation-config Host：localFetch 默认值两处一致且消费点独立生效', () => {
   const capital = plainConfig(CapitalConfig({})).retriever.localFetch
   const main = MainConfig({}).retriever.localFetch
   assert.deepEqual(main, LOCAL_FETCH_DEFAULTS, '主插件 schema 默认值必须引用 LOCAL_FETCH_DEFAULTS')
   assert.deepEqual(capital, main, '两处 schema 的 localFetch 默认值必须逐字一致')
   assert.equal(main.enabled, true, '本地回退默认开启')
   assert.equal(capital.enabled, true, '本地回退默认开启')
-  assert.equal(main.userAgent, '@v587d/capital-generation', 'schema 里的 UA 默认值是产品标识（裸版本号是 WAF 眼里的爬虫特征）')
-  assert.equal(capital.userAgent, '@v587d/capital-generation')
+  assert.equal(main.userAgent, 'dsh-workbench-automation', 'schema 里的 UA 默认值是产品标识（裸版本号是 WAF 眼里的爬虫特征）')
+  assert.equal(capital.userAgent, 'dsh-workbench-automation')
   assert.equal(main.timeoutMs, 30000, '对齐官方 dsh-web-fetch-http 的 timeoutMs（15s 会误杀慢站点）')
   assert.equal(main.maxBytes, 524288)
   assert.equal(main.maxContentChars, 100000, '对齐官方 dsh-web-fetch-http 的 maxBodyChars；切在原始 HTML 上，必须按 HTML 体积给足')
@@ -1366,7 +1366,7 @@ test('capital-config Host：localFetch 默认值两处一致且消费点独立�
   assert.equal(resolveLocalFetchConfig({ userAgent: 'custom/1' }).userAgent, 'custom/1', '显式 UA 覆盖版本号')
 })
 
-test('capital-config Client：详情页外链只认本包，两枚图标各去 GitHub 与 npm', () => {
+test('automation-config Client：详情页外链只认本包，两枚图标各去 GitHub 与 npm', () => {
   const scope = readyScope()
   const { mod } = loadClient({ scope })
   const { ctx, registrations, dictionaries } = fakeCtx({ scope })
@@ -1374,14 +1374,14 @@ test('capital-config Client：详情页外链只认本包，两枚图标各去 G
   const { declaration, component } = registrationFor(registrations, 'plugins.detail.badge')
   assert.equal(declaration.name, 'plugins.detail.badge')
   assert.equal(typeof declaration.id, 'string', 'list 座位按 id 占位：缺 id 上游直接抛')
-  assert.equal(declaration.locale, 'settings.capital', '文案走卡片同一份 bilingual 字典')
+  assert.equal(declaration.locale, 'settings.automation', '文案走卡片同一份 bilingual 字典')
 
   const t = (key) => String(key)
   const own = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
   const bundle = (name) => ({ kind: 'bundle', pkg: { name, rows: [] } })
   assert.equal(component({ subject: bundle('@deepseek-ai/dsh-tool-web'), t }), null,
     '别的包的详情页不许出现本插件的链接')
-  assert.equal(component({ subject: { kind: 'row', pkg: bundle(own.name), row: { rowId: 'capital-config' } }, t }), null,
+  assert.equal(component({ subject: { kind: 'row', pkg: bundle(own.name), row: { rowId: 'automation-config' } }, t }), null,
     '行详情页共用同一格座位：链接是包级属性，只出现在包页')
   assert.equal(component({ subject: { kind: 'item', id: 'capital' }, t }), null, '官方插件页同理')
 
@@ -1400,13 +1400,13 @@ test('capital-config Client：详情页外链只认本包，两枚图标各去 G
   assert.equal(github.props.href, repoUrl, 'GitHub 图标必须逐字跟着 package.json 的 repository.url')
   assert.equal(npm.props.href, `https://www.npmjs.com/package/${own.name}`, 'npm 地址由包名拼出')
 
-  const dict = dictionaries.get('settings.capital')
+  const dict = dictionaries.get('settings.automation')
   assert.deepEqual(Object.keys(dict.zh).sort(), Object.keys(dict.en).sort(), '两份字典的键必须同集合')
   const labels = ['githubLabel', 'npmLabel'].map((key) => dict.zh[key])
   assert.equal(new Set(labels).size, 2, '两枚图标的中文提示各不相同（纯图标全靠它区分去处）')
 })
 
-test('capital-config 包清单：声明运行期 schemastery 依赖，且客户端 bundle 会随包发布', () => {
+test('automation-config 包清单：声明运行期 schemastery 依赖，且客户端 bundle 会随包发布', () => {
   const manifest = JSON.parse(readFileSync(join(ROOT, 'config', 'package.json'), 'utf8'))
   // schemastery is a runtime import; .volatile() needs >= 3.18.4 or the row throws on import.
   assert.equal(manifest.dependencies?.['@deepseek-ai/schemastery'], '^3.18.4')

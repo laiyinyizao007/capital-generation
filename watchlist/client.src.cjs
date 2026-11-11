@@ -1,5 +1,5 @@
 /**
- * Browser half of `@v587d/watchlist`: a session-scoped overlay entry rendered by
+ * Browser half of `dsh-workbench-automation-watchlist`: a session-scoped overlay entry rendered by
  * the official headless `Modal`, plus a preset-gated `commandUi` contribution.
  * The overlay mounts in every session, so it returns null when closed and never
  * fetches while closed. No turn-tail slot and no custom session events (closed
@@ -13,15 +13,15 @@ const { IconChecklistOutlineRegular, IconCloseOutlineRegular, IconDatabaseOutlin
 // Holdability and ceiling come from the same module the host gate uses.
 const { isHoldable, weightCeiling } = require('./holding-rules.js')
 
-const ENTRY_NAME = 'capital-watchlist'
+const ENTRY_NAME = 'automation-watchlist'
 const NS = 'capital.watchlist'
 const SLOT = 'conversation.input.overlay'
-const ROUTE = '/capital-watchlist'
-const PRESET = 'capital-generation'
+const ROUTE = '/automation-watchlist'
+const PRESET = 'dsh-workbench-automation'
 const SEARCH_DEBOUNCE_MS = 300
 /** Weight step in percentage points; no snapping (37.5 stays 37.5 ± 10). */
 const HOLDING_STEP = 10
-const STYLE_TAG = 'capital-watchlist-css'
+const STYLE_TAG = 'automation-watchlist-css'
 
 const zh = {
   'command.label': '自选股',
@@ -246,13 +246,13 @@ function cleanRows(rows) {
   return Array.isArray(rows) ? rows.map((row) => (row === null || typeof row !== 'object' ? row : { ...row, name: scrubInvisible(row.name) })) : rows
 }
 /** Color encodes market only; product type is carried by the label. */const TYPE_TONES = {
-  'a-share': 'capital-watchlist-tag-cn',
-  'a-share-index': 'capital-watchlist-tag-cn',
-  'fund-etf': 'capital-watchlist-tag-cn',
-  'hk-stock': 'capital-watchlist-tag-hk',
-  'hk-index': 'capital-watchlist-tag-hk',
-  'us-stock': 'capital-watchlist-tag-us',
-  'us-index': 'capital-watchlist-tag-us',
+  'a-share': 'automation-watchlist-tag-cn',
+  'a-share-index': 'automation-watchlist-tag-cn',
+  'fund-etf': 'automation-watchlist-tag-cn',
+  'hk-stock': 'automation-watchlist-tag-hk',
+  'hk-index': 'automation-watchlist-tag-hk',
+  'us-stock': 'automation-watchlist-tag-us',
+  'us-index': 'automation-watchlist-tag-us',
 }
 
 /** Client-side filter over fully fetched candidates; `exchange` stores the market. */
@@ -266,126 +266,126 @@ const marketIdOf = (candidate) => (candidate.exchange === 'HK' ? 'hk' : candidat
  * backdrop filter. The red/green pair is the only literal color.
  */
 const CSS = `
-.capital-watchlist-dialog.capital-watchlist-dialog { width: min(420px, 92vw); max-height: 100%; padding: 0; gap: 0; border-radius: 18px; }
-.capital-watchlist-card { position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; border-radius: 18px; --capital-watchlist-up: #d1493f; --capital-watchlist-down: #17a063; --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2); --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2); }
-.capital-watchlist-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 18px 20px 14px; }
-.capital-watchlist-title { margin: 0; font-size: 17px; line-height: 24px; font-weight: 600; letter-spacing: .3px; color: var(--dsw-alias-label-primary); }
-.capital-watchlist-close { flex: none; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 50%; corner-shape: round; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-secondary); cursor: pointer; }
-.capital-watchlist-close:hover { background: var(--dsw-alias-interactive-bg-hover-accent); color: var(--dsw-alias-label-primary); }
-.capital-watchlist-search { position: relative; padding: 0 20px 16px; }
-.capital-watchlist-field { position: relative; display: flex; align-items: center; height: 42px; padding: 0 14px 0 40px; border: none; border-radius: 12px; background: var(--dsw-alias-bg-module-platform); transition: box-shadow .2s var(--ds-ease-in-out); }
-.capital-watchlist-field:focus-within { box-shadow: inset 0 0 0 1.5px var(--dsw-alias-brand-primary); }
-.capital-watchlist-searchicon { position: absolute; left: 14px; display: inline-flex; color: var(--dsw-alias-label-tertiary); pointer-events: none; }
-.capital-watchlist-input { flex: 1 1 auto; min-width: 0; height: 100%; padding: 0; border: none; outline: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 14px; line-height: 22px; }
-.capital-watchlist-input::placeholder { color: var(--dsw-alias-label-tertiary); }
-.capital-watchlist-clear { flex: none; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 50%; corner-shape: round; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); cursor: pointer; }
-.capital-watchlist-clear:hover { background: var(--dsw-alias-interactive-bg-hover-accent); color: var(--dsw-alias-label-primary); }
-/* max-height must equal the .capital-watchlist-list-open min-height (test pins both). */
-.capital-watchlist-dropdown { position: absolute; top: calc(100% - 8px); left: 20px; right: 20px; z-index: 20; display: flex; flex-direction: column; max-height: 320px; overflow: hidden; background: var(--dsw-specific-menu); backdrop-filter: var(--dsw-menu-backdrop-filter); border: 0; border-radius: 12px; --dsw-elevation-stroke-color: var(--dsw-alias-border-l1); box-shadow: var(--dsw-elevation-prominent); animation: capital-watchlist-drop .18s var(--ds-ease-in-out); }
-.capital-watchlist-filter { flex: none; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: .5px solid var(--dsw-alias-border-l2); }
-.capital-watchlist-options { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
-.capital-watchlist-filterbtn { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border: none; border-radius: 999px; corner-shape: round; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 12px; line-height: 16px; cursor: pointer; }
-.capital-watchlist-filterbtn:hover { background: var(--dsw-alias-interactive-bg-hover-accent); color: var(--dsw-alias-label-primary); }
-.capital-watchlist-filterbtn[aria-pressed="true"] { background: color-mix(in srgb, var(--dsw-alias-brand-primary) 14%, transparent); color: var(--dsw-alias-label-primary); }
-.capital-watchlist-filtercount { font-size: 11px; color: var(--dsw-alias-label-tertiary); font-variant-numeric: tabular-nums; }
-@keyframes capital-watchlist-drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes capital-watchlist-breathe { 0% { opacity: 1; } 40% { opacity: .6; } 80%, 100% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .capital-watchlist-dropdown { animation: none; } .capital-watchlist-skeleton { animation: none; } }
-.capital-watchlist-option { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; border: none; border-bottom: .5px solid var(--dsw-alias-border-l2); background: transparent; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
-.capital-watchlist-option:last-of-type { border-bottom: none; }
+.automation-watchlist-dialog.automation-watchlist-dialog { width: min(420px, 92vw); max-height: 100%; padding: 0; gap: 0; border-radius: 18px; }
+.automation-watchlist-card { position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; border-radius: 18px; --automation-watchlist-up: #d1493f; --automation-watchlist-down: #17a063; --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2); --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2); }
+.automation-watchlist-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 18px 20px 14px; }
+.automation-watchlist-title { margin: 0; font-size: 17px; line-height: 24px; font-weight: 600; letter-spacing: .3px; color: var(--dsw-alias-label-primary); }
+.automation-watchlist-close { flex: none; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 50%; corner-shape: round; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-secondary); cursor: pointer; }
+.automation-watchlist-close:hover { background: var(--dsw-alias-interactive-bg-hover-accent); color: var(--dsw-alias-label-primary); }
+.automation-watchlist-search { position: relative; padding: 0 20px 16px; }
+.automation-watchlist-field { position: relative; display: flex; align-items: center; height: 42px; padding: 0 14px 0 40px; border: none; border-radius: 12px; background: var(--dsw-alias-bg-module-platform); transition: box-shadow .2s var(--ds-ease-in-out); }
+.automation-watchlist-field:focus-within { box-shadow: inset 0 0 0 1.5px var(--dsw-alias-brand-primary); }
+.automation-watchlist-searchicon { position: absolute; left: 14px; display: inline-flex; color: var(--dsw-alias-label-tertiary); pointer-events: none; }
+.automation-watchlist-input { flex: 1 1 auto; min-width: 0; height: 100%; padding: 0; border: none; outline: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 14px; line-height: 22px; }
+.automation-watchlist-input::placeholder { color: var(--dsw-alias-label-tertiary); }
+.automation-watchlist-clear { flex: none; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 50%; corner-shape: round; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); cursor: pointer; }
+.automation-watchlist-clear:hover { background: var(--dsw-alias-interactive-bg-hover-accent); color: var(--dsw-alias-label-primary); }
+/* max-height must equal the .automation-watchlist-list-open min-height (test pins both). */
+.automation-watchlist-dropdown { position: absolute; top: calc(100% - 8px); left: 20px; right: 20px; z-index: 20; display: flex; flex-direction: column; max-height: 320px; overflow: hidden; background: var(--dsw-specific-menu); backdrop-filter: var(--dsw-menu-backdrop-filter); border: 0; border-radius: 12px; --dsw-elevation-stroke-color: var(--dsw-alias-border-l1); box-shadow: var(--dsw-elevation-prominent); animation: automation-watchlist-drop .18s var(--ds-ease-in-out); }
+.automation-watchlist-filter { flex: none; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: .5px solid var(--dsw-alias-border-l2); }
+.automation-watchlist-options { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+.automation-watchlist-filterbtn { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border: none; border-radius: 999px; corner-shape: round; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 12px; line-height: 16px; cursor: pointer; }
+.automation-watchlist-filterbtn:hover { background: var(--dsw-alias-interactive-bg-hover-accent); color: var(--dsw-alias-label-primary); }
+.automation-watchlist-filterbtn[aria-pressed="true"] { background: color-mix(in srgb, var(--dsw-alias-brand-primary) 14%, transparent); color: var(--dsw-alias-label-primary); }
+.automation-watchlist-filtercount { font-size: 11px; color: var(--dsw-alias-label-tertiary); font-variant-numeric: tabular-nums; }
+@keyframes automation-watchlist-drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes automation-watchlist-breathe { 0% { opacity: 1; } 40% { opacity: .6; } 80%, 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .automation-watchlist-dropdown { animation: none; } .automation-watchlist-skeleton { animation: none; } }
+.automation-watchlist-option { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; border: none; border-bottom: .5px solid var(--dsw-alias-border-l2); background: transparent; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
+.automation-watchlist-option:last-of-type { border-bottom: none; }
 /* Reads aria-disabled, not :disabled: real disabled would drop focus and close the dropdown. */
-.capital-watchlist-option:hover:not([aria-disabled="true"]) { background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 10%, transparent); }
-.capital-watchlist-option[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
-.capital-watchlist-close:focus-visible, .capital-watchlist-clear:focus-visible, .capital-watchlist-option:focus-visible, .capital-watchlist-filterbtn:focus-visible, .capital-watchlist-more:focus-visible, .capital-watchlist-predict:focus-visible, .capital-watchlist-review:focus-visible, .capital-watchlist-refresh:focus-visible, .capital-watchlist-confirmbtn:focus-visible, .capital-watchlist-stepperbtn:focus-visible { outline: var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary)); outline-offset: 1px; }
-.capital-watchlist-optionmain { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.capital-watchlist-optionname { font-size: 14px; line-height: 18px; font-weight: 500; color: var(--dsw-alias-label-primary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.capital-watchlist-optioncode { font-size: 12px; line-height: 15px; color: var(--dsw-alias-label-tertiary); }
-.capital-watchlist-addbtn { flex: none; padding: 3px 9px; border: 1px solid color-mix(in srgb, var(--dsw-alias-state-business-primary) 25%, transparent); border-radius: 999px; corner-shape: round; background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent); color: var(--dsw-alias-state-business-primary); font-size: 12px; line-height: 15px; font-weight: 500; }
-.capital-watchlist-option:hover:not([aria-disabled="true"]) .capital-watchlist-addbtn { background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 20%, transparent); }
-.capital-watchlist-addbtn[data-state="added"] { border-color: var(--dsw-alias-border-l1); background: transparent; color: var(--dsw-alias-label-tertiary); font-weight: 400; }
-.capital-watchlist-tag { flex: none; display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 11px; line-height: 14px; font-weight: 500; }
+.automation-watchlist-option:hover:not([aria-disabled="true"]) { background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 10%, transparent); }
+.automation-watchlist-option[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.automation-watchlist-close:focus-visible, .automation-watchlist-clear:focus-visible, .automation-watchlist-option:focus-visible, .automation-watchlist-filterbtn:focus-visible, .automation-watchlist-more:focus-visible, .automation-watchlist-predict:focus-visible, .automation-watchlist-review:focus-visible, .automation-watchlist-refresh:focus-visible, .automation-watchlist-confirmbtn:focus-visible, .automation-watchlist-stepperbtn:focus-visible { outline: var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary)); outline-offset: 1px; }
+.automation-watchlist-optionmain { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.automation-watchlist-optionname { font-size: 14px; line-height: 18px; font-weight: 500; color: var(--dsw-alias-label-primary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.automation-watchlist-optioncode { font-size: 12px; line-height: 15px; color: var(--dsw-alias-label-tertiary); }
+.automation-watchlist-addbtn { flex: none; padding: 3px 9px; border: 1px solid color-mix(in srgb, var(--dsw-alias-state-business-primary) 25%, transparent); border-radius: 999px; corner-shape: round; background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent); color: var(--dsw-alias-state-business-primary); font-size: 12px; line-height: 15px; font-weight: 500; }
+.automation-watchlist-option:hover:not([aria-disabled="true"]) .automation-watchlist-addbtn { background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 20%, transparent); }
+.automation-watchlist-addbtn[data-state="added"] { border-color: var(--dsw-alias-border-l1); background: transparent; color: var(--dsw-alias-label-tertiary); font-weight: 400; }
+.automation-watchlist-tag { flex: none; display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 11px; line-height: 14px; font-weight: 500; }
 /* Badge uses a solid tertiary background; state color as text uses the label tier. */
-.capital-watchlist-tag-cn { color: var(--dsw-alias-state-error-primary); background: var(--dsw-alias-state-error-tertiary, color-mix(in srgb, var(--dsw-alias-state-error-primary) 12%, transparent)); }
-.capital-watchlist-tag-hk { color: var(--dsw-alias-state-warn-label); background: var(--dsw-alias-state-warn-tertiary); }
-.capital-watchlist-tag-us { color: var(--dsw-alias-state-success-primary); background: var(--dsw-alias-state-success-tertiary); }
+.automation-watchlist-tag-cn { color: var(--dsw-alias-state-error-primary); background: var(--dsw-alias-state-error-tertiary, color-mix(in srgb, var(--dsw-alias-state-error-primary) 12%, transparent)); }
+.automation-watchlist-tag-hk { color: var(--dsw-alias-state-warn-label); background: var(--dsw-alias-state-warn-tertiary); }
+.automation-watchlist-tag-us { color: var(--dsw-alias-state-success-primary); background: var(--dsw-alias-state-success-tertiary); }
 /* Header and rows are separate grids, so 92px / 84px must stay fixed for column alignment. */
-.capital-watchlist-grid { display: grid; grid-template-columns: 1fr 92px 84px; gap: 8px; align-items: center; }
-.capital-watchlist-head { padding: 0 20px 8px; font-size: 12px; line-height: 18px; letter-spacing: .2px; white-space: nowrap; color: var(--dsw-alias-label-tertiary); }
-.capital-watchlist-headaction { text-align: right; }
-.capital-watchlist-list { max-height: 300px; padding: 0 12px 8px; overflow-y: auto; }
+.automation-watchlist-grid { display: grid; grid-template-columns: 1fr 92px 84px; gap: 8px; align-items: center; }
+.automation-watchlist-head { padding: 0 20px 8px; font-size: 12px; line-height: 18px; letter-spacing: .2px; white-space: nowrap; color: var(--dsw-alias-label-tertiary); }
+.automation-watchlist-headaction { text-align: right; }
+.automation-watchlist-list { max-height: 300px; padding: 0 12px 8px; overflow-y: auto; }
 /* Must equal the dropdown max-height; min wins over max-height while open. */
-.capital-watchlist-list-open { min-height: 320px; }
-.capital-watchlist-row { padding: 11px 8px; border-radius: 10px; transition: background .15s var(--ds-ease-in-out); }
-.capital-watchlist-row:hover { background: var(--dsw-alias-interactive-bg-hover); }
-.capital-watchlist-namewrap { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.capital-watchlist-name { font-size: 14px; font-weight: 500; color: var(--dsw-alias-label-primary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.capital-watchlist-name-held { color: var(--capital-watchlist-up); }
-.capital-watchlist-codeline { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.capital-watchlist-code { font-size: 11px; color: var(--dsw-alias-label-tertiary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.automation-watchlist-list-open { min-height: 320px; }
+.automation-watchlist-row { padding: 11px 8px; border-radius: 10px; transition: background .15s var(--ds-ease-in-out); }
+.automation-watchlist-row:hover { background: var(--dsw-alias-interactive-bg-hover); }
+.automation-watchlist-namewrap { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.automation-watchlist-name { font-size: 14px; font-weight: 500; color: var(--dsw-alias-label-primary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.automation-watchlist-name-held { color: var(--automation-watchlist-up); }
+.automation-watchlist-codeline { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.automation-watchlist-code { font-size: 11px; color: var(--dsw-alias-label-tertiary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 /* Right-aligned numbers end at the same edge, so padding-right is the only gap before actions. */
-.capital-watchlist-quote { min-width: 0; padding-right: 12px; text-align: right; font-variant-numeric: tabular-nums; }
-.capital-watchlist-price { font-size: 14px; font-weight: 500; color: var(--dsw-alias-label-primary); white-space: nowrap; }
-.capital-watchlist-change { margin-top: 1px; font-size: 12px; font-weight: 500; white-space: nowrap; }
-.capital-watchlist-up { color: var(--capital-watchlist-up); }
-.capital-watchlist-down { color: var(--capital-watchlist-down); }
-.capital-watchlist-flat { color: var(--dsw-alias-label-secondary); }
-.capital-watchlist-nodata { color: var(--dsw-alias-label-tertiary); }
-.capital-watchlist-quotefailed { color: var(--dsw-alias-state-error-primary); }
+.automation-watchlist-quote { min-width: 0; padding-right: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.automation-watchlist-price { font-size: 14px; font-weight: 500; color: var(--dsw-alias-label-primary); white-space: nowrap; }
+.automation-watchlist-change { margin-top: 1px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.automation-watchlist-up { color: var(--automation-watchlist-up); }
+.automation-watchlist-down { color: var(--automation-watchlist-down); }
+.automation-watchlist-flat { color: var(--dsw-alias-label-secondary); }
+.automation-watchlist-nodata { color: var(--dsw-alias-label-tertiary); }
+.automation-watchlist-quotefailed { color: var(--dsw-alias-state-error-primary); }
 /* Failed refresh keeps the last good snapshot; the tooltip names its time. */
-.capital-watchlist-stale { color: var(--dsw-alias-label-secondary); }
-.capital-watchlist-skeleton { display: block; height: 12px; margin: 2px 0 0 auto; border-radius: 6px; background: var(--dsw-alias-bg-skeleton); animation: capital-watchlist-breathe 2s cubic-bezier(.36, 0, .64, 1) infinite; }
-.capital-watchlist-skeleton-price { width: 68px; }
-.capital-watchlist-skeleton-change { width: 44px; height: 10px; }
-.capital-watchlist-more { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; }
-.capital-watchlist-more:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
-.capital-watchlist-more:disabled { opacity: .45; cursor: not-allowed; }
-.capital-watchlist-actions { justify-content: flex-end; }
-.capital-watchlist-rowactions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; min-width: 0; }
+.automation-watchlist-stale { color: var(--dsw-alias-label-secondary); }
+.automation-watchlist-skeleton { display: block; height: 12px; margin: 2px 0 0 auto; border-radius: 6px; background: var(--dsw-alias-bg-skeleton); animation: automation-watchlist-breathe 2s cubic-bezier(.36, 0, .64, 1) infinite; }
+.automation-watchlist-skeleton-price { width: 68px; }
+.automation-watchlist-skeleton-change { width: 44px; height: 10px; }
+.automation-watchlist-more { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; }
+.automation-watchlist-more:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+.automation-watchlist-more:disabled { opacity: .45; cursor: not-allowed; }
+.automation-watchlist-actions { justify-content: flex-end; }
+.automation-watchlist-rowactions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; min-width: 0; }
 /* 26×24 is the minimum hit target for icon-only actions. */
-.capital-watchlist-review, .capital-watchlist-predict { flex: none; width: 26px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }
-.capital-watchlist-review:hover:not(:disabled), .capital-watchlist-predict:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-accent); color: var(--dsw-alias-label-primary); }
-.capital-watchlist-review:disabled, .capital-watchlist-predict:disabled { opacity: .45; cursor: not-allowed; }
-.capital-watchlist-footer { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 14px 20px 18px; border-top: .5px solid var(--dsw-alias-border-l2); }
-.capital-watchlist-footcol { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
-.capital-watchlist-refresh { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: 1px solid color-mix(in srgb, var(--dsw-alias-state-business-primary) 25%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent); color: var(--dsw-alias-state-business-primary); font-family: inherit; font-size: 13px; line-height: 20px; font-weight: 500; cursor: pointer; }
-.capital-watchlist-refresh:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 20%, transparent); }
-.capital-watchlist-refresh:disabled { opacity: .45; cursor: not-allowed; }
-.capital-watchlist-updated { font-size: 12px; line-height: 34px; color: var(--dsw-alias-label-tertiary); }
-.capital-watchlist-hint { flex: none; padding: 8px 14px; font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-secondary); }
-.capital-watchlist-searcherror { color: var(--dsw-alias-state-warn-label); }
-.capital-watchlist-adderror { padding: 0 20px 10px; font-size: 12px; line-height: 18px; color: var(--dsw-alias-state-warn-label); }
-.capital-watchlist-notice { font-size: 12px; line-height: 18px; color: var(--dsw-alias-state-error-primary); }
-.capital-watchlist-empty { padding: 24px 20px; text-align: center; font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-secondary); }
-.capital-watchlist-loaderror { color: var(--dsw-alias-state-error-primary); }
-.capital-watchlist-confirm { position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; border-radius: 18px; background: var(--dsw-alias-bg-mask-1); opacity: 0; visibility: hidden; transition: opacity .2s var(--ds-ease-in-out), visibility .2s; }
-.capital-watchlist-confirm-open { opacity: 1; visibility: visible; }
+.automation-watchlist-review, .automation-watchlist-predict { flex: none; width: 26px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }
+.automation-watchlist-review:hover:not(:disabled), .automation-watchlist-predict:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-accent); color: var(--dsw-alias-label-primary); }
+.automation-watchlist-review:disabled, .automation-watchlist-predict:disabled { opacity: .45; cursor: not-allowed; }
+.automation-watchlist-footer { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 14px 20px 18px; border-top: .5px solid var(--dsw-alias-border-l2); }
+.automation-watchlist-footcol { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.automation-watchlist-refresh { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: 1px solid color-mix(in srgb, var(--dsw-alias-state-business-primary) 25%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent); color: var(--dsw-alias-state-business-primary); font-family: inherit; font-size: 13px; line-height: 20px; font-weight: 500; cursor: pointer; }
+.automation-watchlist-refresh:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 20%, transparent); }
+.automation-watchlist-refresh:disabled { opacity: .45; cursor: not-allowed; }
+.automation-watchlist-updated { font-size: 12px; line-height: 34px; color: var(--dsw-alias-label-tertiary); }
+.automation-watchlist-hint { flex: none; padding: 8px 14px; font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-secondary); }
+.automation-watchlist-searcherror { color: var(--dsw-alias-state-warn-label); }
+.automation-watchlist-adderror { padding: 0 20px 10px; font-size: 12px; line-height: 18px; color: var(--dsw-alias-state-warn-label); }
+.automation-watchlist-notice { font-size: 12px; line-height: 18px; color: var(--dsw-alias-state-error-primary); }
+.automation-watchlist-empty { padding: 24px 20px; text-align: center; font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-secondary); }
+.automation-watchlist-loaderror { color: var(--dsw-alias-state-error-primary); }
+.automation-watchlist-confirm { position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; border-radius: 18px; background: var(--dsw-alias-bg-mask-1); opacity: 0; visibility: hidden; transition: opacity .2s var(--ds-ease-in-out), visibility .2s; }
+.automation-watchlist-confirm-open { opacity: 1; visibility: visible; }
 /* Width follows the card, or a narrow window clips the buttons inside overflow:hidden. */
-.capital-watchlist-confirmbox { width: min(280px, calc(100% - 24px)); padding: 22px 20px 18px; border: 0; border-radius: 14px; background: var(--dsw-alias-bg-layer-2); box-shadow: var(--dsw-elevation-prominent); text-align: center; transform: scale(.95); transition: transform .2s var(--ds-ease-in-out); }
-.capital-watchlist-confirm-open .capital-watchlist-confirmbox { transform: scale(1); }
-.capital-watchlist-confirmtitle { font-size: 15px; line-height: 22px; font-weight: 600; color: var(--dsw-alias-label-primary); }
-.capital-watchlist-confirmdesc { margin-top: 8px; font-size: 13px; line-height: 1.5; color: var(--dsw-alias-label-secondary); }
-.capital-watchlist-confirmdesc strong { color: var(--dsw-alias-label-primary); font-weight: 500; }
-.capital-watchlist-confirmactions { display: flex; gap: 10px; margin-top: 20px; }
-.capital-watchlist-confirmbtn { flex: 1 1 0; height: 36px; border: none; border-radius: 10px; background: var(--dsw-alias-button-primary-dimmed); color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 13px; line-height: 20px; font-weight: 500; cursor: pointer; }
-.capital-watchlist-confirmbtn:hover { background: var(--dsw-alias-interactive-bg-hover-accent); }
-.capital-watchlist-confirmdanger { border: 1px solid color-mix(in srgb, var(--dsw-alias-state-error-primary) 25%, transparent); background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 15%, transparent); color: var(--dsw-alias-state-error-primary); }
-.capital-watchlist-confirmdanger:hover { background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 25%, transparent); }
+.automation-watchlist-confirmbox { width: min(280px, calc(100% - 24px)); padding: 22px 20px 18px; border: 0; border-radius: 14px; background: var(--dsw-alias-bg-layer-2); box-shadow: var(--dsw-elevation-prominent); text-align: center; transform: scale(.95); transition: transform .2s var(--ds-ease-in-out); }
+.automation-watchlist-confirm-open .automation-watchlist-confirmbox { transform: scale(1); }
+.automation-watchlist-confirmtitle { font-size: 15px; line-height: 22px; font-weight: 600; color: var(--dsw-alias-label-primary); }
+.automation-watchlist-confirmdesc { margin-top: 8px; font-size: 13px; line-height: 1.5; color: var(--dsw-alias-label-secondary); }
+.automation-watchlist-confirmdesc strong { color: var(--dsw-alias-label-primary); font-weight: 500; }
+.automation-watchlist-confirmactions { display: flex; gap: 10px; margin-top: 20px; }
+.automation-watchlist-confirmbtn { flex: 1 1 0; height: 36px; border: none; border-radius: 10px; background: var(--dsw-alias-button-primary-dimmed); color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 13px; line-height: 20px; font-weight: 500; cursor: pointer; }
+.automation-watchlist-confirmbtn:hover { background: var(--dsw-alias-interactive-bg-hover-accent); }
+.automation-watchlist-confirmdanger { border: 1px solid color-mix(in srgb, var(--dsw-alias-state-error-primary) 25%, transparent); background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 15%, transparent); color: var(--dsw-alias-state-error-primary); }
+.automation-watchlist-confirmdanger:hover { background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 25%, transparent); }
 /* Portal menu: selectors must be bare classes; card-scoped custom properties do not reach it. */
-.capital-watchlist-checkrow { box-sizing: border-box; display: flex; align-items: center; gap: 6px; width: 100%; min-height: 34px; padding: 6px 8px; border-radius: var(--dsw-radius-md); font-family: inherit; font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-primary); text-align: left; }
-.capital-watchlist-checkicon { display: inline-flex; flex: none; width: 14px; height: 14px; align-items: center; justify-content: center; color: var(--dsw-alias-menu-icon); }
-.capital-watchlist-checklabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.capital-watchlist-stepper { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 34px; padding: 6px 8px; border-radius: var(--dsw-radius-md); font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-primary); }
-.capital-watchlist-stepperlabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.capital-watchlist-stepperline { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: none; }
-.capital-watchlist-stepperbtn { flex: none; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: 0.5px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 15px; line-height: 1; cursor: pointer; }
-.capital-watchlist-stepperbtn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-accent); }
-.capital-watchlist-stepperbtn:disabled { opacity: .45; cursor: not-allowed; }
-.capital-watchlist-stepperreadout { min-width: 46px; text-align: center; font-size: 13px; line-height: 18px; font-variant-numeric: tabular-nums; color: var(--dsw-alias-label-primary); }
-.capital-watchlist-stepperplaceholder { color: var(--dsw-alias-label-tertiary); }
+.automation-watchlist-checkrow { box-sizing: border-box; display: flex; align-items: center; gap: 6px; width: 100%; min-height: 34px; padding: 6px 8px; border-radius: var(--dsw-radius-md); font-family: inherit; font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-primary); text-align: left; }
+.automation-watchlist-checkicon { display: inline-flex; flex: none; width: 14px; height: 14px; align-items: center; justify-content: center; color: var(--dsw-alias-menu-icon); }
+.automation-watchlist-checklabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.automation-watchlist-stepper { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 34px; padding: 6px 8px; border-radius: var(--dsw-radius-md); font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-primary); }
+.automation-watchlist-stepperlabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.automation-watchlist-stepperline { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: none; }
+.automation-watchlist-stepperbtn { flex: none; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: 0.5px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 15px; line-height: 1; cursor: pointer; }
+.automation-watchlist-stepperbtn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-accent); }
+.automation-watchlist-stepperbtn:disabled { opacity: .45; cursor: not-allowed; }
+.automation-watchlist-stepperreadout { min-width: 46px; text-align: center; font-size: 13px; line-height: 18px; font-variant-numeric: tabular-nums; color: var(--dsw-alias-label-primary); }
+.automation-watchlist-stepperplaceholder { color: var(--dsw-alias-label-tertiary); }
 /* Fixed width: content-sized growth from the stepper row shifts the whole right-aligned menu. */
-.capital-watchlist-rows { width: 256px; }
+.automation-watchlist-rows { width: 256px; }
 /* Theme has no global border-box reset; the official item padding would overflow the list. */
-.capital-watchlist-rows button { box-sizing: border-box; }
+.automation-watchlist-rows button { box-sizing: border-box; }
 `
 
 function installStyles() {
@@ -783,7 +783,7 @@ function formatTime(value) {
 }
 
 function TypeTag({ assetType, t }) {
-  return h('span', { className: `capital-watchlist-tag ${TYPE_TONES[assetType] ?? 'capital-watchlist-tag-cn'}` }, typeLabel(assetType, t))
+  return h('span', { className: `automation-watchlist-tag ${TYPE_TONES[assetType] ?? 'automation-watchlist-tag-cn'}` }, typeLabel(assetType, t))
 }
 
 /**
@@ -803,24 +803,24 @@ function QuoteCell({ quote, failureCode, refreshing, t }) {
   const stale = failureCode !== undefined
   if (quote === null || quote === undefined) {
     if (refreshing === true) {
-      return h('div', { className: 'capital-watchlist-quote' },
-        h('span', { className: 'capital-watchlist-skeleton capital-watchlist-skeleton-price' }),
-        h('span', { className: 'capital-watchlist-skeleton capital-watchlist-skeleton-change' }))
+      return h('div', { className: 'automation-watchlist-quote' },
+        h('span', { className: 'automation-watchlist-skeleton automation-watchlist-skeleton-price' }),
+        h('span', { className: 'automation-watchlist-skeleton automation-watchlist-skeleton-change' }))
     }
     if (stale) {
-      return h('div', { className: 'capital-watchlist-quote', title: t(`error.${failureCode}`) },
-        h('div', { className: 'capital-watchlist-price capital-watchlist-quotefailed' }, '—'))
+      return h('div', { className: 'automation-watchlist-quote', title: t(`error.${failureCode}`) },
+        h('div', { className: 'automation-watchlist-price automation-watchlist-quotefailed' }, '—'))
     }
-    return h('div', { className: 'capital-watchlist-quote' }, h('div', { className: 'capital-watchlist-price' }, t('notRefreshed')))
+    return h('div', { className: 'automation-watchlist-quote' }, h('div', { className: 'automation-watchlist-price' }, t('notRefreshed')))
   }
   // Missing change is missing, never 0.00% (0 is a real flat day).
   const hasPct = typeof quote.change_pct === 'number' && Number.isFinite(quote.change_pct)
   const pct = hasPct ? `${quote.change_pct > 0 ? '+' : ''}${quote.change_pct.toFixed(2)}%` : '—'
   const tone = stale
-    ? 'capital-watchlist-stale'
+    ? 'automation-watchlist-stale'
     : !hasPct
-      ? 'capital-watchlist-nodata'
-      : quote.change_pct > 0 ? 'capital-watchlist-up' : quote.change_pct < 0 ? 'capital-watchlist-down' : 'capital-watchlist-flat'
+      ? 'automation-watchlist-nodata'
+      : quote.change_pct > 0 ? 'automation-watchlist-up' : quote.change_pct < 0 ? 'automation-watchlist-down' : 'automation-watchlist-flat'
   /** Failure reason + snapshot time, plus exchange-local time when provided. */
   const exchange = typeof quote.source_time === 'string' && quote.source_time.length > 0
     ? `${t('exchangeTime')} ${quote.source_time}`
@@ -830,11 +830,11 @@ function QuoteCell({ quote, failureCode, refreshing, t }) {
   else if (!hasPct) tips.push(t('noChangePct'))
   if (exchange.length > 0) tips.push(exchange)
   return h('div', {
-    className: 'capital-watchlist-quote',
+    className: 'automation-watchlist-quote',
     title: tips.length === 0 ? undefined : tips.join(' · '),
   },
-    h('div', { className: stale ? 'capital-watchlist-price capital-watchlist-stale' : 'capital-watchlist-price' }, quote.price.toFixed(2)),
-    h('div', { className: `capital-watchlist-change ${tone}` }, pct))
+    h('div', { className: stale ? 'automation-watchlist-price automation-watchlist-stale' : 'automation-watchlist-price' }, quote.price.toFixed(2)),
+    h('div', { className: `automation-watchlist-change ${tone}` }, pct))
 }
 
 /** `list_full` uses the host's `limit`; never print the `{max}` placeholder. */
@@ -904,7 +904,7 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
   const error = state.error
   const notice = error === null || error === undefined
     ? null
-    : h('p', { className: 'capital-watchlist-notice', role: 'alert', 'data-code': error.code },
+    : h('p', { className: 'automation-watchlist-notice', role: 'alert', 'data-code': error.code },
       `${t(`error.${error.code}`)}${error.partial === true ? t('errorSuffix') : ''}`)
 
   /**
@@ -924,28 +924,28 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
   for (const candidate of state.candidates) filterCounts[marketIdOf(candidate)] += 1
   const filterBar = state.candidates.length === 0
     ? null
-    : h('div', { className: 'capital-watchlist-filter', role: 'group', 'aria-label': t('filterLabel') },
+    : h('div', { className: 'automation-watchlist-filter', role: 'group', 'aria-label': t('filterLabel') },
       MARKET_FILTERS.map((entry) => h('button', {
         key: entry.id,
         type: 'button',
-        className: 'capital-watchlist-filterbtn',
+        className: 'automation-watchlist-filterbtn',
         'aria-pressed': state.marketFilter === entry.id,
         onClick: () => surface.setMarketFilter(entry.id),
       },
-        h('span', { className: 'capital-watchlist-filterlabel' }, entry.id === 'all' ? t('filterAll') : entry.label),
-        h('span', { className: 'capital-watchlist-filtercount' }, String(filterCounts[entry.id])))))
+        h('span', { className: 'automation-watchlist-filterlabel' }, entry.id === 'all' ? t('filterAll') : entry.label),
+        h('span', { className: 'automation-watchlist-filtercount' }, String(filterCounts[entry.id])))))
 
   const dropdown = !showDropdown
     ? null
-    : h('div', { className: 'capital-watchlist-dropdown', 'aria-label': t('title'), 'data-menu-material': 'translucent' },
+    : h('div', { className: 'automation-watchlist-dropdown', 'aria-label': t('title'), 'data-menu-material': 'translucent' },
       // Filter bar stays out of the scroll area; the listbox holds only options.
       filterBar,
-      h('div', { className: 'capital-watchlist-options', role: 'listbox', 'aria-label': t('title') },
+      h('div', { className: 'automation-watchlist-options', role: 'listbox', 'aria-label': t('title') },
         visibleCandidates.map((candidate) => h('button', {
           key: candidate.thscode,
           type: 'button',
           role: 'option',
-          className: 'capital-watchlist-option',
+          className: 'automation-watchlist-option',
           // Native tooltip exposes the full name; CSS truncates long US names.
           title: candidate.name,
           // aria-disabled, not disabled: real disabled drops focus to body and closes the dropdown.
@@ -957,40 +957,40 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
             surface.add(candidate).finally(() => { setBusy(false); setAddingThscode(null) })
           },
         },
-          h('span', { className: 'capital-watchlist-optionmain' },
-            h('span', { className: 'capital-watchlist-optionname' }, candidate.name),
+          h('span', { className: 'automation-watchlist-optionmain' },
+            h('span', { className: 'automation-watchlist-optionname' }, candidate.name),
             // Second line shows the full canonical code; a bare `00700` collides with
             // `000700.SZ`, and HSI / HSIGTR / HSINTR are all real indices.
-            h('span', { className: 'capital-watchlist-codeline' },
-              h('span', { className: 'capital-watchlist-optioncode' }, candidate.thscode),
+            h('span', { className: 'automation-watchlist-codeline' },
+              h('span', { className: 'automation-watchlist-optioncode' }, candidate.thscode),
               h(TypeTag, { assetType: candidate.asset_type, t }))),
           // The label is this button's visible verb, not a nested button; state lives on `data-state`.
-          h('span', { className: 'capital-watchlist-addbtn', 'data-state': candidate.in_list === true ? 'added' : 'idle' },
+          h('span', { className: 'automation-watchlist-addbtn', 'data-state': candidate.in_list === true ? 'added' : 'idle' },
             candidate.in_list === true ? t('added') : t('add')))),
         // "No more" scrolls at the end of the list; only shown when this filter has rows.
         state.truncated === true && visibleCandidates.length > 0
-          ? h('div', { className: 'capital-watchlist-hint capital-watchlist-endhint' }, t('truncated'))
+          ? h('div', { className: 'automation-watchlist-hint automation-watchlist-endhint' }, t('truncated'))
           : null),
       // Status hints stay outside the scroll area so they cannot scroll out of sight.
       state.composing === true
         // During composition, say what happens next; never claim "no match".
-        ? h('div', { className: 'capital-watchlist-hint' }, t('composingHint'))
+        ? h('div', { className: 'automation-watchlist-hint' }, t('composingHint'))
         : state.searching === true || state.pendingSearch === true
           // Debounce pending or request in flight both mean "searching", not "no match".
-          ? h('div', { className: 'capital-watchlist-hint' }, t('searching'))
+          ? h('div', { className: 'automation-watchlist-hint' }, t('searching'))
           : state.searchError !== null && state.searchError !== undefined
             // Replaces noHit: a service failure must not read as "you typed it wrong".
-            ? h('div', { className: 'capital-watchlist-hint capital-watchlist-searcherror', role: 'alert', 'data-code': state.searchError.code }, t(`error.${state.searchError.code}`))
+            ? h('div', { className: 'automation-watchlist-hint automation-watchlist-searcherror', role: 'alert', 'data-code': state.searchError.code }, t(`error.${state.searchError.code}`))
             : state.candidates.length === 0
-              ? h('div', { className: 'capital-watchlist-hint' }, t('noHit'))
+              ? h('div', { className: 'automation-watchlist-hint' }, t('noHit'))
               : visibleCandidates.length === 0
                 // Filtered to zero while candidates exist: a filter miss, not "not found".
-                ? h('div', { className: 'capital-watchlist-hint', 'data-filter': state.marketFilter }, t('filterNoHit'))
+                ? h('div', { className: 'automation-watchlist-hint', 'data-filter': state.marketFilter }, t('filterNoHit'))
                 : null,
       // Per-branch failure: separate from the "does this screen have a match" hint.
       ...(state.searchPartial ?? []).map((branch) => h('div', {
         key: `partial-${branch.market}`,
-        className: 'capital-watchlist-hint capital-watchlist-searcherror',
+        className: 'automation-watchlist-hint automation-watchlist-searcherror',
         role: 'status',
         'data-market': branch.market,
         'data-code': branch.code,
@@ -998,21 +998,21 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
 
   const head = state.items.length === 0
     ? null
-    : h('div', { className: 'capital-watchlist-grid capital-watchlist-head' },
+    : h('div', { className: 'automation-watchlist-grid automation-watchlist-head' },
       h('span', null, t('colName')),
-      h('span', { className: 'capital-watchlist-quote' }, t('colQuote')),
-      h('span', { className: 'capital-watchlist-headaction' }, t('colAction')))
+      h('span', { className: 'automation-watchlist-quote' }, t('colQuote')),
+      h('span', { className: 'automation-watchlist-headaction' }, t('colAction')))
 
   /** A 503 is not an empty watchlist. */
   const emptyState = state.loadError !== null && state.loadError !== undefined
-    ? h('p', { className: 'capital-watchlist-empty capital-watchlist-loaderror', role: 'alert', 'data-code': state.loadError.code }, t(`error.${state.loadError.code}`))
-    : h('p', { className: 'capital-watchlist-empty' }, t('empty'))
+    ? h('p', { className: 'automation-watchlist-empty automation-watchlist-loaderror', role: 'alert', 'data-code': state.loadError.code }, t(`error.${state.loadError.code}`))
+    : h('p', { className: 'automation-watchlist-empty' }, t('empty'))
 
   const list = state.loading
-    ? h('p', { className: 'capital-watchlist-empty' }, t('loading'))
+    ? h('p', { className: 'automation-watchlist-empty' }, t('loading'))
     : state.items.length === 0
       ? emptyState
-      : h('div', { className: showDropdown ? 'capital-watchlist-list capital-watchlist-list-open' : 'capital-watchlist-list' }, state.items.map((item, index) => {
+      : h('div', { className: showDropdown ? 'automation-watchlist-list automation-watchlist-list-open' : 'automation-watchlist-list' }, state.items.map((item, index) => {
         const held = item.holding !== null && item.holding !== undefined
         const weight = item.holding?.weight_pct
         // `|| held` keeps legacy index holdings removable; host gate shares `isHoldable`.
@@ -1023,24 +1023,24 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
         const atCeil = (typeof weight === 'number' ? weight : 0) + HOLDING_STEP > ceiling
         return h('div', {
           key: item.thscode,
-          className: 'capital-watchlist-grid capital-watchlist-row',
+          className: 'automation-watchlist-grid automation-watchlist-row',
           'data-thscode': item.thscode,
         },
-          h('span', { className: 'capital-watchlist-namewrap' },
+          h('span', { className: 'automation-watchlist-namewrap' },
             // Held rows tint the name red; title repeats the holding as the non-color channel.
             h('span', {
-              className: held ? 'capital-watchlist-name capital-watchlist-name-held' : 'capital-watchlist-name',
+              className: held ? 'automation-watchlist-name automation-watchlist-name-held' : 'automation-watchlist-name',
               title: nameTitle(item, t),
             }, item.name),
             // Second line is code + market badge only; currency and holding stay out.
-            h('span', { className: 'capital-watchlist-codeline' },
-              h('span', { className: 'capital-watchlist-code' }, item.ticker),
+            h('span', { className: 'automation-watchlist-codeline' },
+              h('span', { className: 'automation-watchlist-code' }, item.ticker),
               h(TypeTag, { assetType: item.asset_type, t }))),
           h(QuoteCell, { quote: item.quote, failureCode: state.failures[item.thscode], refreshing: state.refreshing, t }),
-          h('span', { className: 'capital-watchlist-rowactions' },
+          h('span', { className: 'automation-watchlist-rowactions' },
             h('button', {
               type: 'button',
-              className: 'capital-watchlist-predict',
+              className: 'automation-watchlist-predict',
               disabled: busy,
               title: t('predictTip'),
               'aria-label': `${t('predict')} ${item.name}`,
@@ -1048,7 +1048,7 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
             }, h(IconGoalOutlineRegular, { size: 14 })),
             h('button', {
               type: 'button',
-              className: 'capital-watchlist-review',
+              className: 'automation-watchlist-review',
               disabled: busy,
               title: t('reviewTip'),
               'aria-label': `${t('review')} ${item.name}`,
@@ -1059,7 +1059,7 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
               open: state.rowMenu === item.thscode,
               anchor: h('button', {
                 type: 'button',
-                className: 'capital-watchlist-more',
+                className: 'automation-watchlist-more',
                 disabled: busy,
                 title: t('more'),
                 'aria-label': `${t('more')} ${item.name}`,
@@ -1076,10 +1076,10 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
                   key: 'holding-check',
                   role: 'group',
                   'aria-label': t('holdingName'),
-                  className: 'capital-watchlist-checkrow',
+                  className: 'automation-watchlist-checkrow',
                 },
-                  h('span', { className: 'capital-watchlist-checkicon', 'aria-hidden': 'true' }, h(IconDatabaseOutlineRegular, { size: 14 })),
-                  h('span', { className: 'capital-watchlist-checklabel' }, t('holdingName')),
+                  h('span', { className: 'automation-watchlist-checkicon', 'aria-hidden': 'true' }, h(IconDatabaseOutlineRegular, { size: 14 })),
+                  h('span', { className: 'automation-watchlist-checklabel' }, t('holdingName')),
                   h(Switch, {
                     checked: held,
                     disabled: busy,
@@ -1088,27 +1088,27 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
                   }))] : []),
                 ...(held && isHoldable(item) ? [h('div', {
                   key: 'holding-step',
-                  className: 'capital-watchlist-stepper',
+                  className: 'automation-watchlist-stepper',
                   role: 'group',
                   'aria-label': t('holdingStepper'),
                 },
-                  h('span', { className: 'capital-watchlist-stepperlabel' }, t('holdingWeightLabel')),
-                  h('span', { className: 'capital-watchlist-stepperline' },
+                  h('span', { className: 'automation-watchlist-stepperlabel' }, t('holdingWeightLabel')),
+                  h('span', { className: 'automation-watchlist-stepperline' },
                     h('button', {
                       type: 'button',
-                      className: 'capital-watchlist-stepperbtn',
+                      className: 'automation-watchlist-stepperbtn',
                       'aria-label': t('holdingStepDown'),
                       disabled: atFloor,
                       onClick: () => surface.stepHolding(item.thscode, -HOLDING_STEP),
                     }, '−'),
                     // role=status announces the readout; unset shows headroom, not "unset".
                     h('span', {
-                      className: typeof weight === 'number' ? 'capital-watchlist-stepperreadout' : 'capital-watchlist-stepperreadout capital-watchlist-stepperplaceholder',
+                      className: typeof weight === 'number' ? 'automation-watchlist-stepperreadout' : 'automation-watchlist-stepperreadout automation-watchlist-stepperplaceholder',
                       role: 'status',
                     }, typeof weight === 'number' ? `${weight}%` : `0~${ceiling}`),
                     h('button', {
                       type: 'button',
-                      className: 'capital-watchlist-stepperbtn',
+                      className: 'automation-watchlist-stepperbtn',
                       'aria-label': t('holdingStepUp'),
                       // Disabled key explains the current ceiling on itself, not on the readout.
                       title: `0~${ceiling}`,
@@ -1136,25 +1136,25 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
               onClose: () => surface.closeRowMenu(),
               align: 'end',
               portal: true,
-              listClassName: 'capital-watchlist-rows',
-              className: 'capital-watchlist-actions',
+              listClassName: 'automation-watchlist-rows',
+              className: 'automation-watchlist-actions',
             })))
       }))
   const confirm = h('div', {
-    className: confirming ? 'capital-watchlist-confirm capital-watchlist-confirm-open' : 'capital-watchlist-confirm',
+    className: confirming ? 'automation-watchlist-confirm automation-watchlist-confirm-open' : 'automation-watchlist-confirm',
     'aria-hidden': confirming ? undefined : 'true',
   },
-    h('div', { className: 'capital-watchlist-confirmbox', role: confirming ? 'alertdialog' : undefined, 'aria-label': t('confirmTitle') },
-      h('div', { className: 'capital-watchlist-confirmtitle' }, t('confirmTitle')),
+    h('div', { className: 'automation-watchlist-confirmbox', role: confirming ? 'alertdialog' : undefined, 'aria-label': t('confirmTitle') },
+      h('div', { className: 'automation-watchlist-confirmtitle' }, t('confirmTitle')),
       confirming
-        ? h('p', { className: 'capital-watchlist-confirmdesc' },
+        ? h('p', { className: 'automation-watchlist-confirmdesc' },
           t('confirmDescPrefix'), h('strong', null, `${pendingRemove.name} · ${pendingRemove.ticker}`), t('confirmDescSuffix'))
         : null,
-      h('div', { className: 'capital-watchlist-confirmactions' },
-        h('button', { type: 'button', className: 'capital-watchlist-confirmbtn', onClick: () => surface.setPendingRemove(null) }, t('confirmCancel')),
+      h('div', { className: 'automation-watchlist-confirmactions' },
+        h('button', { type: 'button', className: 'automation-watchlist-confirmbtn', onClick: () => surface.setPendingRemove(null) }, t('confirmCancel')),
         h('button', {
           type: 'button',
-          className: 'capital-watchlist-confirmbtn capital-watchlist-confirmdanger',
+          className: 'automation-watchlist-confirmbtn automation-watchlist-confirmdanger',
           onClick: () => {
             const row = pendingRemove
             surface.setPendingRemove(null)
@@ -1169,23 +1169,23 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
     // headless: official chrome, Escape and focus handling; geometry is ours.
     headless: true,
     shortcutModal: 'watchlist',
-    className: 'capital-watchlist-dialog',
+    className: 'automation-watchlist-dialog',
   },
-    h('div', { className: 'capital-watchlist-card', onKeyDown },
-      h('div', { className: 'capital-watchlist-header' },
-        h('h2', { className: 'capital-watchlist-title' }, t('title')),
+    h('div', { className: 'automation-watchlist-card', onKeyDown },
+      h('div', { className: 'automation-watchlist-header' },
+        h('h2', { className: 'automation-watchlist-title' }, t('title')),
         h('button', {
           type: 'button',
-          className: 'capital-watchlist-close',
+          className: 'automation-watchlist-close',
           'aria-label': t('close'),
           onClick: () => surface.close(),
         }, h(IconCloseOutlineRegular, { size: 14 }))),
 
-      h('div', { className: 'capital-watchlist-search', onBlur },
-        h('div', { className: 'capital-watchlist-field' },
-          h('span', { className: 'capital-watchlist-searchicon' }, h(IconSearchOutlineRegular, { size: 16 })),
+      h('div', { className: 'automation-watchlist-search', onBlur },
+        h('div', { className: 'automation-watchlist-field' },
+          h('span', { className: 'automation-watchlist-searchicon' }, h(IconSearchOutlineRegular, { size: 16 })),
           h('input', {
-            className: 'capital-watchlist-input',
+            className: 'automation-watchlist-input',
             'data-modal-autofocus': true,
             value: state.query,
             placeholder: t('searchPlaceholder'),
@@ -1197,7 +1197,7 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
           state.query.length > 0
             ? h('button', {
               type: 'button',
-              className: 'capital-watchlist-clear',
+              className: 'automation-watchlist-clear',
               title: t('clearInput'),
               'aria-label': t('clearInput'),
               onMouseDown: (event) => event.preventDefault(),
@@ -1208,23 +1208,23 @@ function WatchlistDialog({ useDialog, surface, t, inputActions }) {
 
       state.addError !== null && state.addError !== undefined
         // Add failures stay in the search area and survive typing.
-        ? h('p', { className: 'capital-watchlist-adderror', role: 'status', 'data-code': state.addError.code }, addErrorText(t, state.addError))
+        ? h('p', { className: 'automation-watchlist-adderror', role: 'status', 'data-code': state.addError.code }, addErrorText(t, state.addError))
         : null,
 
       head,
       list,
 
       // Footer: refresh verb + its batch error on the left, shared timestamp on the right.
-      h('div', { className: 'capital-watchlist-footer' },
-        h('div', { className: 'capital-watchlist-footcol' },
+      h('div', { className: 'automation-watchlist-footer' },
+        h('div', { className: 'automation-watchlist-footcol' },
           h('button', {
             type: 'button',
-            className: 'capital-watchlist-refresh',
+            className: 'automation-watchlist-refresh',
             disabled: state.refreshing || busy,
             onClick: () => { surface.refresh() },
           }, h(IconRefreshOutlineRegular, { size: 14 }), state.refreshing ? t('refreshing') : t('refresh')),
           notice),
-        h('span', { className: 'capital-watchlist-updated' },
+        h('span', { className: 'automation-watchlist-updated' },
           `${t('updated')} ${state.refreshed_at === null || state.refreshed_at === undefined ? t('notRefreshed') : formatTime(state.refreshed_at)}`)),
 
       confirm),
@@ -1268,7 +1268,7 @@ function apply(ctx) {
 
   ctx.slots.inject(SLOT, () => ctx.slots.register({
     name: SLOT,
-    id: 'capital-watchlist-dialog',
+    id: 'automation-watchlist-dialog',
     order: 3,
     locale: NS,
     inject: (sessionId) => {

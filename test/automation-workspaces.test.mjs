@@ -57,7 +57,7 @@ test('默认工作区：首次读取时注册到 workspace registry，运行使�
     const list = await catalog.list()
     assert.equal(list.length, 1)
     assert.equal(list[0].default, true)
-    assert.equal(list[0].title, 'CapGen 投研自动化（web）')
+    assert.equal(list[0].title, '自动化工作台（web）')
     assert.equal('path' in list[0], false, '页面 meta 不暴露工作区绝对路径')
     const target = await catalog.resolve('')
     assert.equal(target.workspaceId, list[0].id)
@@ -120,17 +120,17 @@ test('workspaceRegistry 不可用时退回受控目录，不阻断运行与页�
   assert.deepEqual(await catalog.resolve(''), { workspaceId: undefined, path: '/tmp/capgen-no-registry' })
 })
 
-test('专属默认工作区目录是 <dsh home>/CapGen-automation-workspace/<profile>，页面显示仍为 ~', () => {
+test('专属默认工作区目录是 <dsh home>/automation-workbench-workspace/<profile>，页面显示仍为 ~', () => {
   const home = join(tmpdir(), 'capgen-home')
   assert.equal(
     defaultWorkspacePath({ home, name: 'web' }),
-    join(home, 'CapGen-automation-workspace', 'web'),
+    join(home, 'automation-workbench-workspace', 'web'),
     '默认目录名与 profile 名分开：改显示名不会再改路径',
   )
-  assert.equal(defaultWorkspaceTitle('web'), 'CapGen 投研自动化（web）')
+  assert.equal(defaultWorkspaceTitle('web'), '自动化工作台（web）')
   assert.equal(
-    workspaceDisplayPath(join(home, 'CapGen-automation-workspace', 'web'), home),
-    `~${sep}CapGen-automation-workspace${sep}web`,
+    workspaceDisplayPath(join(home, 'automation-workbench-workspace', 'web'), home),
+    `~${sep}automation-workbench-workspace${sep}web`,
   )
   assert.equal(workspaceDisplayPath('/srv/research', '/home/shawn'), '/srv/research', '家目录外的路径仍写绝对路径')
 })

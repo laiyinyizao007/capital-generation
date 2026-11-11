@@ -4,6 +4,6 @@
  * credentials per call.
  */
 import type { Context } from '@deepseek-ai/cordis';
-export declare const name = "capital-retrieve-search-tools";
+export declare const name = "automation-retrieve-search-tools";
 export declare const inject: string[];
 export declare function apply(ctx: Context): void;

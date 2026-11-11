@@ -1,9 +1,9 @@
-// Sole reader of preset/capital-generation/agent.patch.yml; every assembly assertion goes through it.
+// Sole reader of preset/dsh-workbench-automation/agent.patch.yml; every assembly assertion goes through it.
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { load as yamlLoad } from 'js-yaml'
 
-const PATCH = fileURLToPath(new URL('../preset/capital-generation/agent.patch.yml', import.meta.url))
+const PATCH = fileURLToPath(new URL('../preset/dsh-workbench-automation/agent.patch.yml', import.meta.url))
 
 export const PRESET_PATCH_TEXT = readFileSync(PATCH, 'utf8')
 
@@ -15,7 +15,7 @@ export function presetDeclaration(patch = yamlLoad(PRESET_PATCH_TEXT.replace(/!!
   return declared.config
 }
 
-export const ROOT_PRESET_ID = 'capital-generation'
+export const ROOT_PRESET_ID = 'dsh-workbench-automation'
 
 export function allPresets(patch = yamlLoad(PRESET_PATCH_TEXT.replace(/!!js\s+/g, ''))) {
   return patch.flatMap((entry) => entry?.insert ?? []).filter((row) => row?.name === '@deepseek-ai/dsh-agent-preset')
@@ -48,7 +48,7 @@ export function delegationRow(toolName, patch = yamlLoad(PRESET_PATCH_TEXT.repla
 // Must recurse into `cordis:group`: the collector row hides in an isolate realm, and a top-level
 // read reports its tool surface as empty.
 export function capitalRowsOf(presetId, patch = yamlLoad(PRESET_PATCH_TEXT.replace(/!!js\s+/g, ''))) {
-  return allRowsOf(presetId, patch).filter((row) => typeof row?.name === 'string' && row.name.startsWith('@v587d/capital-generation'))
+  return allRowsOf(presetId, patch).filter((row) => typeof row?.name === 'string' && row.name.startsWith('dsh-workbench-automation'))
 }
 
 // Framework rows (skill / control / shell / fs) can hide in groups too; top-level-only checks miss them.

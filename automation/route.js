@@ -1,5 +1,5 @@
 /**
- * `/capital-automation/*` route. Authentication is the first statement: a rejected request
+ * `/automation-workbench/*` route. Authentication is the first statement: a rejected request
  * never reads the body, a task id, or storage. Bodies are strict JSON and capped before parsing.
  */
 import { MAX_REQUEST_BODY_BYTES } from './defaults.js'
@@ -191,7 +191,7 @@ export function createAutomationRouteHandler(service, options = {}) {
       const code = known ? error.code : schema ? 'invalid_request' : storage ? 'storage_unavailable' : 'internal_error'
       const message = known || schema ? error.message : storage ? '投研自动化存储暂时不可用。' : '服务暂时不可用。'
       if (!known && !schema && !storage) {
-        logger?.warn?.(`capital-automation: ${requestId} ${method} ${pathname} 失败：${String(error)}`)
+        logger?.warn?.(`automation-workbench: ${requestId} ${method} ${pathname} 失败：${String(error)}`)
       }
       send(res, status, {
         ok: false,

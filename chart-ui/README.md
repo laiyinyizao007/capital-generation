@@ -1,6 +1,6 @@
-# @v587d/capital-charts
+# dsh-workbench-automation-charts
 
-自动模式的图表前端组件。**它不是独立安装的包**——它是 `@v587d/capital-generation`
+自动模式的图表前端组件。**它不是独立安装的包**——它是 `dsh-workbench-automation`
 随包携带的嵌套包，由后者 `cordis.patch.yml` 里的 `insert` 行以 host 平面挂载。
 
 ## 为什么是一个嵌套包，而不是主包的一部分
@@ -27,7 +27,7 @@
 
 因此 `cordis.patch.yml` 里写的是 `./chart-ui/index.js`（`cordis-plugin-include` 会把
 baseUrl 设为本 patch 文件所在目录）；`locatePkgJson` 随后按"最近的 package.json"归属，
-包身份为 `@v587d/capital-charts`。
+包身份为 `dsh-workbench-automation-charts`。
 
 回归断言在 `test/chart-composition.test.mjs`（既复刻那两条守卫，也真的解析并导入一次）；
 真实启动验证是 `npm run smoke:boot`。
@@ -36,7 +36,7 @@ baseUrl 设为本 patch 文件所在目录）；`locatePkgJson` 随后按"最近
 
 | 文件 | 说明 |
 |---|---|
-| `index.js` | 宿主半边：`capitalCharts` 服务 + `/capital-charts/<chart_id>.json` 序列路由。纯 JS、零构建 |
+| `index.js` | 宿主半边：`capitalCharts` 服务 + `/automation-charts/<chart_id>.json` 序列路由。纯 JS、零构建 |
 | `client.src.cjs` | 浏览器半边源码：只注册 `tool.call.toolview['render_chart']` 过程明细卡片（取数 → 渲染 → “打开”自包含 HTML）。**不再有 turn-tail 卡片**——呈现改走官方交付通道，见下 |
 | `client.js` | 浏览器半边**构建产物**：`npm run build:client` 用 esbuild 打包生成。`lightweight-charts` 内联（无页面全局）、`react` external |
 | `package.json` | `dsh.client` 声明（`platform: web`）+ `exports["./client"]` |
@@ -110,4 +110,4 @@ auto 模式下 `render_chart` 不再自动登记：`present_charts` 只记录本
 `docs/dev/chart-delivery-events.md` §6.3。
 
 `tool.call.toolview['render_chart']` 保留为工具过程明细（子会话与展开视图可见），
-经 `/capital-charts/<chart_id>.json` 旁路取数渲染，**不经**会话事件。
+经 `/automation-charts/<chart_id>.json` 旁路取数渲染，**不经**会话事件。

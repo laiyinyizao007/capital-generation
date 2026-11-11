@@ -1,4 +1,4 @@
-# Capital Generation 研发约定
+# CapGen 研发约定
 
 > **读者是研发 Agent**。使用者指令住 persona + skill + 工具 `description`，与本文不共用文本；
 > 不得把本文内容搬进 persona（§8.2）。
@@ -36,7 +36,7 @@
 - **§5.1** 可编辑配置只坐 `plugins.bundle.config`（key = 组合包名）一处，不开行级座位：每深一跳就多一次"设置里没这个插件"。
 - **§6.1** 根收敛监听挂 `ctx.root`（standing 层收不到）；身份闸门全局装、调用期现读
   （created 时人设未定）。委派出口只有专用角色，工具面 = preset 挂的族行（allow 清单禁恢复）。
-- **§6.1** `/capital-charts` 序列旁路必须接 `connection.requestRejection`，否则是无认证端点。
+- **§6.1** `/automation-charts` 序列旁路必须接 `connection.requestRejection`，否则是无认证端点。
 - **§6.3** 会话事件词汇表是闭集，交付必须走 first-party `deliverables/presented`；cordis ctx 不能用
   `{ ...ctx }` 展开；队列按 owner 归档；auto 模式在收尾流 finish 帧写交付（L34），回合钩子会落空。
 - **§8.6** 接入必查清单先过：取数一律委派、不许用记忆回填、不带执行面；frontmatter/目录须可发现；catalog 与打包约束见详情。
@@ -50,8 +50,8 @@
 `wait_for_agents` 等子树收敛，不以等待行结束回合。
 ## 2. 项目结构
 ```text
-capital-generation/
-├── preset/capital-generation/    # agent.patch.yml 声明行 + skills（协议 / 任务 skill）
+dsh-workbench-automation/
+├── preset/dsh-workbench-automation/    # agent.patch.yml 声明行 + skills（协议 / 任务 skill）
 ├── src/                          # index.ts 装配；tool-exec.ts 唯一工具授权
 │   ├── data-collector/ sources/  # Dataset / hub / Fuyao 端点表
 │   ├── chart/ agents/ net/       # 出图与交付 / 根收敛 + bash-guard（§1.6）/ 出网（§9.7）
@@ -79,7 +79,7 @@ capital-analysis/runs/<analysis_id>/          # 预留（data_analyst）
 模型侧纪律在主 / 子 persona 与 skill `capital-web-protocol`（都有断言）；维护者结构事实——三类工作面
 （含文档解析 `ocr`）、本地回退边界、输出预算与 `ocr` 的 job 生命周期与落盘——在 `docs/dev/web-retriever.md`。
 
-## 5. settings 配置纪律（`capital-config`，host 平面）
+## 5. settings 配置纪律（`automation-config`，host 平面）
 
 卡片是 host 平面独立嵌套包（`cordis.patch.yml` insert 行）；可编辑面就是条目 Config 的 `.volatile()` 字段（命名空间 ≡ 条目 id，**四处同字**），密钥只进 credentials 域；细节全在 `docs/dev/settings-config.md`。
 **⛔ 卡片坐「插件」页该 bundle 自己的「配置」段**（槽 `plugins.bundle.config`，key = 包名），**不在行详情页、不在「设置」页**；条目 id 与包名任一处漂移 = 卡片静默消失（§5.1 §5.4）。
@@ -133,7 +133,7 @@ capital-analysis/runs/<analysis_id>/          # 预留（data_analyst）
 `@param` / `@returns`。文件头 ≤5 行，单点一行；优先英文（中文只用于原文报错、用户文案或中文术语更准处）。
 细节住 `docs/dev/`，只留指针；生成物（`lib/`、生成的 `client.js`）不手改；指令注释不删。
 ## 12. 投研自动化
-`capital-automation` 独立 host bundle，官方 `ui-schedule` 不变；固定域 `capital_automation` + 服务端
+`automation-workbench` 独立 host bundle，官方 `ui-schedule` 不变；固定域 `capital_automation` + 服务端
 `profileKey` 过滤 + 单 scheduler lease + 每次运行新 session + 无人值守闸门；细节见 `docs/dev/automation.md`
 §12.1–§12.5。延期：条件触发器、跨运行上下文、watchdog、preset/projectRoot。
 

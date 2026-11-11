@@ -81,7 +81,7 @@ export function installPresetRosterFilter(service: unknown, ctx: EffectContext):
     } catch {
     }
   }
-  if (typeof ctx.effect === 'function') ctx.effect(() => restore, 'capital-preset-roster')
+  if (typeof ctx.effect === 'function') ctx.effect(() => restore, 'automation-preset-roster')
   return true
 }
 

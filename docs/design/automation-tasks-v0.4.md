@@ -50,7 +50,7 @@ v0.4 的实现范围收缩为：
 
 **CapGen v0.4 自身设计：**
 
-- `capital-automation` 独立 host bundle、页面和路由；
+- `automation-workbench` 独立 host bundle、页面和路由；
 - 固定 `capital_automation` domain，记录内带服务端 profileKey；
 - Capital 自有 60 秒 tick、scheduler owner、occurrence 和运行状态；
 - 每次运行创建新 session，不在 Phase 1 自动 compact。
@@ -70,11 +70,11 @@ v0.4 的实现范围收缩为：
 | 名称 | 含义 |
 |---|---|
 | `CapGen 投研自动化` | 用户看到的页面标题和侧栏文案 |
-| `capital-automation` | host 行 id、客户端包名的一部分、路由和内部命名空间 |
+| `automation-workbench` | host 行 id、客户端包名的一部分、路由和内部命名空间 |
 | `automation/` | host bundle 源码和客户端 bundle 目录 |
 | `capital_automation` | 固定 storage domain 名称；记录内部带 profileKey |
-| `/capital-automation` | Capital 自有 HTTP 路由前缀 |
-| `capital-automation` | Capital 自有 `main` key 与 `sidebar.panellist` id |
+| `/automation-workbench` | Capital 自有 HTTP 路由前缀 |
+| `automation-workbench` | Capital 自有 `main` key 与 `sidebar.panellist` id |
 
 技术身份和用户文案分开维护。行 id、包名、路由、slot key 发生变化都视为迁移，不以“改名”处理。
 
@@ -99,7 +99,7 @@ Capital 页面不读取、编辑或删除官方 schedule 记录。页面可以�
 
 ```yaml
 - insert:
-    - id: capital-automation
+    - id: automation-workbench
       name: './automation/index.js'
 ```
 
@@ -221,7 +221,7 @@ type TaskIconId = string
 - `monitor` 监控：清单与日历维护（自选股分诊、事件日历），输出先给需要动作或跟踪的条目与截止
   时间，没有变化的项并成一句。
 
-任务分类同时决定输出结构与通用侧重，不再有独立的「输出侧重」设置。分类不是 agent preset；所有运行仍固定使用 `capital-generation` 自动模式。内置任务的指令只负责主体、覆盖范围与交付口径（分级、缺口、截止时刻怎么写），数据纪律、来源要求、无人值守与最终答复格式都由 preset / runner 提供。
+任务分类同时决定输出结构与通用侧重，不再有独立的「输出侧重」设置。分类不是 agent preset；所有运行仍固定使用 `dsh-workbench-automation` 自动模式。内置任务的指令只负责主体、覆盖范围与交付口径（分级、缺口、截止时刻怎么写），数据纪律、来源要求、无人值守与最终答复格式都由 preset / runner 提供。
 
 Phase 1 不允许用户指定：
 
@@ -231,7 +231,7 @@ Phase 1 不允许用户指定：
 - 任意外部通知地址。
 
 任务运行使用当前 profile 的已注册工作区：任务保存 `workspaceId`，未选择时把受控运行目录
-`<dsh home>/CapGen-automation-workspace/<profile>` 注册为专属工作区；设置卡还可指定一个
+`<dsh home>/automation-workbench-workspace/<profile>` 注册为专属工作区；设置卡还可指定一个
 「统一默认工作区」（已注册 id），未选择任务工作区时优先用它，缺失或目录不可用时回退专属工作区。
 只接受 `workspaceRegistry` 中的 id，客户端不能传路径；保存前与运行前都做 `get` + `status()` 校验。
 workspace registry 不可用时退回受控目录。
@@ -352,7 +352,7 @@ interface BuiltinDefinition {
 
 Phase 1 不继承上一次运行的上下文。每次运行创建一个新的 automation session：
 
-- `agentPreset = capital-generation`（Capital 自动模式）；
+- `agentPreset = dsh-workbench-automation`（Capital 自动模式）；
 - 使用任务保存的已注册 `workspaceId`；未选择时使用设置卡指定的统一默认工作区，未指定或不可用时使用专属受控运行目录并注册为工作区；
 - 标题格式：`<MM-DD> <task-title> <run-id-prefix>`（月-日取任务时区，id 默认前 8 位）；
 - `run.sessionId` 保存服务端创建结果；
@@ -728,7 +728,7 @@ export const DEFAULT_MAX_TOOL_CALLS = 1200
 export const DEFAULT_OWNER_LEASE_MS = 90_000
 ```
 
-用户可编辑字段只进入现有 `capital-config` 的包级设置卡，并使用 `.volatile()`。host row 的 `config` 只允许部署级默认值，不再同时保存一份可编辑的 tick 或 timeout。
+用户可编辑字段只进入现有 `automation-config` 的包级设置卡，并使用 `.volatile()`。host row 的 `config` 只允许部署级默认值，不再同时保存一份可编辑的 tick 或 timeout。
 
 优先级固定为：
 
@@ -779,7 +779,7 @@ Phase 1 只在任务详情和通知中心展示错误，不新增独立的宿主
 
 ### Phase 1
 
-- 独立 `capital-automation` host bundle；
+- 独立 `automation-workbench` host bundle；
 - 官方 `ui-schedule` 保持不变；
 - 固定 domain 和 profile 过滤；
 - 单 scheduler owner；
@@ -810,12 +810,12 @@ Phase 1 只在任务详情和通知中心展示错误，不新增独立的宿主
 
 ### 13.1 组合和打包
 
-- `capital-automation` 行使用字面量相对路径；
+- `automation-workbench` 行使用字面量相对路径；
 - `automation/package.json` 的 client 声明正确；
 - 根 `package.json` 的 `files` 包含 `automation/`；
 - client bundle 存在且可被 `npm pack` 包含；
 - `ui-schedule` 没有被 disabled；
-- 官方 `schedules` 和 Capital `capital-automation` 同时存在；
+- 官方 `schedules` 和 Capital `automation-workbench` 同时存在；
 - Capital 没有注册官方 turn tail、right-sidebar 或 session row id。
 
 ### 13.2 权限和 profile

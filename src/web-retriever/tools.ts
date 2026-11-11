@@ -277,7 +277,7 @@ export function registerSearchTools(
   ]
 
   for (const definition of definitions) {
-    ctx.effect(() => tools.register(definition), `capital-generation.tool(${definition.name})`)
+    ctx.effect(() => tools.register(definition), `automation-workbench.tool(${definition.name})`)
   }
 }
 
@@ -301,7 +301,7 @@ function ocrToolDefinition(ocr: OcrToolDependencies, trace: OcrTrace) {
   return {
     name: 'ocr',
     timeoutMs: OCR_TOOL_TIMEOUT_MS,
-    description: '把一份 PDF 或图片解析成模型可读的 markdown（PaddleOCR 文档解析，需要 Token）。一次调用只走一种形态：url=公网 .pdf 直链（本机不抓文件，由上游取）；file=session workspace 内的相对路径（pdf/png/jpg/jpeg/webp/bmp/tiff，@mention 带来的开头 @ 可省）；job_id + doc_id=继续等上一次 status:pending 回执里的作业（**不重复提交、不再花钱**）；doc_id=读已落盘的结果，可配 pages（"1-3" / "5" / "2-4,9"，一次最多 8 页）或 query（关键词定位，回命中片段与页号）。⚠️ 作业**整篇一次算完**：pages 只影响读、不影响算价，也不会更便宜；同一份文档重复调用会命中 doc_id 缓存、不再出网。结果一律落 capital-data/ocr/<doc_id>/，回执在预算内给全文、超预算只给页索引与第 1 页。没有 Token、解析失败或文档超页时须如实说明边界：不得把标题当正文引用，不得把 PDF 链接当正文来源标注（正文来自解析结果，引用写 doc_id 与页号）。',
+    description: '把一份 PDF 或图片解析成模型可读的 markdown（PaddleOCR 文档解析，需要 Token）。一次调用只走一种形态：url=公网 .pdf 直链（本机不抓文件，由上游取）；file=session workspace 内的相对路径（pdf/png/jpg/jpeg/webp/bmp/tiff，@mention 带来的开头 @ 可省）；job_id + doc_id=继续等上一次 status:pending 回执里的作业（**不重复提交、不再花钱**）；doc_id=读已落盘的结果，可配 pages（"1-3" / "5" / "2-4,9"，一次最多 8 页）或 query（关键词定位，回命中片段与页号）。⚠️ 作业**整篇一次算完**：pages 只影响读、不影响算价，也不会更便宜；同一份文档重复调用会命中 doc_id 缓存、不再出网。结果一律落 automation-data/ocr/<doc_id>/，回执在预算内给全文、超预算只给页索引与第 1 页。没有 Token、解析失败或文档超页时须如实说明边界：不得把标题当正文引用，不得把 PDF 链接当正文来源标注（正文来自解析结果，引用写 doc_id 与页号）。',
     parameters: jsonObject({
       url: { type: 'string', description: '公网可达的 .pdf 直链（http/https，不含凭据，不接受内网地址与 IP 字面量）' },
       file: { type: 'string', description: 'session workspace 内的相对路径，例如 refs/贵州茅台研报.pdf' },
@@ -326,7 +326,7 @@ export function registerOcrTool(ctx: Context, ocr: OcrToolDependencies, echo = c
   if (!tools) return
   const trace: OcrTrace = (exec, provider, tool, query) => echo(exec, { provider, tool, query, at: Date.now() })
   const definition = ocrToolDefinition(ocr, trace)
-  ctx.effect(() => tools.register(definition), 'capital-generation.tool(ocr)')
+  ctx.effect(() => tools.register(definition), 'automation-workbench.tool(ocr)')
 }
 
 // Document parsing: ocr (PDF / image -> markdown, always persisted)
@@ -434,7 +434,7 @@ function ocrFailure(error: unknown): { code: OcrFailureCode; error: string; hint
     return {
       code: 'STORE_UNAVAILABLE',
       error: errorMessage(error),
-      hint: '落盘需要 session 的 workspace cwd 与可写权限（写到 capital-data/ocr/）',
+      hint: '落盘需要 session 的 workspace cwd 与可写权限（写到 automation-data/ocr/）',
     }
   }
   return { code: 'INVALID_INPUT', error: errorMessage(error) }
@@ -1385,6 +1385,6 @@ export function registerSourceTools(ctx: Context, localFetchOptions: LocalFetchO
   ]
 
   for (const definition of definitions) {
-    ctx.effect(() => tools.register(definition), `capital-generation.tool(${definition.name})`)
+    ctx.effect(() => tools.register(definition), `automation-workbench.tool(${definition.name})`)
   }
 }

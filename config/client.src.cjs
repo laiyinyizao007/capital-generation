@@ -35,16 +35,16 @@ const { WORKSPACES_ROUTE } = require('../automation/contract.js')
  * `plugins.bundle.config` key, in selectors and the npm URL. Drift silently
  * removes the card; tests pin both.
  */
-const ENTRY_ID = 'capital-config'
-const BUNDLE_NAME = '@v587d/capital-generation'
-const LOCALE_NS = 'settings.capital'
+const ENTRY_ID = 'automation-config'
+const BUNDLE_NAME = 'dsh-workbench-automation'
+const LOCALE_NS = 'settings.automation'
 
 /**
  * `plugins.detail.badge` (list, root scope) needs an `id` and also renders on row
  * detail pages, so both `subject.kind` and the package name must gate the links.
  */
 const BADGE_SLOT = 'plugins.detail.badge'
-const REPO_URL = 'https://github.com/v587d/capital-generation'
+const REPO_URL = 'https://github.com/laiyinyizao007/capital-generation'
 const NPM_URL = `https://www.npmjs.com/package/${BUNDLE_NAME}`
 
 const FUYAO_DEFAULT_REF = 'FUYAO_API_KEY'
@@ -53,9 +53,9 @@ const ANYSEARCH_DEFAULT_REF = 'ANYSEARCH_API_KEY'
 const WIND_DEFAULT_REF = 'WIND_API_KEY'
 const PADDLE_OCR_DEFAULT_REF = 'PADDLE_OCR_TOKEN'
 /** SegmentedControl contract: tab id is `<id>-<value>`, panel id is `<id>-<value>-panel`. */
-const TABS_ID = 'capital-config-tabs'
+const TABS_ID = 'automation-config-tabs'
 /** Must match `SKILL_DOC_ROUTE` in `config/index.js`; drift = details never load. */
-const SKILL_DOC_ROUTE = '/capital-skills'
+const SKILL_DOC_ROUTE = '/automation-skills'
 const DOC_URLS = {
   fuyao: 'https://fuyao.aicubes.cn/docs/',
   ftshare: 'https://market.ft.tech/gateway/doc/p/pb8eizu3',
@@ -114,7 +114,7 @@ const zh = {
   anysearchHint: 'AnySearch 网页搜索 / 提取接口。保存后新自动模式会话生效。',
   localFetchLabel: '允许启动本地提取网页内容',
   localFetchHint: '开启后本地抓取兜底（回执来源 local-http）。保存后新自动模式会话生效。',
-  automationTitle: '投研自动化',
+  automationTitle: '自动化',
   automationScheduleGroup: '调度',
   automationRunGroup: '单次运行上限',
   automationNotifyGroup: '通知',
@@ -253,95 +253,95 @@ function refOf(snapshot, field) {
 }
 
 function installStyles() {
-  if (typeof document === 'undefined' || document.querySelector('style[data-capital-config]')) return () => {}
+  if (typeof document === 'undefined' || document.querySelector('style[data-automation-config]')) return () => {}
   const style = document.createElement('style')
   style.dataset.capitalConfig = 'true'
   style.textContent = `
-    .capital-config-card { display: flex; flex-direction: column; gap: 12px; }
+    .automation-config-card { display: flex; flex-direction: column; gap: 12px; }
     /* Declare display only when not hidden, or the hidden attribute loses to author display. */
-    .capital-config-panel { flex-direction: column; gap: 12px; }
-    .capital-config-panel:not([hidden]) { display: flex; }
-    .capital-config-panel[hidden] { display: none; }
+    .automation-config-panel { flex-direction: column; gap: 12px; }
+    .automation-config-panel:not([hidden]) { display: flex; }
+    .automation-config-panel[hidden] { display: none; }
     /* Host rows section: positive :has rules only, so any mismatch leaves it visible. */
-    [data-plugin-detail="${BUNDLE_NAME}"]:has(.capital-config-card[data-capital-config-tab="sources"]) section[data-plugin-rows] { display: none; }
-    [data-plugin-detail="${BUNDLE_NAME}"]:has(.capital-config-card[data-capital-config-tab="automation"]) section[data-plugin-rows] { display: none; }
-    [data-plugin-detail="${BUNDLE_NAME}"]:has(.capital-config-card[data-capital-config-tab="skills"]) section[data-plugin-rows] { display: none; }
+    [data-plugin-detail="${BUNDLE_NAME}"]:has(.automation-config-card[data-automation-config-tab="sources"]) section[data-plugin-rows] { display: none; }
+    [data-plugin-detail="${BUNDLE_NAME}"]:has(.automation-config-card[data-automation-config-tab="automation"]) section[data-plugin-rows] { display: none; }
+    [data-plugin-detail="${BUNDLE_NAME}"]:has(.automation-config-card[data-automation-config-tab="skills"]) section[data-plugin-rows] { display: none; }
     /* Internal roles must stay declared for delegation; hide their user-selectable cards in Settings. */
-    [data-agent-preset-id="capital-data-junior"],
-    [data-agent-preset-id="capital-visualization-specialist"] { display: none !important; }
-    .capital-config-secret-row { display: flex; flex-direction: column; gap: 2px; }
+    [data-agent-preset-id="automation-data-junior"],
+    [data-agent-preset-id="automation-visualization-specialist"] { display: none !important; }
+    .automation-config-secret-row { display: flex; flex-direction: column; gap: 2px; }
     /* Doc link is portaled into the host head row: shrink its label, keep the badge at the end. */
-    .capital-config-secret-row label { flex: 0 1 auto; }
-    .capital-config-secret-row label ~ span { order: 1; margin-left: auto; }
-    .capital-config-field { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-top: 0.5px solid var(--dsw-alias-border-l2); }
-    .capital-config-automation { display: flex; flex-direction: column; gap: 16px; padding-top: 12px; }
-    .capital-config-automation-group { display: flex; flex-direction: column; gap: 8px; }
-    .capital-config-automation-group > .capital-config-group-label { color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 500; line-height: 18px; }
-    .capital-config-number { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-    .capital-config-workspace { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-    .capital-config-number-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
-    .capital-config-number-head .capital-config-write-failed { font-size: 11px; line-height: 16px; }
-    .capital-config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
-    .capital-config-automation input[type="number"] { width: 100%; box-sizing: border-box; padding: 6px 8px; border: .5px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; }
-    .capital-config-select { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-width: 0; height: 34px; padding: 0 10px 0 12px; border: 0; border-radius: 10px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; line-height: 20px; text-align: left; cursor: pointer; transition: background .15s, opacity .15s; }
-    .capital-config-select:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }
-    .capital-config-select:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary)); outline-offset: 0; }
-    .capital-config-select:disabled { opacity: .5; cursor: not-allowed; }
-    .capital-config-selectvalue { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .capital-config-select > svg { flex: none; color: var(--dsw-alias-label-tertiary); }
-    .capital-config-selected-mode { padding: 12px 14px; border: 0.5px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }
-    .capital-config-switch-row { align-items: center; gap: 12px; display: flex; }
-    .capital-config-switch-text { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
-    .capital-config-switch-label { color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 500; line-height: 20px; }
-    .capital-config-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }
-    .capital-config-skills-browser { display: flex; flex-direction: column; gap: 16px; }
-    .capital-config-filters { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border: 0.5px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }
-    .capital-config-filter-row { display: flex; align-items: flex-start; gap: 12px; }
-    .capital-config-filter-label { flex: 0 0 auto; min-width: 64px; padding-top: 3px; color: var(--dsw-alias-label-tertiary); font-size: 11.5px; font-weight: 500; line-height: 18px; }
-    .capital-config-filter-options { display: flex; flex: 1 1 auto; flex-wrap: wrap; gap: 4px; min-width: 0; }
-    .capital-config-filter-pill { height: 22px; padding: 0 7px; gap: 5px; font-size: 11.5px; line-height: 16px; }
-    .capital-config-filter-pill:disabled { opacity: 0.45; cursor: not-allowed; }
-    .capital-config-filter-pill:disabled:hover { background: var(--dsw-alias-bg-layer-2); }
-    .capital-config-filter-count { color: var(--dsw-alias-label-tertiary); font-size: 10px; line-height: 14px; font-variant-numeric: tabular-nums; }
-    .capital-config-filter-pill[aria-pressed="true"] .capital-config-filter-count { color: inherit; opacity: 0.72; }
-    .capital-config-selected-list { display: flex; flex-direction: column; border-top: 0.5px solid var(--dsw-alias-border-l1); }
-    .capital-config-skill-item { border-bottom: 0.5px solid var(--dsw-alias-border-l1); }
-    .capital-config-skill-row { display: flex; align-items: flex-start; gap: 16px; padding: 14px 2px; }
-    .capital-config-skill-main { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 6px; }
-    .capital-config-skill-heading { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
-    .capital-config-skill-name { padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px; font-weight: 500; line-height: 20px; text-align: left; cursor: pointer; }
-    .capital-config-skill-name:hover { color: var(--dsw-alias-brand-primary); }
-    .capital-config-skill-name:focus-visible { outline: var(--dsw-focus-ring-width, 2px) solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary)); outline-offset: 2px; }
-    .capital-config-skill-tags, .capital-config-skill-presets { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-    .capital-config-skill-tag { font-weight: 400; }
-    .capital-config-skill-preset { font-weight: 500; }
-    .capital-config-skill-description { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
-    .capital-config-skill-meta { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 10px; row-gap: 2px; margin: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
-    .capital-config-skill-meta dt { color: var(--dsw-alias-label-tertiary); font-weight: 500; white-space: nowrap; }
-    .capital-config-skill-meta dd { min-width: 0; margin: 0; }
-    .capital-config-skill-repo { display: inline-flex; align-items: center; gap: 3px; width: max-content; max-width: 100%; margin-top: 2px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; text-decoration: none; }
-    .capital-config-skill-repo:hover { color: var(--dsw-alias-brand-primary); text-decoration: underline; }
-    .capital-config-selected-empty { margin: 0; padding: 28px 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; text-align: center; }
+    .automation-config-secret-row label { flex: 0 1 auto; }
+    .automation-config-secret-row label ~ span { order: 1; margin-left: auto; }
+    .automation-config-field { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-top: 0.5px solid var(--dsw-alias-border-l2); }
+    .automation-config-automation { display: flex; flex-direction: column; gap: 16px; padding-top: 12px; }
+    .automation-config-automation-group { display: flex; flex-direction: column; gap: 8px; }
+    .automation-config-automation-group > .automation-config-group-label { color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 500; line-height: 18px; }
+    .automation-config-number { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .automation-config-workspace { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .automation-config-number-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
+    .automation-config-number-head .automation-config-write-failed { font-size: 11px; line-height: 16px; }
+    .automation-config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+    .automation-config-automation input[type="number"] { width: 100%; box-sizing: border-box; padding: 6px 8px; border: .5px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; }
+    .automation-config-select { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-width: 0; height: 34px; padding: 0 10px 0 12px; border: 0; border-radius: 10px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; line-height: 20px; text-align: left; cursor: pointer; transition: background .15s, opacity .15s; }
+    .automation-config-select:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }
+    .automation-config-select:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary)); outline-offset: 0; }
+    .automation-config-select:disabled { opacity: .5; cursor: not-allowed; }
+    .automation-config-selectvalue { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .automation-config-select > svg { flex: none; color: var(--dsw-alias-label-tertiary); }
+    .automation-config-selected-mode { padding: 12px 14px; border: 0.5px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }
+    .automation-config-switch-row { align-items: center; gap: 12px; display: flex; }
+    .automation-config-switch-text { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .automation-config-switch-label { color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 500; line-height: 20px; }
+    .automation-config-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }
+    .automation-config-skills-browser { display: flex; flex-direction: column; gap: 16px; }
+    .automation-config-filters { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border: 0.5px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }
+    .automation-config-filter-row { display: flex; align-items: flex-start; gap: 12px; }
+    .automation-config-filter-label { flex: 0 0 auto; min-width: 64px; padding-top: 3px; color: var(--dsw-alias-label-tertiary); font-size: 11.5px; font-weight: 500; line-height: 18px; }
+    .automation-config-filter-options { display: flex; flex: 1 1 auto; flex-wrap: wrap; gap: 4px; min-width: 0; }
+    .automation-config-filter-pill { height: 22px; padding: 0 7px; gap: 5px; font-size: 11.5px; line-height: 16px; }
+    .automation-config-filter-pill:disabled { opacity: 0.45; cursor: not-allowed; }
+    .automation-config-filter-pill:disabled:hover { background: var(--dsw-alias-bg-layer-2); }
+    .automation-config-filter-count { color: var(--dsw-alias-label-tertiary); font-size: 10px; line-height: 14px; font-variant-numeric: tabular-nums; }
+    .automation-config-filter-pill[aria-pressed="true"] .automation-config-filter-count { color: inherit; opacity: 0.72; }
+    .automation-config-selected-list { display: flex; flex-direction: column; border-top: 0.5px solid var(--dsw-alias-border-l1); }
+    .automation-config-skill-item { border-bottom: 0.5px solid var(--dsw-alias-border-l1); }
+    .automation-config-skill-row { display: flex; align-items: flex-start; gap: 16px; padding: 14px 2px; }
+    .automation-config-skill-main { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 6px; }
+    .automation-config-skill-heading { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+    .automation-config-skill-name { padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px; font-weight: 500; line-height: 20px; text-align: left; cursor: pointer; }
+    .automation-config-skill-name:hover { color: var(--dsw-alias-brand-primary); }
+    .automation-config-skill-name:focus-visible { outline: var(--dsw-focus-ring-width, 2px) solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary)); outline-offset: 2px; }
+    .automation-config-skill-tags, .automation-config-skill-presets { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+    .automation-config-skill-tag { font-weight: 400; }
+    .automation-config-skill-preset { font-weight: 500; }
+    .automation-config-skill-description { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
+    .automation-config-skill-meta { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 10px; row-gap: 2px; margin: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
+    .automation-config-skill-meta dt { color: var(--dsw-alias-label-tertiary); font-weight: 500; white-space: nowrap; }
+    .automation-config-skill-meta dd { min-width: 0; margin: 0; }
+    .automation-config-skill-repo { display: inline-flex; align-items: center; gap: 3px; width: max-content; max-width: 100%; margin-top: 2px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; text-decoration: none; }
+    .automation-config-skill-repo:hover { color: var(--dsw-alias-brand-primary); text-decoration: underline; }
+    .automation-config-selected-empty { margin: 0; padding: 28px 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; text-align: center; }
     /* Official Modal defaults to 380px; the div prefix outranks the hashed .dialog class. */
-    div.capital-config-skill-modal { width: min(820px, 100%); max-height: 100%; }
+    div.automation-config-skill-modal { width: min(820px, 100%); max-height: 100%; }
     /* Scroll the body so the dialog's overflow:hidden cannot clip it. */
-    .capital-config-skill-modal-content { min-height: 0; overflow: auto; }
+    .automation-config-skill-modal-content { min-height: 0; overflow: auto; }
     /* Show SKILL.md as source, not rendered markdown. */
-    .capital-config-skill-doc { min-height: 0; max-height: 58vh; margin: 0; padding: 12px 14px; overflow: auto; border-radius: 8px; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; line-height: 17px; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .capital-config-skill-doc-state { margin: 0; padding: 12px 14px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }
+    .automation-config-skill-doc { min-height: 0; max-height: 58vh; margin: 0; padding: 12px 14px; overflow: auto; border-radius: 8px; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; line-height: 17px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .automation-config-skill-doc-state { margin: 0; padding: 12px 14px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }
     /* aria-controls target must not be empty; absolute keeps it layout-free. */
-    .capital-config-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .automation-config-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     /* Pull the host h4 up to the same 24px rhythm as the other tabs (measured). */
-    .capital-config-panel[data-capital-config-panel="components"] { margin-bottom: -20px; }
-    .capital-config-doc-link { display: inline-flex; align-items: center; gap: 3px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 20px; white-space: nowrap; text-decoration: none; }
-    .capital-config-doc-link:hover { color: var(--dsw-alias-brand-primary); text-decoration: underline; }
-    .capital-config-doc-link:focus-visible { border-radius: 3px; outline: var(--dsw-focus-ring-width, 2px) solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary)); outline-offset: 2px; }
-    .capital-config-write-failed { margin: 0; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }
+    .automation-config-panel[data-automation-config-panel="components"] { margin-bottom: -20px; }
+    .automation-config-doc-link { display: inline-flex; align-items: center; gap: 3px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 20px; white-space: nowrap; text-decoration: none; }
+    .automation-config-doc-link:hover { color: var(--dsw-alias-brand-primary); text-decoration: underline; }
+    .automation-config-doc-link:focus-visible { border-radius: 3px; outline: var(--dsw-focus-ring-width, 2px) solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary)); outline-offset: 2px; }
+    .automation-config-write-failed { margin: 0; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }
     /* Own inline-flex group so the host's wrapping never splits the two links. */
-    .capital-config-plugin-links { flex: none; align-items: center; gap: 2px; display: inline-flex; }
-    .capital-config-plugin-link { border-radius: var(--dsw-radius-sm); width: 24px; height: 24px; color: var(--dsw-alias-label-tertiary); justify-content: center; align-items: center; display: inline-flex; text-decoration: none; }
-    .capital-config-plugin-link:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
-    .capital-config-plugin-link:focus-visible { outline: var(--dsw-focus-ring-width, 2px) solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary)); outline-offset: 1px; }
+    .automation-config-plugin-links { flex: none; align-items: center; gap: 2px; display: inline-flex; }
+    .automation-config-plugin-link { border-radius: var(--dsw-radius-sm); width: 24px; height: 24px; color: var(--dsw-alias-label-tertiary); justify-content: center; align-items: center; display: inline-flex; text-decoration: none; }
+    .automation-config-plugin-link:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+    .automation-config-plugin-link:focus-visible { outline: var(--dsw-focus-ring-width, 2px) solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary)); outline-offset: 1px; }
   `
   document.head.appendChild(style)
   return () => style.remove()
@@ -407,7 +407,7 @@ function WorkspaceSelect({ value, options, onChange, disabled, label, describedB
   const trigger = h('button', {
     ref: triggerRef,
     type: 'button',
-    className: 'capital-config-select',
+    className: 'automation-config-select',
     disabled,
     'aria-label': current?.label ? `${label}：${current.label}` : label,
     'aria-haspopup': 'menu',
@@ -416,7 +416,7 @@ function WorkspaceSelect({ value, options, onChange, disabled, label, describedB
     title: current?.label,
     onClick: () => setOpen((currentOpen) => !currentOpen),
   },
-  h('span', { className: 'capital-config-selectvalue', title: current?.label }, current?.label ?? ''),
+  h('span', { className: 'automation-config-selectvalue', title: current?.label }, current?.label ?? ''),
   h(IconChevronDownOutlineRegular, { size: 14 }))
   return h(Menu, {
     open,
@@ -780,12 +780,12 @@ function SecretRow({ field, label, hint, docsUrl, state, disabled, onEdit, t }) 
     target: '_blank',
     rel: 'noopener noreferrer',
     'aria-label': `${label} ${t('openDocs')}`,
-    'data-capital-config-doc': 'true',
-    className: 'capital-config-doc-link',
+    'data-automation-config-doc': 'true',
+    className: 'automation-config-doc-link',
   }, t('openDocs'), h(IconRightUpOutlineRegular, { size: 12 }))
-  return h('div', { className: 'capital-config-secret-row', key: field, ref: rowRef },
+  return h('div', { className: 'automation-config-secret-row', key: field, ref: rowRef },
     h(SettingsSecretField, {
-      id: `capital-config-${field}-key`,
+      id: `automation-config-${field}-key`,
       label,
       hint,
       text: state.text,
@@ -871,25 +871,25 @@ function SelectedSkillRow({ entry, state, disabled, onChange, t }) {
     loadSkillDoc(entry.name).then(
       (text) => setDoc({ status: 'ready', text }),
       (error) => {
-        globalThis.console?.warn?.(`capital-config: SKILL.md 原文读取失败 ${entry.name}: ${String(error?.code ?? error?.message ?? error)}`)
+        globalThis.console?.warn?.(`automation-config: SKILL.md 原文读取失败 ${entry.name}: ${String(error?.code ?? error?.message ?? error)}`)
         setDoc({ status: 'failed', code: error?.code === 'route_missing' ? 'route_missing' : 'unreadable' })
       },
     )
   }
   const detailContent = doc?.status === 'ready'
-    ? h('pre', { className: 'capital-config-skill-doc' }, doc.text)
+    ? h('pre', { className: 'automation-config-skill-doc' }, doc.text)
     : doc?.status === 'failed'
-      ? h('p', { className: 'capital-config-skill-doc-state' }, t(doc.code === 'route_missing' ? 'selectedSkillsDocStale' : 'selectedSkillsDocFailed'))
-      : h('p', { className: 'capital-config-skill-doc-state' }, t('selectedSkillsDocLoading'))
+      ? h('p', { className: 'automation-config-skill-doc-state' }, t(doc.code === 'route_missing' ? 'selectedSkillsDocStale' : 'selectedSkillsDocFailed'))
+      : h('p', { className: 'automation-config-skill-doc-state' }, t('selectedSkillsDocLoading'))
   const { when, keywords } = splitUseWhen(SELECTED_SKILL_ROUTING[entry.name]?.useWhen?.[locale] ?? '', locale)
   const roles = entry.roles ?? []
-  return h('div', { className: 'capital-config-skill-item' },
-    h('div', { className: 'capital-config-skill-row' },
-      h('div', { className: 'capital-config-skill-main' },
-        h('div', { className: 'capital-config-skill-heading' },
+  return h('div', { className: 'automation-config-skill-item' },
+    h('div', { className: 'automation-config-skill-row' },
+      h('div', { className: 'automation-config-skill-main' },
+        h('div', { className: 'automation-config-skill-heading' },
           h('button', {
             type: 'button',
-            className: 'capital-config-skill-name',
+            className: 'automation-config-skill-name',
             title: t('selectedSkillsOpenDetail'),
             'aria-haspopup': 'dialog',
             // Prefetch on hover / focus so the modal opens with content; click is the action.
@@ -900,19 +900,19 @@ function SelectedSkillRow({ entry, state, disabled, onChange, t }) {
               setDetailOpen(true)
             },
           }, label),
-          h('div', { className: 'capital-config-skill-tags', role: 'group', 'aria-label': t('selectedSkillsTraitGroup') },
+          h('div', { className: 'automation-config-skill-tags', role: 'group', 'aria-label': t('selectedSkillsTraitGroup') },
             entry.tags.map((tag) => h(Tag, {
               key: tag,
               tone: 'neutral',
-              className: 'capital-config-skill-tag',
+              className: 'automation-config-skill-tag',
             }, SELECTED_SKILL_TAG_LABELS[locale][tag] ?? tag))),
-          roles.length > 0 ? h('div', { className: 'capital-config-skill-presets', role: 'group', 'aria-label': t('selectedSkillsPresetGroup') },
+          roles.length > 0 ? h('div', { className: 'automation-config-skill-presets', role: 'group', 'aria-label': t('selectedSkillsPresetGroup') },
             roles.map((role) => h(Tag, {
               key: role,
               tone: 'info',
-              className: 'capital-config-skill-preset',
+              className: 'automation-config-skill-preset',
             },
-            h('span', { className: 'capital-config-sr-only' }, `${t('selectedSkillsPresetGroup')}：`),
+            h('span', { className: 'automation-config-sr-only' }, `${t('selectedSkillsPresetGroup')}：`),
             presetLabel(role, locale)))) : null,
           h(Modal, {
             open: detailOpen,
@@ -920,19 +920,19 @@ function SelectedSkillRow({ entry, state, disabled, onChange, t }) {
             title: label,
             description: entry.name,
             closeLabel: t('selectedSkillsDetailClose'),
-            className: 'capital-config-skill-modal',
-            contentClassName: 'capital-config-skill-modal-content',
+            className: 'automation-config-skill-modal',
+            contentClassName: 'automation-config-skill-modal-content',
           }, detailContent),
         ),
-        h('p', { className: 'capital-config-skill-description' }, entry.description[locale]),
-        h('dl', { className: 'capital-config-skill-meta' },
+        h('p', { className: 'automation-config-skill-description' }, entry.description[locale]),
+        h('dl', { className: 'automation-config-skill-meta' },
           h('dt', { key: 'when-label' }, t('selectedSkillsWhen')),
           h('dd', { key: 'when' }, when),
           keywords ? h('dt', { key: 'keywords-label' }, t('selectedSkillsKeywords')) : null,
           keywords ? h('dd', { key: 'keywords' }, keywords) : null,
         ),
         h('a', {
-          className: 'capital-config-skill-repo',
+          className: 'automation-config-skill-repo',
           href: repositoryUrl,
           target: '_blank',
           rel: 'noopener noreferrer',
@@ -946,14 +946,14 @@ function SelectedSkillRow({ entry, state, disabled, onChange, t }) {
         onChange,
       }),
     ),
-    state?.failed ? h('p', { role: 'status', className: 'capital-config-write-failed' }, t('saveFailed')) : null,
+    state?.failed ? h('p', { role: 'status', className: 'automation-config-write-failed' }, t('saveFailed')) : null,
   )
 }
 
 /**
  * Bundle config page. Inactive panels stay mounted and only `hidden` (unmounting
  * `SettingsForm` discards drafts). The host rows section collapses on
- * `data-capital-config-tab`, so when unavailable we draw neither tabs nor that
+ * `data-automation-config-tab`, so when unavailable we draw neither tabs nor that
  * attribute and the host list stays visible.
  */
 function CapitalCard(props) {
@@ -1000,12 +1000,12 @@ function CapitalCard(props) {
     h(SecretRow, { field: 'wind', label: t('windLabel'), hint: t('windHint'), docsUrl: DOC_URLS.wind, state: state.wind, disabled: disabled || state.saving || !state.wind.writable, onEdit: (value) => props.edit('wind', value), t }),
     h(SecretRow, { field: 'paddleocr', label: t('paddleocrLabel'), hint: t('paddleocrHint'), docsUrl: DOC_URLS.paddleocr, state: state.paddleocr, disabled: disabled || state.saving || !state.paddleocr.writable, onEdit: (value) => props.edit('paddleocr', value), t }),
   )
-  if (!state.available) return h('div', { className: 'capital-config-card' }, form)
-  const localFetchSection = h('div', { className: 'capital-config-field' },
-    h('div', { className: 'capital-config-switch-row' },
-      h('div', { className: 'capital-config-switch-text' },
-        h('span', { className: 'capital-config-switch-label' }, t('localFetchLabel')),
-        h('p', { className: 'capital-config-hint' }, t('localFetchHint')),
+  if (!state.available) return h('div', { className: 'automation-config-card' }, form)
+  const localFetchSection = h('div', { className: 'automation-config-field' },
+    h('div', { className: 'automation-config-switch-row' },
+      h('div', { className: 'automation-config-switch-text' },
+        h('span', { className: 'automation-config-switch-label' }, t('localFetchLabel')),
+        h('p', { className: 'automation-config-hint' }, t('localFetchHint')),
       ),
       h(Switch, {
         label: t('localFetchLabel'),
@@ -1014,7 +1014,7 @@ function CapitalCard(props) {
         onChange: props.toggleLocalFetch,
       }),
     ),
-    state.localFetch?.failed ? h('p', { role: 'status', className: 'capital-config-write-failed' }, t('saveFailed')) : null,
+    state.localFetch?.failed ? h('p', { role: 'status', className: 'automation-config-write-failed' }, t('saveFailed')) : null,
   )
   const automationNumber = (field, label) => {
     const { min, max, unit } = AUTOMATION_RANGES[field]
@@ -1023,14 +1023,14 @@ function CapitalCard(props) {
     const error = invalid
       ? t('automationInvalid', { min, max, unit: t(unit) })
       : state.automation?.[field]?.failed ? t('saveFailed') : null
-    return h('label', { className: 'capital-config-number' },
+    return h('label', { className: 'automation-config-number' },
       // Error sits on the title row (the card's usual spot), not under the box.
-      h('span', { className: 'capital-config-number-head' },
-        h('span', { className: 'capital-config-switch-label' }, t(label)),
+      h('span', { className: 'automation-config-number-head' },
+        h('span', { className: 'automation-config-switch-label' }, t(label)),
         error ? h('span', {
-          id: `capital-config-automation-${field}-error`,
+          id: `automation-config-automation-${field}-error`,
           role: invalid ? 'alert' : 'status',
-          className: 'capital-config-write-failed',
+          className: 'automation-config-write-failed',
         }, error) : null,
       ),
       h('input', {
@@ -1041,7 +1041,7 @@ function CapitalCard(props) {
         defaultValue: stored,
         disabled: disabled || state.saving,
         'aria-invalid': invalid ? 'true' : undefined,
-        'aria-describedby': error ? `capital-config-automation-${field}-error` : undefined,
+        'aria-describedby': error ? `automation-config-automation-${field}-error` : undefined,
         onFocus: () => props.clearAutomationInvalid(field),
         onBlur: (event) => {
           const input = event.target
@@ -1052,8 +1052,8 @@ function CapitalCard(props) {
       }),
     )
   }
-  const automationGroup = (labelKey, children) => h('div', { className: 'capital-config-automation-group' },
-    h('span', { className: 'capital-config-group-label' }, t(labelKey)),
+  const automationGroup = (labelKey, children) => h('div', { className: 'automation-config-automation-group' },
+    h('span', { className: 'automation-config-group-label' }, t(labelKey)),
     ...children,
   )
   const workspaceState = state.workspace ?? {
@@ -1066,7 +1066,7 @@ function CapitalCard(props) {
     writing: false,
     failed: false,
   }
-  const workspacePathId = 'capital-config-automation-workspace-path'
+  const workspacePathId = 'automation-config-automation-workspace-path'
   const namedWorkspaceOptions = workspaceState.options.map((option) => ({
     id: option.id,
     path: option.path,
@@ -1083,11 +1083,11 @@ function CapitalCard(props) {
     // Two registered workspaces may legitimately share a title; path keeps the menu unambiguous.
     return { ...option, label: `${option.label} · ${option.path}` }
   })
-  const workspaceSection = h('div', { className: 'capital-config-workspace' },
-    h('span', { className: 'capital-config-number-head' },
-      h('span', { className: 'capital-config-switch-label' }, t('automationDefaultWorkspace')),
+  const workspaceSection = h('div', { className: 'automation-config-workspace' },
+    h('span', { className: 'automation-config-number-head' },
+      h('span', { className: 'automation-config-switch-label' }, t('automationDefaultWorkspace')),
       workspaceState.failed
-        ? h('span', { role: 'status', className: 'capital-config-write-failed' }, t('saveFailed'))
+        ? h('span', { role: 'status', className: 'automation-config-write-failed' }, t('saveFailed'))
         : null,
     ),
     h(WorkspaceSelect, {
@@ -1099,24 +1099,24 @@ function CapitalCard(props) {
       describedBy: workspaceState.current?.path ? workspacePathId : undefined,
     }),
     workspaceState.unavailable
-      ? h('p', { role: 'status', className: 'capital-config-hint' }, t('automationWorkspaceUnavailable'))
+      ? h('p', { role: 'status', className: 'automation-config-hint' }, t('automationWorkspaceUnavailable'))
       : workspaceState.loading
-        ? h('p', { className: 'capital-config-hint' }, t('automationWorkspaceLoading'))
+        ? h('p', { className: 'automation-config-hint' }, t('automationWorkspaceLoading'))
         : workspaceState.missing
-          ? h('p', { role: 'status', className: 'capital-config-write-failed' }, t('automationWorkspaceMissing'))
+          ? h('p', { role: 'status', className: 'automation-config-write-failed' }, t('automationWorkspaceMissing'))
           : workspaceState.current?.path
-            ? h('p', { id: workspacePathId, className: 'capital-config-hint' }, t('automationWorkspacePath', { path: workspaceState.current.path }))
+            ? h('p', { id: workspacePathId, className: 'automation-config-hint' }, t('automationWorkspacePath', { path: workspaceState.current.path }))
             : null,
   )
-  const automationSection = h('div', { className: 'capital-config-automation' },
+  const automationSection = h('div', { className: 'automation-config-automation' },
     workspaceSection,
     automationGroup('automationScheduleGroup', [
-      h('div', { className: 'capital-config-grid' },
+      h('div', { className: 'automation-config-grid' },
         automationNumber('tickMs', 'automationTick'),
       ),
     ]),
     automationGroup('automationRunGroup', [
-      h('div', { className: 'capital-config-grid' },
+      h('div', { className: 'automation-config-grid' },
         automationNumber('runTimeoutMinutes', 'automationRunTimeout'),
         automationNumber('idleTimeoutMinutes', 'automationIdleTimeout'),
         automationNumber('maxSteps', 'automationMaxSteps'),
@@ -1124,10 +1124,10 @@ function CapitalCard(props) {
       ),
     ]),
     automationGroup('automationNotifyGroup', [
-      h('div', { className: 'capital-config-switch-row' },
-        h('div', { className: 'capital-config-switch-text' },
-          h('span', { className: 'capital-config-switch-label' }, t('automationInApp')),
-          h('p', { className: 'capital-config-hint' }, t('automationInAppHint')),
+      h('div', { className: 'automation-config-switch-row' },
+        h('div', { className: 'automation-config-switch-text' },
+          h('span', { className: 'automation-config-switch-label' }, t('automationInApp')),
+          h('p', { className: 'automation-config-hint' }, t('automationInAppHint')),
         ),
         h(Switch, {
           label: t('automationInApp'),
@@ -1136,14 +1136,14 @@ function CapitalCard(props) {
           onChange: (value) => props.writeAutomation('inAppNotifications', value),
         }),
       ),
-      state.automation?.inAppNotifications?.failed ? h('p', { role: 'status', className: 'capital-config-write-failed' }, t('saveFailed')) : null,
+      state.automation?.inAppNotifications?.failed ? h('p', { role: 'status', className: 'automation-config-write-failed' }, t('saveFailed')) : null,
     ]),
   )
-  const modeSection = h('div', { className: 'capital-config-selected-mode' },
-    h('div', { className: 'capital-config-switch-row' },
-      h('div', { className: 'capital-config-switch-text' },
-        h('span', { className: 'capital-config-switch-label' }, t('selectedSkillsModeLabel')),
-        h('p', { className: 'capital-config-hint' }, t('selectedSkillsModeHint')),
+  const modeSection = h('div', { className: 'automation-config-selected-mode' },
+    h('div', { className: 'automation-config-switch-row' },
+      h('div', { className: 'automation-config-switch-text' },
+        h('span', { className: 'automation-config-switch-label' }, t('selectedSkillsModeLabel')),
+        h('p', { className: 'automation-config-hint' }, t('selectedSkillsModeHint')),
       ),
       h(Switch, {
         label: t('selectedSkillsModeLabel'),
@@ -1152,23 +1152,23 @@ function CapitalCard(props) {
         onChange: props.toggleSelectedSkillsMode,
       }),
     ),
-    state.selectedSkillsMode?.failed ? h('p', { role: 'status', className: 'capital-config-write-failed' }, t('saveFailed')) : null,
+    state.selectedSkillsMode?.failed ? h('p', { role: 'status', className: 'automation-config-write-failed' }, t('saveFailed')) : null,
   )
   const traitLabels = SELECTED_SKILL_TAG_LABELS[locale]
-  const filterRow = (label, pills) => h('div', { className: 'capital-config-filter-row' },
-    h('span', { className: 'capital-config-filter-label' }, label),
-    h('div', { className: 'capital-config-filter-options', role: 'group', 'aria-label': label }, ...pills),
+  const filterRow = (label, pills) => h('div', { className: 'automation-config-filter-row' },
+    h('span', { className: 'automation-config-filter-label' }, label),
+    h('div', { className: 'automation-config-filter-options', role: 'group', 'aria-label': label }, ...pills),
   )
   const traitPills = SELECTED_SKILL_TRAITS.map((trait) => h(Pill, {
     key: trait,
     type: 'button',
-    className: 'capital-config-filter-pill',
+    className: 'automation-config-filter-pill',
     active: traitFilter === trait,
     'aria-pressed': traitFilter === trait ? 'true' : 'false',
     onClick: () => setTraitFilter(trait),
   },
   trait === SELECTED_SKILL_FILTER_ALL ? t('selectedSkillsAll') : (traitLabels[trait] ?? trait),
-  h('span', { className: 'capital-config-filter-count' }, String(facetCounts.traits.get(trait) ?? 0))))
+  h('span', { className: 'automation-config-filter-count' }, String(facetCounts.traits.get(trait) ?? 0))))
   const presetPills = [SELECTED_SKILL_FILTER_ALL, ...SELECTED_SKILL_PRESET_ORDER].map((preset) => {
     const total = preset === SELECTED_SKILL_FILTER_ALL
       ? SELECTED_SKILL_CATALOG.length
@@ -1177,7 +1177,7 @@ function CapitalCard(props) {
     return h(Pill, {
       key: preset,
       type: 'button',
-      className: 'capital-config-filter-pill',
+      className: 'automation-config-filter-pill',
       active: presetFilter === preset,
       'aria-pressed': presetFilter === preset ? 'true' : 'false',
       disabled: unavailable,
@@ -1185,9 +1185,9 @@ function CapitalCard(props) {
       onClick: () => setPresetFilter(preset),
     },
     preset === SELECTED_SKILL_FILTER_ALL ? t('selectedSkillsAll') : presetLabel(preset, locale),
-    h('span', { className: 'capital-config-filter-count' }, String(facetCounts.presets.get(preset) ?? 0)))
+    h('span', { className: 'automation-config-filter-count' }, String(facetCounts.presets.get(preset) ?? 0)))
   })
-  const skillsFilter = h('div', { className: 'capital-config-filters', role: 'group', 'aria-label': t('selectedSkillsFilterLabel') },
+  const skillsFilter = h('div', { className: 'automation-config-filters', role: 'group', 'aria-label': t('selectedSkillsFilterLabel') },
     filterRow(t('selectedSkillsTraitGroup'), traitPills),
     filterRow(t('selectedSkillsPresetGroup'), presetPills),
   )
@@ -1201,7 +1201,7 @@ function CapitalCard(props) {
       onChange: (value) => props.toggleSelectedSkill(entry.key, value),
       t,
     }))
-    : [h('p', { key: 'empty', className: 'capital-config-selected-empty' }, t('selectedSkillsEmpty'))]
+    : [h('p', { key: 'empty', className: 'automation-config-selected-empty' }, t('selectedSkillsEmpty'))]
   // No cap banner: the icon is the only explanation. Unknown count prints no number.
   const withCount = (label, count) => (Number.isInteger(count) ? `${label} ${count}` : label)
   const options = [
@@ -1215,11 +1215,11 @@ function CapitalCard(props) {
     id: `${TABS_ID}-${value}-panel`,
     role: 'tabpanel',
     'aria-labelledby': `${TABS_ID}-${value}`,
-    className: 'capital-config-panel',
-    'data-capital-config-panel': value,
+    className: 'automation-config-panel',
+    'data-automation-config-panel': value,
     hidden: tab !== value,
   }, ...children)
-  return h('div', { className: 'capital-config-card', 'data-capital-config-tab': tab },
+  return h('div', { className: 'automation-config-card', 'data-automation-config-tab': tab },
     h(SegmentedControl, {
       id: TABS_ID,
       value: tab,
@@ -1239,12 +1239,12 @@ function CapitalCard(props) {
     panel('automation', [automationSection]),
     panel('skills', autoMode
       ? [modeSection]
-      : [modeSection, h('div', { className: 'capital-config-skills-browser' },
+      : [modeSection, h('div', { className: 'automation-config-skills-browser' },
         skillsFilter,
-        h('div', { className: 'capital-config-selected-list' }, ...skillRows),
+        h('div', { className: 'automation-config-selected-list' }, ...skillRows),
       )]),
     // The panel is the host's rows list; keep the aria-controls target non-empty via sr-only.
-    panel('components', [h('span', { className: 'capital-config-sr-only' }, t('componentsHint'))]),
+    panel('components', [h('span', { className: 'automation-config-sr-only' }, t('componentsHint'))]),
   )
 }
 
@@ -1256,7 +1256,7 @@ const GLYPHS = {
 
 function PluginLink({ kind, href, label }) {
   return h('a', {
-    className: 'capital-config-plugin-link',
+    className: 'automation-config-plugin-link',
     href,
     target: '_blank',
     rel: 'noopener noreferrer',
@@ -1276,18 +1276,18 @@ function PluginLink({ kind, href, label }) {
 /** The same slot renders on row detail and plugin pages: gate on subject.kind and package name. */
 function PluginLinks({ subject, t }) {
   if (subject?.kind !== 'bundle' || subject.pkg?.name !== BUNDLE_NAME) return null
-  return h('span', { className: 'capital-config-plugin-links' },
+  return h('span', { className: 'automation-config-plugin-links' },
     h(PluginLink, { kind: 'github', href: REPO_URL, label: t('githubLabel') }),
     h(PluginLink, { kind: 'npm', href: NPM_URL, label: t('npmLabel') }),
   )
 }
 
 function apply(ctx) {
-  ctx.effect(installStyles, 'capital-config: styles')
-  ctx.effect(() => ctx.locale.register(LOCALE_NS, { zh, en }), 'capital-config: dictionaries')
+  ctx.effect(installStyles, 'automation-config: styles')
+  ctx.effect(() => ctx.locale.register(LOCALE_NS, { zh, en }), 'automation-config: dictionaries')
   const card = new CapitalCardController(ctx.configForms.get(ENTRY_ID), ctx)
-  ctx.effect(() => () => card.dispose(), 'capital-config: form subscription')
-  ctx.effect(() => ctx.remote.$on('credentials/reference-updated', (ref) => card.refresh(ref)), 'capital-config: credential invalidations')
+  ctx.effect(() => () => card.dispose(), 'automation-config: form subscription')
+  ctx.effect(() => ctx.remote.$on('credentials/reference-updated', (ref) => card.refresh(ref)), 'automation-config: credential invalidations')
   // `plugin-manager/changed` is authoritative; re-read after reconnect too. Merge disposers into one cleanup.
   ctx.effect(() => {
     const refresh = () => card.invalidateBundleRows()
@@ -1298,23 +1298,23 @@ function apply(ctx) {
     return () => {
       for (const dispose of disposers) dispose()
     }
-  }, 'capital-config: bundle row invalidations')
+  }, 'automation-config: bundle row invalidations')
   // Register the card only while the host serves this entry; slot key is the bundle name.
   ctx.effect(() => ctx.configForms.whileServed([ENTRY_ID], () => ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({
     name: 'plugins.bundle.config',
     key: BUNDLE_NAME,
     locale: LOCALE_NS,
     inject: () => card.inject(),
-  }, CapitalCard))), 'capital-config: page')
+  }, CapitalCard))), 'automation-config: page')
   // Links are a plugin property, unrelated to whether the config entry is served.
   ctx.effect(() => ctx.slots.inject(BADGE_SLOT, () => ctx.slots.register({
     name: BADGE_SLOT,
     id: `${ENTRY_ID}-plugin-links`,
     locale: LOCALE_NS,
-  }, PluginLinks)), 'capital-config: plugin links')
-  ctx.logger?.info?.('capital-config: settings card + 标题外链 mounted')
+  }, PluginLinks)), 'automation-config: plugin links')
+  ctx.logger?.info?.('automation-config: settings card + 标题外链 mounted')
 }
 
-exports.name = 'capital-config'
+exports.name = 'automation-config'
 exports.inject = ['slots', 'locale', 'remote', 'remote.credentials', 'remote.pluginManager', 'configForms']
 exports.apply = apply

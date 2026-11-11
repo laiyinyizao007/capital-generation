@@ -62,7 +62,7 @@ async function rpc(endpoint, method, params) {
 const initializeParams = {
   protocolVersion: '2025-03-26',
   capabilities: {},
-  clientInfo: { name: 'capital-generation-spike', version: 'spike' },
+  clientInfo: { name: 'dsh-workbench-automation-spike', version: 'spike' },
 }
 
 /** Key-name risk flags: data_collector row keys must be ASCII snake_case (§10.6). */

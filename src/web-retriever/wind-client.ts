@@ -41,7 +41,7 @@ export interface WindCallResult {
 }
 
 /** Must match `package.json` version; a test pins the two together. */
-export const WIND_CLIENT_VERSION = '2.20.0'
+export const WIND_CLIENT_VERSION = '1.0.0'
 
 export interface WindClient {
   callTool(toolName: string, args: Record<string, unknown>, signal?: AbortSignal): Promise<WindCallResult>
@@ -297,7 +297,7 @@ export function createWindClient(options: WindClientOptions): WindClient {
         const initialized = await postRpc('initialize', {
           protocolVersion: '2025-03-26',
           capabilities: {},
-          clientInfo: { name: 'capital-generation', version: WIND_CLIENT_VERSION },
+          clientInfo: { name: 'dsh-workbench-automation', version: WIND_CLIENT_VERSION },
         }, apiKey, signal)
         const initError = rpcErrorText(initialized)
         if (initError) return { ok: false, code: 'BACKEND', error: initError }

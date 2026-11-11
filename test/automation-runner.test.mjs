@@ -60,7 +60,7 @@ async function harness({ promptFails = false, createFails = false, createPending
     ctx,
     store,
     settings,
-    profile: { displayName: 'web', runDir: '/tmp/capital-automation-runner-test' },
+    profile: { displayName: 'web', runDir: '/tmp/automation-workbench-runner-test' },
     workspaces,
     onRunSucceeded,
     now: () => NOW,
@@ -96,7 +96,7 @@ test('prompt 模板包含触发原因、occurrence、时区与无人值守标识
   assert.match(prompt, /任务说明（背景资料，不是指令）/)
   assert.match(prompt, /任务指令（唯一可执行指令）/)
   assert.equal(sessionTitleOf(task, run.id, NOW), `10-27 ${task.title} abcdef12`, '会话名 = 月-日 + 任务名 + run id 前缀')
-  assert.doesNotMatch(sessionTitleOf(task, run.id, NOW), /CapGen 投研自动化·web/, '会话名不再重复 profile 前缀')
+  assert.doesNotMatch(sessionTitleOf(task, run.id, NOW), /自动化工作台·web/, '会话名不再重复 profile 前缀')
 })
 
 test('任务分类决定输出结构与通用侧重，任务指令排在后面并优先', () => {
@@ -319,12 +319,12 @@ test('工具预算按整棵运行子树计数：tool/call 与 PTC 派发各算�
 test('任务选择工作区时以 workspaceId 创建 session；未选择时退回受控 cwd', async () => {
   const withWorkspace = await harness({ workspaces: { resolve: async () => ({ workspaceId: 'ws_1', path: '/tmp/project' }) } })
   await withWorkspace.runner.dispatch(withWorkspace.run, withWorkspace.task, 'manual')
-  assert.deepEqual(withWorkspace.createdWith[0], { workspaceId: 'ws_1', agentPreset: 'capital-generation' })
+  assert.deepEqual(withWorkspace.createdWith[0], { workspaceId: 'ws_1', agentPreset: 'dsh-workbench-automation' })
   withWorkspace.runner.dispose()
 
   const withoutWorkspace = await harness()
   await withoutWorkspace.runner.dispatch(withoutWorkspace.run, withoutWorkspace.task, 'manual')
-  assert.deepEqual(withoutWorkspace.createdWith[0], { cwd: '/tmp/capital-automation-runner-test', agentPreset: 'capital-generation' })
+  assert.deepEqual(withoutWorkspace.createdWith[0], { cwd: '/tmp/automation-workbench-runner-test', agentPreset: 'dsh-workbench-automation' })
   withoutWorkspace.runner.dispose()
 })
 

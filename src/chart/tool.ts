@@ -153,7 +153,7 @@ const receiptSchema = jsonObject({
 
 const parameters = jsonObject({
   dataset_id: { type: 'string', description: '数据来源之一：已授权的 DatasetRef 的 dataset_id（与 path / chart_source_ref 三选一）' },
-  path: { type: 'string', description: '数据来源之一：workspace 相对路径的 JSON 文件，如 capital-data/datasets/x/raw.json（与 dataset_id / chart_source_ref 三选一）' },
+  path: { type: 'string', description: '数据来源之一：workspace 相对路径的 JSON 文件，如 automation-data/datasets/x/raw.json（与 dataset_id / chart_source_ref 三选一）' },
   chart_source_ref: { type: 'string', description: '数据来源之一：宿主签发给 visualization_specialist 的短期 opaque chart source token（与 dataset_id / path 三选一）' },
   task_id: { type: 'string', description: '使用 chart_source_ref 时必需；必须与 token 绑定的当前任务一致' },
   spec: {
@@ -385,5 +385,5 @@ export function registerChartTool(ctx: Context, options: RenderChartInput): void
       }
     },
   }
-  ctx.effect(() => tools.register(definition), 'capital-generation.tool(render_chart)')
+  ctx.effect(() => tools.register(definition), 'automation-workbench.tool(render_chart)')
 }

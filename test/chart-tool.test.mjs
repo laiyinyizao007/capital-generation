@@ -276,7 +276,7 @@ test('注册后的 render_chart：Dataset/文件错误转换成模型可读 JSON
 
 test('图表协议 skill 必须真实存在（工具 description 让模型去加载它）', () => {
   const root = dirname(dirname(fileURLToPath(import.meta.url)))
-  const file = `${root}/preset/capital-generation/skills/capital-chart-protocol/SKILL.md`
+  const file = `${root}/preset/dsh-workbench-automation/skills/capital-chart-protocol/SKILL.md`
   assert.ok(existsSync(file), '缺少 skills/capital-chart-protocol/SKILL.md：工具 description 指向的协议不存在，模型会去加载一个空名字')
 
   const text = readFileSync(file, 'utf8')
@@ -305,7 +305,7 @@ test('render_chart：host 平面服务在场时登记序列并回 chart_url（�
     charts: () => ({
       publish: (input) => {
         published.push(input)
-        return `/capital-charts/${input.chartId}.json`
+        return `/automation-charts/${input.chartId}.json`
       },
     }),
   }, { dataset_id: ref.dataset_id, spec: { kind: 'line', x: 'trade_date', series: ['close'] } }, exec())
@@ -317,7 +317,7 @@ test('render_chart：host 平面服务在场时登记序列并回 chart_url（�
     `${WORKSPACE}/capital-analysis/charts/${receipt.chart_id}/series.json`,
     '登记给路由的必须是已解析好的**绝对**路径（路由不做任何路径拼接）',
   )
-  assert.equal(receipt.chart_url, `/capital-charts/${receipt.chart_id}.json`)
+  assert.equal(receipt.chart_url, `/automation-charts/${receipt.chart_id}.json`)
   assert.equal(JSON.stringify(receipt).includes(String(SENTINEL)), false, '登记旁路不得把数据带进回执')
 })
 
@@ -341,7 +341,7 @@ test('render_chart：旁路服务惰性解析，后到的 host 服务在下一�
   const input = { store, charts: () => service }
   const before = await renderChart(input, { dataset_id: ref.dataset_id, spec: { kind: 'line', x: 'trade_date', series: ['close'] } }, exec())
   assert.equal(before.chart_url, null, '服务缺席时降级为只有文件路径')
-  service = { publish: (value) => `/capital-charts/${value.chartId}.json` }
+  service = { publish: (value) => `/automation-charts/${value.chartId}.json` }
   const after = await renderChart(input, { dataset_id: ref.dataset_id, spec: { kind: 'line', x: 'trade_date', series: ['close'] } }, exec())
-  assert.equal(after.chart_url, `/capital-charts/${after.chart_id}.json`, '服务后到时不应被一次性解析固化为 null')
+  assert.equal(after.chart_url, `/automation-charts/${after.chart_id}.json`, '服务后到时不应被一次性解析固化为 null')
 })

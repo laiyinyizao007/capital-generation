@@ -1,7 +1,7 @@
 # Agent 角色与 DSH 能力复用
 
 > 本文件是 [README](../README.md)「三个模式怎么选」与「还能做什么」的详情层：README 只留模式与
-> 角色边界摘要，逐角色职责与逐条基础设施复用清单都在这里。文中所有事实与 `preset/capital-generation/agent.patch.yml` 的装配一致，
+> 角色边界摘要，逐角色职责与逐条基础设施复用清单都在这里。文中所有事实与 `preset/dsh-workbench-automation/agent.patch.yml` 的装配一致，
 > 装配能起由 `npm run smoke:boot` 在真实 boot graph 里验证。
 
 ## 总原则
@@ -114,7 +114,7 @@
 - **数据持久化**：通过宿主侧 `fs` / `sandboxPolicy` 服务完成 Dataset 落盘与权限校验，不直接操作文件系统；
   所有数据落在用户 workspace，服从当前 session 的沙箱策略。
 - **用户级资产**：自选股这类**跨 workspace** 的用户数据走官方 `dsh-storage-domain`
-  （域 `capital_watchlist`，落 `~/.dsh/storages/`），不自建文件路径；浏览器半边只与本机 loopback 上的
+  （域 `automation_watchlist`，落 `~/.dsh/storages/`），不自建文件路径；浏览器半边只与本机 loopback 上的
   宿主路由对话，密钥从不进浏览器。
 - **配置与凭据**：可编辑项就是插件条目 Config 里标了 `.volatile()` 的字段，DSH 自动把它投影成「插件」页
   上的表单（命名空间恒等于条目 id），插件不自建设置界面；API Key 经宿主 `credentials` 服务解析引用，

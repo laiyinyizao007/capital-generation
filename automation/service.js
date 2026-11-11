@@ -198,7 +198,7 @@ export function createAutomationService(options) {
       scheduler: scheduler === undefined ? { state: 'unavailable' } : scheduler.status(),
       calendar: calendar?.status?.(new Date(now())) ?? { available: false, source: 'none' },
       execution: {
-        preset: 'capital-generation',
+        preset: 'dsh-workbench-automation',
         cwdKind: 'profile',
         policy: 'automation-v1',
         categories: [...TaskCategorySchema.options],

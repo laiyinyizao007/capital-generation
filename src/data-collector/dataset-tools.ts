@@ -511,6 +511,6 @@ export function registerDatasetTools(
 
   const withWriteProfile = options.writeProfile === true
   for (const definition of registrations.filter((item) => withWriteProfile || item.name !== 'write_profile')) {
-    ctx.effect(() => tools.register(definition), `capital-generation.dataset-tool(${definition.name})`)
+    ctx.effect(() => tools.register(definition), `automation-workbench.dataset-tool(${definition.name})`)
   }
 }

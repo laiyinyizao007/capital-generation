@@ -103,7 +103,7 @@ export function createScheduler(options) {
   // inbox and evicted real run failures at the 200-record cap).
   async function standby(message, code = 'lease_lost') {
     const entering = state.state !== 'standby'
-    if (entering) logger?.warn?.(`capital-automation: ${message}`)
+    if (entering) logger?.warn?.(`automation-workbench: ${message}`)
     state.state = 'standby'
     state.leaseExpiresAt = null
     if (entering) {
@@ -142,7 +142,7 @@ export function createScheduler(options) {
       recovered = true
       try {
         state.recoveredRuns = await store.recoverNonTerminalRuns()
-        if (state.recoveredRuns > 0) logger?.warn?.(`capital-automation: ${state.recoveredRuns} 个上次进程的运行已恢复收口；无回合边界的记 unknown_after_restart`)
+        if (state.recoveredRuns > 0) logger?.warn?.(`automation-workbench: ${state.recoveredRuns} 个上次进程的运行已恢复收口；无回合边界的记 unknown_after_restart`)
       } catch (error) {
         state.lastError = String(error)
       }
@@ -287,7 +287,7 @@ export function createScheduler(options) {
       return
     }
     void Promise.resolve().then(() => runner.dispatch(run, task, 'scheduled')).catch((error) => {
-      logger?.warn?.(`capital-automation: scheduled dispatch failed: ${String(error)}`)
+      logger?.warn?.(`automation-workbench: scheduled dispatch failed: ${String(error)}`)
     })
   }
 
@@ -314,7 +314,7 @@ export function createScheduler(options) {
         }
       } catch (error) {
         state.lastError = String(error)
-        logger?.warn?.(`capital-automation: tick 失败：${String(error)}`)
+        logger?.warn?.(`automation-workbench: tick 失败：${String(error)}`)
       } finally {
         tickInFlight = undefined
       }
@@ -335,7 +335,7 @@ export function createScheduler(options) {
       // Never start the first tick on a calendar that cannot answer today: a network fetch
       // gets one bounded chance before fail-closed would claim the day's occurrence.
       await calendar.ready().catch((error) => {
-        logger?.warn?.(`capital-automation: 交易日历初始化失败：${sanitizeMessage(String(error))}`)
+        logger?.warn?.(`automation-workbench: 交易日历初始化失败：${sanitizeMessage(String(error))}`)
       })
     }
     if (stopped) return
@@ -470,7 +470,7 @@ export function createScheduler(options) {
       return { ok: false, code: 'run_capacity', message: '当前 profile 已达到自动化并发上限，请等待已有运行结束。', runId: run.id }
     }
     void Promise.resolve().then(() => runner.dispatch(run, task, 'manual')).catch((error) => {
-      logger?.warn?.(`capital-automation: manual dispatch failed: ${String(error)}`)
+      logger?.warn?.(`automation-workbench: manual dispatch failed: ${String(error)}`)
     })
     return { ok: true, run }
   }

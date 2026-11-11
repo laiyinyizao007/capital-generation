@@ -29,8 +29,8 @@ if (DSH_CLI === undefined) {
 }
 
 /** Preset identity and settings entry id must match agent.patch.yml and config/index.js verbatim. */
-const PRESET_ID = 'capital-generation'
-const SETTINGS_ENTRY_ID = 'capital-config'
+const PRESET_ID = 'dsh-workbench-automation'
+const SETTINGS_ENTRY_ID = 'automation-config'
 /** Bundle name from package.json: the plugin panel lists bundles by this name. */
 const PACKAGE_NAME = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).name
 /** Fresh scratch profile: every code-defined builtin is seeded once, by id, in dormant state. */
@@ -110,7 +110,7 @@ async function fetchIndex(url) {
 async function watchlistFenceProbe(url, cookie) {
   const signal = AbortSignal.timeout(15_000)
   const origin = new URL(url).origin
-  const target = `${origin}/capital-watchlist/list`
+  const target = `${origin}/automation-watchlist/list`
   const anonymous = await fetch(target, { signal })
   const authed = await fetch(target, { headers: cookie.length > 0 ? { cookie } : {}, signal })
   let items = null
@@ -134,7 +134,7 @@ async function watchlistFenceProbe(url, cookie) {
 async function automationMetaProbe(url, cookie) {
   const signal = AbortSignal.timeout(15_000)
   const origin = new URL(url).origin
-  const target = `${origin}/capital-automation/meta`
+  const target = `${origin}/automation-workbench/meta`
   const anonymous = await fetch(target, { signal })
   const headers = cookie.length > 0 ? { cookie } : {}
   const authed = await fetch(target, { headers, signal })
@@ -144,21 +144,21 @@ async function automationMetaProbe(url, cookie) {
   } catch {
     payload = undefined
   }
-  const tasksResponse = await fetch(`${origin}/capital-automation/tasks`, { headers, signal })
+  const tasksResponse = await fetch(`${origin}/automation-workbench/tasks`, { headers, signal })
   let tasks
   try {
     tasks = JSON.parse(await tasksResponse.text())
   } catch {
     tasks = undefined
   }
-  const workspacesResponse = await fetch(`${origin}/capital-automation/workspaces`, { headers, signal })
+  const workspacesResponse = await fetch(`${origin}/automation-workbench/workspaces`, { headers, signal })
   let workspaces
   try {
     workspaces = JSON.parse(await workspacesResponse.text())
   } catch {
     workspaces = undefined
   }
-  const boardResponse = await fetch(`${origin}/capital-automation/board?days=14&tz=Asia%2FShanghai&limit=30`, { headers, signal })
+  const boardResponse = await fetch(`${origin}/automation-workbench/board?days=14&tz=Asia%2FShanghai&limit=30`, { headers, signal })
   let board
   try {
     board = JSON.parse(await boardResponse.text())
@@ -197,26 +197,26 @@ function automationWorkspacesMatch(probe) {
   if (probe.workspacesStatus !== 200 || !Array.isArray(probe.workspaces)) return false
   const dedicated = probe.workspaces.find((item) => item.dedicated === true)
   if (dedicated === undefined) return false
-  return dedicated.title === 'CapGen 投研自动化（scratch）'
+  return dedicated.title === '自动化工作台（scratch）'
     && typeof dedicated.path === 'string'
-    && dedicated.path.includes('CapGen-automation-workspace')
+    && dedicated.path.includes('automation-workbench-workspace')
     && probe.defaultWorkspaceId === dedicated.id
 }
 
 /**
- * Live fence and closed-set check for /capital-skills: anonymous 401, an uncatalogued or encoded
+ * Live fence and closed-set check for /automation-skills: anonymous 401, an uncatalogued or encoded
  * `../` name 404, and a hit returns real frontmatter.
  */
 async function skillDocFenceProbe(url, cookie, skillName) {
   const signal = AbortSignal.timeout(15_000)
   const origin = new URL(url).origin
-  const target = `${origin}/capital-skills/${encodeURIComponent(skillName)}.md`
+  const target = `${origin}/automation-skills/${encodeURIComponent(skillName)}.md`
   const headers = cookie.length > 0 ? { cookie } : {}
   const anonymous = await fetch(target, { signal })
   const authed = await fetch(target, { headers, signal })
   const body = authed.ok ? await authed.text() : ''
-  const missing = await fetch(`${origin}/capital-skills/not-a-catalogued-skill.md`, { headers, signal })
-  const traversal = await fetch(`${origin}/capital-skills/${encodeURIComponent('../../package.json')}.md`, { headers, signal })
+  const missing = await fetch(`${origin}/automation-skills/not-a-catalogued-skill.md`, { headers, signal })
+  const traversal = await fetch(`${origin}/automation-skills/${encodeURIComponent('../../package.json')}.md`, { headers, signal })
   let missingError = null
   try {
     missingError = (await missing.json())?.error ?? null
@@ -282,7 +282,7 @@ function probeSource() {
     `      const required = ['persona', 'tool-subagent-data-collector', 'tool-subagent-data-junior', 'tool-fs']`,
     `      result.presetRows = required.map((id) => ({ id, state: composition?.rows?.find((row) => row.entryId === id)?.fiberState ?? null }))`,
     `      for (const row of result.presetRows) if (row.state !== 2) result.problems.push('预设子行未激活：' + row.id + '（fiberState=' + row.state + '）')`,
-    `      if (composition?.rows?.some((row) => row.entryId === 'capital-generation')) result.problems.push('根 preset 仍然挂着单体 capital-generation 行')`,
+    `      if (composition?.rows?.some((row) => row.entryId === 'dsh-workbench-automation')) result.problems.push('根 preset 仍然挂着单体 dsh-workbench-automation 行')`,
     `      // phase-1 spike：所有 Capital preset 都要能激活。`,
     `      const roster = await agentPresets.list()`,
     `      result.rolePresets = []`,
@@ -323,7 +323,7 @@ function probeSource() {
     `          result.familyRows.push({ preset: presetId, rowId, state })`,
     `          if (state !== 2) result.problems.push(presetId + ' 的族行 ' + rowId + ' 未激活（fiberState=' + state + '）：那颗角色的这一族工具整族不存在')`,
     `        }`,
-    `        if (compositionOf.rows?.some((row) => row.entryId === 'capital-generation')) result.problems.push(presetId + ' 仍然挂着单体 capital-generation 行')`,
+    `        if (compositionOf.rows?.some((row) => row.entryId === 'dsh-workbench-automation')) result.problems.push(presetId + ' 仍然挂着单体 dsh-workbench-automation 行')`,
     `      }`,
     `      // PTC：presentation 是 preset 级行，runtime 是宿主级服务；两者缺一，junior 的执行面直接不存在。`,
     `      const PTC_PRESET_ID = ${JSON.stringify(PTC_PRESET_ID)}`,
@@ -335,8 +335,8 @@ function probeSource() {
     `      if (result.ptcRuntime !== true) result.problems.push('ctx.get(\\'ptcRuntime\\') 为空：宿主的 ptc-runtime 行没装，tool-presentation: ptc 会在 mount 阶段失败')`,
     `    }`,
     `    result.hostRuntime = Boolean(ctx.get('capitalChartRuntime'))`,
-    `    if (!result.hostRuntime) result.problems.push('capital-runtime 未提供 capitalChartRuntime（chart source token 无法跨 preset 共享）')`,
-    `    // 身份闸门必须真的落在宿主的 global guard 层：capital-policy 行不声明 inject 时`,
+    `    if (!result.hostRuntime) result.problems.push('automation-runtime 未提供 capitalChartRuntime（chart source token 无法跨 preset 共享）')`,
+    `    // 身份闸门必须真的落在宿主的 global guard 层：automation-policy 行不声明 inject 时`,
     `    // ctx.get('tools') 在 boot 期解析成 undefined（不抛错），三颗闸门就静默不装`,
     `    //（2026-10-15 起的 fs 写口 guard 一直是这个形状，被 tool-fs 的行级开关掩护住）。`,
     `    try {`,
@@ -542,7 +542,7 @@ try {
           ? fence.status === 200
           : fence.anonymousStatus === 401 && fence.status === 200
         fence.ok = fenceOk
-        console.log(`smoke-boot: ${fenceOk ? '✅' : '❌'} /capital-watchlist/list 围栏：匿名 HTTP ${fence.anonymousStatus}（应 401）、带 cookie HTTP ${fence.status}（应 200），清单 ${fence.items ?? '?'} 条，cache-control=${fence.cacheControl}${fence.cause ? `，原因=${fence.cause}` : ''}`)
+        console.log(`smoke-boot: ${fenceOk ? '✅' : '❌'} /automation-watchlist/list 围栏：匿名 HTTP ${fence.anonymousStatus}（应 401）、带 cookie HTTP ${fence.status}（应 200），清单 ${fence.items ?? '?'} 条，cache-control=${fence.cacheControl}${fence.cause ? `，原因=${fence.cause}` : ''}`)
       } catch (error) {
         fence = { ok: false, error: String(error?.message ?? error) }
         console.log(`smoke-boot: ❌ 自选股路由探针失败：${fence.error}`)
@@ -565,7 +565,7 @@ try {
             && automationFence.boardEmpty === true
             && automationFence.boardRange === 14
         automationFence.ok = ok && automationFence.cacheControl === 'no-store'
-        console.log(`smoke-boot: ${automationFence.ok ? '✅' : '❌'} /capital-automation/meta：匿名 HTTP ${automationFence.anonymousStatus}（应 401）、带 cookie HTTP ${automationFence.status}，profile=${automationFence.profile}，policy=${automationFence.policy}，scheduler=${automationFence.scheduler}，storage=${automationFence.storage}，tasks=${automationFence.tasks?.length ?? '?'}/${BUILTIN_IDS.length}，workspaces=${automationFence.workspaces?.length ?? '?'}（默认 ${automationFence.defaultWorkspaceId ?? '?'}），board=${automationFence.boardStatus}（empty=${automationFence.boardEmpty}）`)
+        console.log(`smoke-boot: ${automationFence.ok ? '✅' : '❌'} /automation-workbench/meta：匿名 HTTP ${automationFence.anonymousStatus}（应 401）、带 cookie HTTP ${automationFence.status}，profile=${automationFence.profile}，policy=${automationFence.policy}，scheduler=${automationFence.scheduler}，storage=${automationFence.storage}，tasks=${automationFence.tasks?.length ?? '?'}/${BUILTIN_IDS.length}，workspaces=${automationFence.workspaces?.length ?? '?'}（默认 ${automationFence.defaultWorkspaceId ?? '?'}），board=${automationFence.boardStatus}（empty=${automationFence.boardEmpty}）`)
       } catch (error) {
         automationFence = { ok: false, error: String(error?.message ?? error) }
         console.log(`smoke-boot: ❌ 投研自动化路由探针失败：${automationFence.error}`)
@@ -584,7 +584,7 @@ try {
             ? fence.status === 200 && fence.startsWithFrontMatter
             : skillFenceOk(fence)
           fences.push(fence)
-          console.log(`smoke-boot: ${fence.ok ? '✅' : '❌'} /capital-skills/${skillName}.md：匿名 HTTP ${fence.anonymousStatus}（应 401）、带 cookie HTTP ${fence.status}（应 200）${fence.bytes} 字节、cache-control=${fence.cacheControl}、开头是 frontmatter=${fence.startsWithFrontMatter}；表外名 HTTP ${fence.missingStatus}（error=${fence.missingError}）、编码斜杠穿越 HTTP ${fence.traversalStatus}（都应 404）`)
+          console.log(`smoke-boot: ${fence.ok ? '✅' : '❌'} /automation-skills/${skillName}.md：匿名 HTTP ${fence.anonymousStatus}（应 401）、带 cookie HTTP ${fence.status}（应 200）${fence.bytes} 字节、cache-control=${fence.cacheControl}、开头是 frontmatter=${fence.startsWithFrontMatter}；表外名 HTTP ${fence.missingStatus}（error=${fence.missingError}）、编码斜杠穿越 HTTP ${fence.traversalStatus}（都应 404）`)
         }
         skillFence = { ok: fences.length > 0 && fences.every((fence) => fence.ok === true) }
       } catch (error) {

@@ -120,7 +120,7 @@ test('rolePresetIdOf 只认角色 preset：根 Agent、别的 preset、读不到
   for (const presetId of ROLE_PRESET_ID_LIST) {
     assert.equal(rolePresetIdOf(ctx, childAgent({}, presetId)), presetId)
   }
-  assert.equal(rolePresetIdOf(ctx, { session: { id: 'main-1', header: { cwd: '/w' } }, ctx: { presetId: 'capital-generation' } }), undefined,
+  assert.equal(rolePresetIdOf(ctx, { session: { id: 'main-1', header: { cwd: '/w' } }, ctx: { presetId: 'dsh-workbench-automation' } }), undefined,
     '主 Agent 由 root-tool-policy 收敛，这里必须判 undefined')
   assert.equal(rolePresetIdOf(ctx, { session: { id: 'x', header: { cwd: '/w', parentSession: 'm' } }, ctx: { presetId: 'other-mode' } }), undefined,
     '别的 preset 的 child 不许被我们碰')
@@ -144,7 +144,7 @@ test('agent/created 只收敛角色 child，且同一颗 child 只收敛一次',
 
   const rootTools = fakeTools()
   created(first.rootListeners.find((entry) => entry.event === 'agent/created'))(
-    { agent: { session: { id: 'main-1', header: { cwd: '/w' } }, ctx: { tools: rootTools, presetId: 'capital-generation' } } })
+    { agent: { session: { id: 'main-1', header: { cwd: '/w' } }, ctx: { tools: rootTools, presetId: 'dsh-workbench-automation' } } })
   assert.deepEqual(rootTools.calls, [], '主 Agent 不该在这里被收敛')
 
   const tools = fakeTools()
@@ -193,8 +193,8 @@ test('挂在角色 preset 的根会话（用户手选角色 preset 开的会话�
 
   // The main root id remains owned by root-tool-policy.
   const mainTools = fakeTools()
-  created({ agent: { session: { id: 'root-main', header: { cwd: '/w' } }, ctx: { tools: mainTools, presetId: 'capital-generation' } } })
-  assert.deepEqual(mainTools.calls, [], 'capital-generation 不是角色 preset，这里不许碰它')
+  created({ agent: { session: { id: 'root-main', header: { cwd: '/w' } }, ctx: { tools: mainTools, presetId: 'dsh-workbench-automation' } } })
+  assert.deepEqual(mainTools.calls, [], 'dsh-workbench-automation 不是角色 preset，这里不许碰它')
 })
 
 
@@ -215,7 +215,7 @@ test('roleSiblingGuardReasonFor：角色人设调 interrupt_agent / list_agents 
   }
   // Root may interrupt / list its children; unknown presets must remain allowed.
   for (const name of SIBLING_DENIED_TOOLS) {
-    assert.equal(guard({ name, agent: { ctx: { presetId: 'capital-generation' } } }), undefined)
+    assert.equal(guard({ name, agent: { ctx: { presetId: 'dsh-workbench-automation' } } }), undefined)
     assert.equal(guard({ name, agent: { ctx: { presetId: 'standard' } } }), undefined)
     assert.equal(guard({ name, agent: { ctx: {} } }), undefined)
     assert.equal(roleSiblingGuardReasonFor(fakeCtx(undefined, { registry: false }).ctx)({ name, agent: { ctx: { presetId: ROLE_PRESET_IDS.retriever } } }), undefined,

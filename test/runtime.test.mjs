@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { capitalDatasetStore, capitalSharedRuntime, resetCapitalRuntime } from '../lib/runtime.js'
+import { automationDatasetStore, automationSharedRuntime, resetCapitalRuntime } from '../lib/runtime.js'
 
 /** Fake ctx with a stable root. */
 const fakeCtx = (root, { withServices = true } = {}) => ({
@@ -22,8 +22,8 @@ const fakeCtx = (root, { withServices = true } = {}) => ({
 test('同一个 root 上多次挂载必须拿到同一份出图凭证与产物登记', () => {
   resetCapitalRuntime()
   const root = {}
-  const first = capitalSharedRuntime(fakeCtx(root))
-  const second = capitalSharedRuntime(fakeCtx(root))
+  const first = automationSharedRuntime(fakeCtx(root))
+  const second = automationSharedRuntime(fakeCtx(root))
 
   for (const key of ['sourceTokens', 'artifacts']) {
     assert.equal(first[key], second[key], `第二次挂载重新构造了 ${key}——data_junior 签发的凭证，specialist 查不到`)
@@ -32,8 +32,8 @@ test('同一个 root 上多次挂载必须拿到同一份出图凭证与产物�
 
 test('不同 root 各拿一份（凭证不能跨会话根泄漏）', () => {
   resetCapitalRuntime()
-  const a = capitalSharedRuntime(fakeCtx({}))
-  const b = capitalSharedRuntime(fakeCtx({}))
+  const a = automationSharedRuntime(fakeCtx({}))
+  const b = automationSharedRuntime(fakeCtx({}))
   assert.notEqual(a.sourceTokens, b.sourceTokens, '缓存键没有按 root 区分，两个会话会共用同一张凭证表')
   assert.notEqual(a.artifacts, b.artifacts, '缓存键没有按 root 区分，两个会话会共用同一份产物登记')
 })
@@ -42,9 +42,9 @@ test('root 交替挂载 A → B → A 仍复用 A 的实例', () => {
   resetCapitalRuntime()
   const aRoot = {}
   const bRoot = {}
-  const a1 = capitalSharedRuntime(fakeCtx(aRoot))
-  capitalSharedRuntime(fakeCtx(bRoot))
-  const a2 = capitalSharedRuntime(fakeCtx(aRoot))
+  const a1 = automationSharedRuntime(fakeCtx(aRoot))
+  automationSharedRuntime(fakeCtx(bRoot))
+  const a2 = automationSharedRuntime(fakeCtx(aRoot))
   assert.equal(a2.sourceTokens, a1.sourceTokens, '单槽缓存被 B 覆盖后，A 再挂载会重建凭证表')
   assert.equal(a2.artifacts, a1.artifacts, '单槽缓存被 B 覆盖后，A 再挂载会重建产物登记')
 })
@@ -52,16 +52,16 @@ test('root 交替挂载 A → B → A 仍复用 A 的实例', () => {
 test('Dataset 存储必须每次挂载各一份（共享会撞能力注册表）', () => {
   resetCapitalRuntime()
   const root = {}
-  assert.notEqual(capitalDatasetStore(fakeCtx(root)), capitalDatasetStore(fakeCtx(root)),
+  assert.notEqual(automationDatasetStore(fakeCtx(root)), automationDatasetStore(fakeCtx(root)),
     'store 被共享了：hub 跟着共享即第二次挂载注册同名数据源直接失败，'
-    + '而 capital-generation-scope 行的 isolate 名单本来就把它按 realm 隔离')
+    + '而 automation-workbench-scope 行的 isolate 名单本来就把它按 realm 隔离')
 })
 
 test('宿主服务未就绪时给出可用实例，失败留到调用期响亮', () => {
   resetCapitalRuntime()
   const root = {}
   // Services absent: fail loudly at the save step, never at assembly (a throw/undefined there poisons the process).
-  const cold = capitalDatasetStore(fakeCtx(root, { withServices: false }))
+  const cold = automationDatasetStore(fakeCtx(root, { withServices: false }))
   assert.ok(cold, '缺席时也要给出一个可用的 store')
-  assert.ok(capitalDatasetStore(fakeCtx(root)), '就绪时同样给出实例')
+  assert.ok(automationDatasetStore(fakeCtx(root)), '就绪时同样给出实例')
 })

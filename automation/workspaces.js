@@ -6,7 +6,7 @@
 import { mkdir, realpath } from 'node:fs/promises'
 import { join, sep } from 'node:path'
 
-export const AUTOMATION_WORKSPACE_DIR = 'CapGen-automation-workspace'
+export const AUTOMATION_WORKSPACE_DIR = 'automation-workbench-workspace'
 
 export class WorkspaceError extends Error {
   constructor(code, message) {
@@ -39,7 +39,7 @@ export function defaultWorkspacePath(profile = {}) {
 }
 
 export function defaultWorkspaceTitle(displayName) {
-  return `CapGen 投研自动化（${displayName}）`
+  return `自动化工作台（${displayName}）`
 }
 
 /** `~` only for paths under the user's home; anything else stays absolute so it is unambiguous. */
@@ -73,7 +73,7 @@ export function createWorkspaceCatalog(options) {
   function warnDefaultUnusable(id, reason) {
     if (warnedDefaultId === id) return
     warnedDefaultId = id
-    logger?.warn?.(`capital-automation: 默认工作区 ${id} ${reason}，回退到专属默认工作区。`)
+    logger?.warn?.(`automation-workbench: 默认工作区 ${id} ${reason}，回退到专属默认工作区。`)
   }
 
   async function adoptSessions(entity) {
@@ -149,7 +149,7 @@ export function createWorkspaceCatalog(options) {
       if (created !== undefined) dedicatedEntity = created
       return created
     } catch (error) {
-      logger?.warn?.(`capital-automation: 无法注册默认工作区：${String(error)}`)
+      logger?.warn?.(`automation-workbench: 无法注册默认工作区：${String(error)}`)
       return undefined
     } finally {
       if (registrations.get(runDir) === sharedPromise) registrations.delete(runDir)

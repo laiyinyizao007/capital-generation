@@ -42,7 +42,7 @@
 | `peerDependencies["@deepseek-ai/cordis"]` | `^4.0.2` | 不匹配 `@deepseek-ai/dsh*`，不参与预检 |
 | `devDependencies` | three dsh packages = `^0.2.1-rc.5`；cordis `^4.0.2`；schemastery `^3.18.4` | 类型侧与本地回归 |
 | 本机全局宿主 | `@deepseek-ai/dsh@0.2.1-rc.5` | `~/.npm-global` |
-| 本机 profile | `web` / `capital` 均 `link:/home/shawn/projects/capital-generation` | 改工作区即改插件 |
+| 本机 profile | `web` / `capital` 均 `link:/home/shawn/projects/dsh-workbench-automation` | 改工作区即改插件 |
 
 升级后（2.18.0）：两个 dsh peer 精确 pin `0.2.2-rc.1`；三颗 devDependency 与 lockfile 同步；
 cordis → `~4.1.0`，schemastery → `^3.19.0`。
@@ -62,7 +62,7 @@ cordis → `~4.1.0`，schemastery → `^3.19.0`。
 | **Session Projection 注册 API 异步化** | `sessionProjections.register()` 返回 Promise/handle | 本仓只读 `stateOf`，不注册 | **零动作** |
 | **Cordis 4.1 / Loader 1.1 / Include 1.1** | 配置访问、条目变更、持久化统一 | `ctx.effect` / `ctx.inject` / `ctx.get` / `ctx.root` | **零动作**（单元测试与 smoke 都过） |
 | **官方组合包列表移到 `dsh-official-bundles`** | `dsh-app-boot` 不再导出该表 | 本仓不读官方组合包列表 | **零动作** |
-| **自动化任务改为宿主级管理** | 宿主 automation 插件 | 本仓 `capital-automation` 是独立 bundle、自有路由与域 | **零动作**（smoke 的 16 任务 / 看板照常） |
+| **自动化任务改为宿主级管理** | 宿主 automation 插件 | 本仓 `automation-workbench` 是独立 bundle、自有路由与域 | **零动作**（smoke 的 16 任务 / 看板照常） |
 | **Node.js 最低 24.9** | `engines` | 本机 24.18.0 | 满足；README/CHANGELOG 已写 |
 | **locale 扩到 de/es/fr/ja/pt/ru** | 各包 locale | 本仓只读英文/中文按钮文案 | **零动作** |
 
@@ -92,7 +92,7 @@ semver 仍是老结论：`^0.2.1-rc.5` 在 includePrerelease 下会放进未测�
 | `package.json` | 两个 dsh peer → `0.2.2-rc.1`；cordis → `~4.1.0`；三颗 dsh devDep → `^0.2.2-rc.1`；schemastery → `^3.19.0`；`version` → `2.18.0` |
 | `package-lock.json` | 17 颗 `@deepseek-ai/*` 的 version / resolved / integrity / 相互引用同步；新增 `dsh-fs-patch` |
 | `chart-ui/` `config/` `watchlist/` `automation/package.json` | 嵌套包版本 → `2.18.0` |
-| `preset/capital-generation/agent.patch.yml` | `tool-presentation` 行改挂 `@deepseek-ai/dsh-tool-executor-ptc`（`maxParallelSubCalls: 10`）；删 `tool-subagent-list-agents` 子路径行 |
+| `preset/dsh-workbench-automation/agent.patch.yml` | `tool-presentation` 行改挂 `@deepseek-ai/dsh-tool-executor-ptc`（`maxParallelSubCalls: 10`）；删 `tool-subagent-list-agents` 子路径行 |
 | `src/agents/role-tool-policy.ts` | `SIBLING_DENIED_TOOLS` 加 `list_agents`（主入口把它焊进每颗角色）；注释同步 |
 | `src/chart/delivery.ts` / `src/present-entry.ts` / `src/chart/present-tool.ts` | 交付卡“只重放收尾消息之前”的注释改为 0.2.2 的整轮语义；写入点理由改为“收尾轮判定” |
 | `scripts/check-dsh-compat.mjs` | L6 / L11 / L12 / L16 / L30 / L31 / L35 七条探针按新落点重写 |
@@ -102,7 +102,7 @@ semver 仍是老结论：`^0.2.1-rc.5` 在 includePrerelease 下会放进未测�
 | `test/role-tool-policy.test.mjs` | 逐名 deny 的计数从 1 改为 `SIBLING_DENIED_TOOLS.length`；guard 用例覆盖 `list_agents` |
 | `src/web-retriever/local-fetch.ts` / `wind-client.ts` | 客户端版本常量 → `2.18.0` |
 | `README.md` / `CONTRIBUTING.md` / `.github/workflows/test.yml` | 基线徽章、正文、CI 安装版本 → `0.2.2-rc.1` / `2.18.0` |
-| `preset/capital-generation/README.md`、`docs/dev/*.md`、`docs/reference/dsh-surface-ledger.md` | PTC、list-agents、并发/输出校验落点、交付重放同步 |
+| `preset/dsh-workbench-automation/README.md`、`docs/dev/*.md`、`docs/reference/dsh-surface-ledger.md` | PTC、list-agents、并发/输出校验落点、交付重放同步 |
 | `CHANGELOG.md` | 新增 2.18.0 段与迁移说明 |
 
 不需要动：`src/tool-exec.ts`（授权判据）、数据源与 Dataset 契约、settings 卡片结构、
@@ -111,7 +111,7 @@ semver 仍是老结论：`^0.2.1-rc.5` 在 includePrerelease 下会放进未测�
 ### 4.2 用户侧的升级顺序
 
 先升宿主，再更新插件（2.18.0 要求 0.2.2-rc.1）。反过来做，插件先被兼容预检禁用，需要再执行一次
-`dsh plugin --profile <profile> update @v587d/capital-generation` 才能恢复；桌面端缺少 stderr
+`dsh plugin --profile <profile> update dsh-workbench-automation` 才能恢复；桌面端缺少 stderr
 时尤其容易卡住。应急通道仍是 `dsh plugin allow-version`，但它只豁免 manifest 检查，运行时导入
 仍跨版本。
 
@@ -126,14 +126,14 @@ semver 仍是老结论：`^0.2.1-rc.5` 在 includePrerelease 下会放进未测�
 | `npm test`（对 0.2.2-rc.1） | **1392 / 1392** 通过（含 2.18.0 版本闸门、两处 deny 计数修复与 1 条 JSONL 后端导出面回归） |
 | `npm run smoke:boot` | 通过：`broken=null`、20/20 族行 ACTIVE、12 行 bundle 组件、3/3 身份闸门、PTC executor 行 `fiberState=2`、`ptcRuntime=present`、settings 条目 present、三条路由围栏 401/200 |
 | 兼容预检 | `evaluatePluginCompatibility(package.json)` → `undefined` |
-| 运行中的 GUI | 2026-11-06 09:57 用户重启 `dsh web`；新进程（PID 10097）`dsh --version` = `0.2.2-rc.1`，`plugin_manager.list_bundles()` 报本 bundle `2.18.0` / enabled；`~/.dsh/storages/capital-automation-locks` 与 `capital_automation.json` 在 09:57–09:58 写入，说明 web profile 里的本插件已加载并运行 |
+| 运行中的 GUI | 2026-11-06 09:57 用户重启 `dsh web`；新进程（PID 10097）`dsh --version` = `0.2.2-rc.1`，`plugin_manager.list_bundles()` 报本 bundle `2.18.0` / enabled；`~/.dsh/storages/automation-workbench-locks` 与 `automation_workbench.json` 在 09:57–09:58 写入，说明 web profile 里的本插件已加载并运行 |
 
 未做：自选股弹窗、图表卡片内联渲染（交付事件与自包含 HTML 已实测，见 §5.1）、思考内容样式。
 
 ### 5.1 2.18.0 实机业务复核（2026-11-06）
 
 `smoke:boot` 只证明行能激活；这一轮在独立 scratch web profile 上跑真实会话：只挂
-`dsh-base` + `dsh-web-app` + `capital-generation` 2.18.0，独立 `DSH_HOME` 与 credentials 副本，
+`dsh-base` + `dsh-web-app` + `dsh-workbench-automation` 2.18.0，独立 `DSH_HOME` 与 credentials 副本，
 用真实 `/api/session/create` + `/api/session/prompt` 驱动 Agent，UI 用 headless Chromium 打开
 同一 profile。**不复用用户真实 profile 的会话数据。**
 
@@ -145,7 +145,7 @@ semver 仍是老结论：`^0.2.1-rc.5` 在 includePrerelease 下会放进未测�
 | 叶子工具面 | collector：`request_data` / `send_message`；junior：仅 `run_code`；specialist：`render_chart`；三者均无 `list_agents` | ✅ 0.2.2 焊入主入口的 `list_agents` 被逐名 deny 掉 |
 | 资讯专员 | `capital-web-retriever` 会话：`eastmoney_announcements` 先返回 0（窗口内无公告，合法空结果），放宽窗口返回 5 条并正确标注 `authoritative_reprint` / `not_verified` | ✅ 零密钥来源与空结果语义未变 |
 | 设置卡片 | 真实 UI：bundle 详情页四格 tab（Data Sources / Research automation / Selected Skills / Components 12）与凭据状态正常 | ✅ |
-| 投研自动化 | 真实 UI：看板、任务/运行 tab、单 scheduler lease 提示；`/capital-automation/meta` 在 scratch 下 `tasks=16/16`、`storage=ready` | ✅（scoped host 下 scheduler 暂停是单 lease 的预期行为） |
+| 投研自动化 | 真实 UI：看板、任务/运行 tab、单 scheduler lease 提示；`/automation-workbench/meta` 在 scratch 下 `tasks=16/16`、`storage=ready` | ✅（scoped host 下 scheduler 暂停是单 lease 的预期行为） |
 | 会话闸门 | `npm run verify:sessions -- --strict` 对 6 份 scratch 会话：1 份含交付事件，0 份闭集外事件，0 份冷加载失败 | ✅（修复后，见下） |
 
 **本轮新发现与原因**
@@ -153,10 +153,10 @@ semver 仍是老结论：`^0.2.1-rc.5` 在 includePrerelease 下会放进未测�
 | 现象 | 直接原因 | 归类 |
 |---|---|---|
 | `npm run verify:sessions` 启动即 `TypeError: Backend is not a constructor` | 0.2.2 的 `@deepseek-ai/dsh-session-persistence-jsonl` 把默认导出的后端类换成插件 `apply`；脚本仍 `new Backend(...)`。`check:dsh` 没有这条账本、`npm test` 也不调用该脚本，所以 37/37 与 1391/1391（修复前）都绿而闸门已失效 | **升级漏改，已修**：改为挂载到裸 `Context` 后取 `sessionPersistence`；新增 `test/session-files.test.mjs` 用例钉住 `apply` 导出面 |
-| 重启 scratch 宿主后 `/capital-charts/<id>.json` 返回 404 | chart host 的登记表是进程级 500 条 LRU，不落盘；重启后旧 `chart_id` 查不到 | **已知遗留，与 0.2.2 无关**：交付事件里的自包含 HTML 仍是权威产物，卡片会退回「打开」文件 |
+| 重启 scratch 宿主后 `/automation-charts/<id>.json` 返回 404 | chart host 的登记表是进程级 500 条 LRU，不落盘；重启后旧 `chart_id` 查不到 | **已知遗留，与 0.2.2 无关**：交付事件里的自包含 HTML 仍是权威产物，卡片会退回「打开」文件 |
 | `data_junior` 一次 `dataset_not_found` | 模型把 `ds_e35590f2-…-e2fdc16e7689` 抄成 `…-e2dfc16e7689`（`e2fd`/`e2df` 顺序颠倒） | **模型笔误，不是插件**：主 Agent 用 `bash` 核对目录名后经 `send_message` 纠正，junior 重试成功 |
 | scratch UI 一开始看不到本 bundle 与设置卡片 | 手写 scratch profile 只在 `dsh.profile.bundles` 里列了包，没有写 `dependencies`，`pluginManager` 因此报 `installed:false`；补上 `link:` 依赖后卡片正常出现在 Installed plugins | **测试环境构造**，不是产品回归 |
-| 真实 `web` profile 启动日志有一条 `patch: name mismatch for "capital-config"` | 用户层 `cordis.patch.yml` 还留着已重命名的 `capital-config/index.js` 旧行；后一条 `config/index.js` 覆盖生效 | **配置债**，无功能影响；建议删掉旧行 |
+| 真实 `web` profile 启动日志有一条 `patch: name mismatch for "automation-config"` | 用户层 `cordis.patch.yml` 还留着已重命名的 `automation-config/index.js` 旧行；后一条 `config/index.js` 覆盖生效 | **配置债**，无功能影响；建议删掉旧行 |
 
 **结论**：0.2.2-rc.1 上本插件的主业务链（取数 → Dataset → PTC 分析 → 出图 → 官方交付；资讯专员；
 设置卡片；自动化看板）实机走通，叶子工具面与 deny 生效；唯一阻断性回归是 `verify:sessions`

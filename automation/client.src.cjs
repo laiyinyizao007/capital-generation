@@ -1,7 +1,7 @@
 /**
- * Browser half of `@v587d/capital-automation`: the `capital-automation` main key plus the
+ * Browser half of `@v587d/automation-workbench`: the `automation-workbench` main key plus the
  * adjacent sidebar row. The page owns no schedule identity and reads only the profile the
- * server put it in; `/capital-automation` is the only data source.
+ * server put it in; `/automation-workbench` is the only data source.
  */
 const { createElement: h, useEffect, useRef, useState } = require('react')
 const {
@@ -39,10 +39,10 @@ const {
   taskIconId,
 } = require('./task-icons.js')
 
-const ENTRY_NAME = 'capital-automation'
-const ROUTE = '/capital-automation'
-const PANEL_ID = 'capital-automation'
-const STYLE_TAG = 'capital-automation-css'
+const ENTRY_NAME = 'automation-workbench'
+const ROUTE = '/automation-workbench'
+const PANEL_ID = 'automation-workbench'
+const STYLE_TAG = 'automation-workbench-css'
 const ACTIVE_RUN_STATUSES = ['queued', 'starting', 'running']
 const FAILURE_RUN_STATUSES = ['failed', 'timed_out', 'blocked_requires_user', 'unknown_after_restart']
 const SKIPPED_RUN_STATUSES = ['skipped_overlap', 'skipped_calendar_unavailable', 'missed']
@@ -82,22 +82,22 @@ const TITLE_MAX_LENGTH = 12
 const DESCRIPTION_MAX_LENGTH = 100
 const INSTRUCTION_MAX_LENGTH = 12_000
 const AUTOSAVE_DELAY_MS = 600
-const BOARD_UI_KEY = 'capital-automation:board-ui:v3'
+const BOARD_UI_KEY = 'automation-workbench:board-ui:v3'
 const BOARD_PANEL_KEYS = ['todo', 'stocks', 'gaps', 'health']
 const BOARD_TODO_PERIODS = ['today', 'future', 'expired']
 const BOARD_STOCK_PAGE_SIZE = 12
 const BOARD_STOCK_ROLES = ['holding', 'risk', 'event', 'watch']
 const BOARD_BRIEF_HIGHLIGHT_MS = 3_000
 const BOARD_PANEL_IDS = {
-  'capital-automation-todo': 'todo',
-  'capital-automation-stocks': 'stocks',
-  'capital-automation-gaps': 'gaps',
-  'capital-automation-health': 'health',
+  'automation-workbench-todo': 'todo',
+  'automation-workbench-stocks': 'stocks',
+  'automation-workbench-gaps': 'gaps',
+  'automation-workbench-health': 'health',
 }
 
 const zh = {
-  panel: 'CapGen 投研自动化',
-  title: 'CapGen 投研自动化',
+  panel: '自动化工作台',
+  title: '自动化工作台',
   subtitle: '定时投研，自动执行，结果可追溯',
   tabs: { board: '看板', tasks: '任务', runs: '运行' },
   board: {
@@ -234,7 +234,7 @@ const zh = {
     categoryEmpty: '没有符合筛选的任务简报',
   },
   storageUnavailable: '存储不可用，页面只读',
-  standbyBanner: '本窗口的定时任务已暂停：定时触发与手动运行不可用；若另一个 CapGen 窗口在运行，定时任务仍会由它执行。',
+  standbyBanner: '本窗口的定时任务已暂停：定时触发与手动运行不可用；若另一个工作台窗口在运行，定时任务仍会由它执行。',
   storageBanner: '投研自动化存储暂时不可用：页面只读，调度器不会启动。',
   calendarBanner: '交易日历暂时不可用：仅交易日的任务会跳过，其他任务仍按设定时间运行。',
   calendarCoverageBanner: '交易日历只覆盖到 {through}：之后仅交易日的任务会跳过；交易所公布新一年安排后会自动接上。',
@@ -460,7 +460,7 @@ const zh = {
   systemHideDetails: '收起',
   systemLastStandby: '上次中断',
   systemNoStandby: '没有调度中断记录。',
-  systemReasonLeaseHeld: '另一个 CapGen 窗口正在负责定时任务。',
+  systemReasonLeaseHeld: '另一个自动化工作台窗口正在负责定时任务。',
   systemReasonLeaseLost: '本窗口的调度权已失效，可能已由另一个窗口接管。',
   systemReasonUnverified: '本窗口的调度权校验未通过。',
   systemTechnical: '技术信息',
@@ -528,645 +528,645 @@ function installStyles() {
   const style = document.createElement('style')
   style.setAttribute(`data-${STYLE_TAG}`, 'true')
   style.textContent = `
-    .capital-automation-page, .capital-automation-modal { --ca-card: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-layer-1)); --ca-line: var(--dsw-alias-border-l3, var(--dsw-alias-border-l1)); --ca-line-soft: var(--dsw-alias-border-l2, var(--dsw-alias-border-l1)); --ca-table-line: var(--ca-line); --ca-muted: var(--dsw-alias-label-tertiary); --ca-caption: var(--dsw-alias-label-caption, var(--dsw-alias-label-tertiary)); --ca-hover: var(--dsw-alias-interactive-bg-hover); --ca-field: var(--dsw-alias-bg-module-platform); --ca-business: var(--dsw-alias-state-business-primary, var(--dsw-alias-brand-primary)); --ca-success: var(--dsw-alias-state-success-primary); --ca-error: var(--dsw-alias-state-error-primary); --ca-warn: var(--dsw-alias-state-warn-label); --ca-business-text: var(--ca-business); --ca-success-text: var(--ca-success); --ca-error-text: var(--ca-error); --ca-warn-text: var(--ca-warn); --ca-heat-0: #262626; --ca-heat-1: #1b5e3a; --ca-heat-2: #2f8a56; --ca-heat-3: #40b366; --ca-heat-4: #56d364; --ca-heat-fail: #f85149; }
-    body:not([data-ds-dark-theme]) .capital-automation-page, body:not([data-ds-dark-theme]) .capital-automation-modal { --ca-line: #0000001f; --ca-line-soft: #0000001a; --ca-table-line: #00000026; --ca-muted: #5d626a; --ca-caption: #6a6f77; --ca-hover: #eef1f5; --ca-field: #f7f8fa; --ca-business: #2f63d6; --ca-success: #16a34a; --ca-error: #dc2626; --ca-warn: #d97706; --ca-business-text: #2f63d6; --ca-success-text: #15803d; --ca-error-text: #c81e1e; --ca-warn-text: #b45309; --ca-tag-news: #2f6fd0; --ca-tag-market: #a85a08; --ca-tag-review: #6d4ac4; --ca-tag-research: #0f766e; --ca-tag-portfolio: #4d7c0f; --ca-tag-monitor: #0e7490; --ca-tag-custom: #b3246d; --ca-heat-0: #eef1f4; --ca-heat-1: #b7e4c0; --ca-heat-2: #74c98a; --ca-heat-3: #3ba55c; --ca-heat-4: #1f7a3a; --ca-heat-fail: #cf222e; }
-    .capital-automation-page { display: flex; flex-direction: column; min-height: 0; height: 100%; color: var(--dsw-alias-label-primary); }
-    .capital-automation-head { flex: none; padding: 18px 0 0; }
-    .capital-automation-headinner { box-sizing: border-box; width: min(1080px, 100%); margin: 0 auto 5px; padding: 0 clamp(20px, 3vw, 36px); }
-    .capital-automation-topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px 18px; min-width: 0; }
-    .capital-automation-brand { display: flex; align-items: center; gap: 10px; min-width: 0; justify-self: start; }
-    .capital-automation-brandmark { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; color: #fff; background: linear-gradient(135deg, #4f8cff, #7c3aed); box-shadow: inset 0 1px 0 rgba(255,255,255,.24); }
-    .capital-automation-brand h1 { margin: 0; font-size: 17px; line-height: 24px; font-weight: 600; letter-spacing: .1px; white-space: nowrap; }
-    .capital-automation-tabs { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: .5px solid var(--ca-line-soft); border-radius: 999px; background: color-mix(in srgb, var(--dsw-alias-label-primary) 5%, var(--ca-card)); box-shadow: inset 0 1px 2px color-mix(in srgb, var(--dsw-alias-label-primary) 4%, transparent); justify-self: center; }
-    .capital-automation-tab { height: 28px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--ca-muted); font: inherit; font-size: 12.5px; font-weight: 500; line-height: 28px; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s; }
-    .capital-automation-tab:hover:not([aria-selected="true"]) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 5%, transparent); color: var(--dsw-alias-label-primary); }
-    .capital-automation-tab[aria-selected="true"] { background: var(--dsw-alias-label-primary); color: var(--dsw-alias-bg-base); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.18), 0 2px 8px color-mix(in srgb, var(--dsw-alias-label-primary) 12%, transparent); }
-    .capital-automation-tab:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 2px; }
-    .capital-automation-topactions { display: flex; align-items: center; gap: 8px; justify-self: end; }
-    .capital-automation-btn { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px; border: .5px solid var(--ca-line-soft); border-radius: 999px; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 12.5px; line-height: 20px; white-space: nowrap; cursor: pointer; transition: background .15s, border-color .15s, color .15s, opacity .15s; }
-    .capital-automation-btn:hover:not(:disabled) { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
-    .capital-automation-btn[data-variant="primary"] { border-color: transparent; background: var(--ca-business); color: var(--dsw-alias-bg-base); }
-    .capital-automation-btn[data-variant="primary"]:hover:not(:disabled) { background: var(--ca-business); color: var(--dsw-alias-bg-base); filter: brightness(1.08); }
-    .capital-automation-templatefoot .capital-automation-btn[data-variant="primary"] { min-width: 54px; padding: 0 12px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 1px 2px rgba(0,0,0,.16); }
-    .capital-automation-templatefoot .capital-automation-btn[data-variant="primary"]:hover:not(:disabled) { box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 2px 8px color-mix(in srgb, var(--ca-business) 32%, transparent); }
-    .capital-automation-btn[data-variant="contrast"] { border-color: transparent; background: var(--dsw-alias-label-primary); color: var(--dsw-alias-bg-base); }
-    .capital-automation-btn[data-variant="contrast"]:hover:not(:disabled) { background: var(--dsw-alias-label-primary); color: var(--dsw-alias-bg-base); opacity: .88; }
-    .capital-automation-btn[data-variant="ghost"] { border-color: transparent; background: transparent; color: var(--ca-muted); }
-    .capital-automation-btn[data-variant="ghost"]:hover:not(:disabled) { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
-    .capital-automation-btn[data-variant="danger"] { border-color: transparent; background: var(--ca-error); color: var(--dsw-alias-bg-base); }
-    .capital-automation-btn[data-variant="danger"]:hover:not(:disabled) { background: var(--ca-error); color: var(--dsw-alias-bg-base); filter: brightness(1.08); }
-    .capital-automation-btn[data-size="sm"] { height: 28px; padding: 0 10px; font-size: 12px; }
-    .capital-automation-btn[data-size="icon"] { width: 30px; height: 30px; padding: 0; border-radius: 9px; }
-    .capital-automation-btn:disabled { opacity: .42; cursor: not-allowed; }
-    .capital-automation-iconbtn { display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--ca-muted); cursor: pointer; }
-    .capital-automation-iconbtn:hover:not(:disabled) { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
-    .capital-automation-iconbtn:disabled { opacity: .4; cursor: not-allowed; }
-    .capital-automation-count { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--ca-business); color: var(--dsw-alias-bg-base); font-size: 10px; line-height: 16px; }
-    .capital-automation-banner { box-sizing: border-box; width: min(1080px, 100%); margin: 12px auto 0; padding: 10px 13px; border: .5px solid var(--ca-line-soft); border-radius: 12px; background: var(--ca-card); color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 19px; }
-    .capital-automation-banner[data-tone="warn"] { border-color: color-mix(in srgb, var(--ca-warn) 38%, var(--ca-line-soft)); color: var(--ca-warn-text); }
-    .capital-automation-banner[data-tone="error"] { border-color: color-mix(in srgb, var(--ca-error) 38%, var(--ca-line-soft)); color: var(--ca-error-text); }
-    .capital-automation-banner .capital-automation-btn { margin-left: 8px; vertical-align: middle; }
-    .capital-automation-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
-    .capital-automation-container { box-sizing: border-box; width: min(1080px, 100%); margin: 0 auto; padding: 20px clamp(20px, 3vw, 36px) 72px; }
-    .capital-automation-card { box-sizing: border-box; border: .5px solid var(--ca-line); border-radius: 16px; background: var(--ca-card); }
-    .capital-automation-history { position: relative; padding: 18px 20px 14px; }
-    .capital-automation-historyhead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 18px; }
-    .capital-automation-historytitle { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
-    .capital-automation-historytitle h2 { margin: 0; font-size: 14px; line-height: 22px; font-weight: 600; }
-    .capital-automation-historytitle span { color: var(--ca-muted); font-size: 12px; line-height: 20px; }
-    .capital-automation-historystats { display: flex; align-items: center; gap: 14px; color: var(--ca-muted); font-size: 12px; line-height: 20px; }
-    .capital-automation-historystat { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
-    .capital-automation-historystat[data-tone="ok"] { color: var(--ca-success-text); }
-    .capital-automation-historystat[data-tone="error"] { color: var(--ca-error-text); }
-    .capital-automation-historystat[data-tone="active"] { color: var(--ca-business-text); }
-    .capital-automation-statusdot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
-    .capital-automation-historylink { display: inline-flex; align-items: center; gap: 2px; height: 24px; padding: 0 6px; border: 0; border-radius: 7px; background: transparent; color: var(--ca-muted); font: inherit; font-size: 12px; cursor: pointer; }
-    .capital-automation-historylink:hover { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
-    .capital-automation-heatmap { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; }
-    .capital-automation-heatweekdays { flex: none; display: grid; grid-template-rows: repeat(7, 1fr); gap: 3px; width: 28px; padding-top: 22px; color: var(--ca-caption); font-size: 10.5px; line-height: 1; align-self: stretch; }
-    .capital-automation-heatweekday { display: flex; align-items: center; }
-    .capital-automation-heatscroll { flex: 1 1 auto; min-width: 0; overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; scrollbar-width: thin; }
-    .capital-automation-heatscroll[data-faded="true"] { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 18px); mask-image: linear-gradient(to right, transparent 0, #000 18px); }
-    .capital-automation-heatcanvas { min-width: 620px; }
-    .capital-automation-heatmonths { display: grid; grid-template-columns: repeat(${HEATMAP_WEEKS}, minmax(0, 1fr)); gap: 3px; height: 16px; margin-bottom: 6px; }
-    .capital-automation-heatmonth { color: var(--ca-caption); font-size: 10.5px; line-height: 16px; white-space: nowrap; letter-spacing: .01em; }
-    .capital-automation-heatgrid { display: grid; grid-template-columns: repeat(${HEATMAP_WEEKS}, minmax(0, 1fr)); grid-template-rows: repeat(7, auto); grid-auto-flow: column; gap: 3px; }
-    .capital-automation-heatcell { display: block; min-width: 0; aspect-ratio: 1; border-radius: 2.5px; background: var(--ca-heat-0); box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--dsw-alias-label-primary) 4%, transparent); transition: background .12s, box-shadow .12s, outline-color .12s; }
-    .capital-automation-heatcell[data-level="1"] { background: var(--ca-heat-1); }
-    .capital-automation-heatcell[data-level="2"] { background: var(--ca-heat-2); }
-    .capital-automation-heatcell[data-level="3"] { background: var(--ca-heat-3); }
-    .capital-automation-heatcell[data-level="4"] { background: var(--ca-heat-4); }
-    .capital-automation-heatcell[data-future="true"] { opacity: .45; }
-    .capital-automation-heatcell[data-failed="true"] { box-shadow: inset 0 0 0 1.5px var(--ca-heat-fail); }
-    .capital-automation-heatcell[data-active="true"] { box-shadow: inset 0 0 0 1.5px var(--ca-business); animation: capital-automation-heatpulse 1.8s ease-in-out infinite; }
-    .capital-automation-heatcell:hover { outline: 1px solid var(--dsw-alias-label-primary); outline-offset: 1px; }
-    .capital-automation-heattip { position: absolute; z-index: 5; min-width: 128px; max-width: 220px; padding: 7px 9px; border: .5px solid var(--ca-line); border-radius: 9px; background: var(--dsw-alias-bg-layer-3, var(--ca-card)); box-shadow: 0 8px 22px rgba(0, 0, 0, .28); color: var(--dsw-alias-label-primary); pointer-events: none; transform: translate(-50%, -100%); }
-    .capital-automation-heattipdate { display: block; font-size: 11.5px; font-weight: 600; line-height: 16px; white-space: nowrap; }
-    .capital-automation-heattipmeta { display: block; margin-top: 2px; color: var(--ca-muted); font-size: 11px; line-height: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-    .capital-automation-heatfoot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin-top: 8px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
-    .capital-automation-heatrange { font-variant-numeric: tabular-nums; }
-    .capital-automation-heatlegend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 5px; }
-    .capital-automation-heatlegendlabel { color: var(--ca-caption); }
-    .capital-automation-heatsample { width: 10px; height: 10px; border-radius: 2px; background: var(--ca-heat-0); box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--dsw-alias-label-primary) 5%, transparent); }
-    .capital-automation-heatsample[data-level="1"] { background: var(--ca-heat-1); }
-    .capital-automation-heatsample[data-level="2"] { background: var(--ca-heat-2); }
-    .capital-automation-heatsample[data-level="3"] { background: var(--ca-heat-3); }
-    .capital-automation-heatsample[data-level="4"] { background: var(--ca-heat-4); }
-    .capital-automation-heatkey { display: inline-flex; align-items: center; gap: 5px; margin-right: 7px; }
-    .capital-automation-heatfailbox { width: 10px; height: 10px; border-radius: 2px; background: var(--ca-heat-0); box-shadow: inset 0 0 0 1.5px var(--ca-heat-fail); }
-    .capital-automation-heatactivebox { width: 10px; height: 10px; border-radius: 2px; background: var(--ca-heat-0); box-shadow: inset 0 0 0 1.5px var(--ca-business); }
-    @keyframes capital-automation-heatpulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-    @media (prefers-reduced-motion: reduce) { .capital-automation-heatcell[data-active="true"] { animation: none; } }
-    .capital-automation-section { margin-top: 26px; }
-    .capital-automation-sectionhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 10px; }
-    .capital-automation-sectionhead h2 { margin: 0; font-size: 14px; line-height: 22px; font-weight: 600; }
-    .capital-automation-sectionhead > span { color: var(--ca-muted); font-size: 12px; line-height: 18px; }
-    .capital-automation-sectiontools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; }
-    .capital-automation-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-    .capital-automation-filter { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; color: var(--ca-muted); font: inherit; font-size: 12px; line-height: 28px; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s; }
-    .capital-automation-filtercount { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: color-mix(in srgb, currentColor 13%, transparent); font-size: 10.5px; line-height: 17px; font-variant-numeric: tabular-nums; }
-    .capital-automation-filter[aria-pressed="true"] .capital-automation-filtercount { background: var(--ca-business); color: var(--dsw-alias-bg-base); }
-    .capital-automation-filter:hover { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
-    .capital-automation-filter[aria-pressed="true"] { background: color-mix(in srgb, var(--ca-business) 11%, var(--ca-card)); box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--ca-business) 28%, transparent); color: var(--ca-business-text); font-weight: 600; }
-    .capital-automation-filter:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 1px; }
-    .capital-automation-search { box-sizing: border-box; display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 9px; border: .5px solid var(--ca-line-soft); border-radius: 999px; background: var(--ca-card); color: var(--ca-muted); }
-    .capital-automation-search:focus-within { border-color: var(--ca-business); }
-    .capital-automation-search input { width: 128px; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; }
-    .capital-automation-search input::placeholder { color: var(--ca-caption); }
-    .capital-automation-running { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 10px; padding: 12px 14px; border: .5px solid color-mix(in srgb, var(--ca-business) 30%, var(--ca-line)); border-radius: 14px; background: color-mix(in srgb, var(--ca-business) 7%, var(--ca-card)); }
-    .capital-automation-runningrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; width: 100%; min-width: 0; }
-    .capital-automation-runningactions { display: flex; flex: none; align-items: center; gap: 8px; margin-left: auto; }
-    .capital-automation-live { display: inline-flex; align-items: center; gap: 6px; color: var(--ca-business-text); font-size: 12px; }
-    .capital-automation-livedot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: capital-automation-pulse 1.6s ease-in-out infinite; }
-    @keyframes capital-automation-pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 30%, transparent); } 50% { opacity: .55; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 0%, transparent); } }
-    @media (prefers-reduced-motion: reduce) { .capital-automation-livedot { animation: none; } .capital-automation-skeleton { animation: none; } }
-    .capital-automation-table { overflow: hidden; border: .5px solid var(--ca-table-line); border-radius: 16px; background: var(--ca-card); }
-    .capital-automation-thead { display: grid; grid-template-columns: minmax(0, 1fr) 36px; align-items: center; padding-right: 18px; border-bottom: .5px solid var(--ca-table-line); background: color-mix(in srgb, var(--dsw-alias-label-primary) 3.5%, var(--ca-card)); color: var(--ca-muted); font-size: 11.5px; font-weight: 500; letter-spacing: .02em; line-height: 16px; }
-    .capital-automation-theadmain { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(110px, .85fr) minmax(128px, .95fr) 88px; gap: 14px; padding: 9px 0 9px 16px; }
-    .capital-automation-trow { display: grid; grid-template-columns: minmax(0, 1fr) 36px; align-items: stretch; padding-right: 18px; border-top: .5px solid var(--ca-table-line); transition: background .15s; }
-    .capital-automation-trow:first-of-type { border-top: 0; }
-    .capital-automation-trow:hover { background: color-mix(in srgb, var(--dsw-alias-label-primary) 5%, var(--ca-card)); }
-    .capital-automation-trowmain { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(110px, .85fr) minmax(128px, .95fr) 88px; align-items: center; gap: 14px; min-width: 0; padding: 11px 0 11px 16px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-    .capital-automation-trowmain:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: -2px; }
-    .capital-automation-trowmenu { display: flex; align-items: center; justify-content: center; }
-    .capital-automation-cell { min-width: 0; }
-    .capital-automation-identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .capital-automation-glyph { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.22); }
-    .capital-automation-glyph[data-tone="news"] { background: linear-gradient(135deg, #5b9dff, #2563eb); }
-    .capital-automation-glyph[data-tone="market"] { background: linear-gradient(135deg, #ffbd4a, #f97316); }
-    .capital-automation-glyph[data-tone="review"] { background: linear-gradient(135deg, #b18cff, #7c3aed); }
-    .capital-automation-glyph[data-tone="research"] { background: linear-gradient(135deg, #39d7a8, #0d9488); }
-    .capital-automation-glyph[data-tone="portfolio"] { background: linear-gradient(135deg, #84cc16, #4d7c0f); }
-    .capital-automation-glyph[data-tone="monitor"] { background: linear-gradient(135deg, #06b6d4, #0e7490); }
-    .capital-automation-glyph[data-tone="custom"] { background: linear-gradient(135deg, #f472b6, #db2777); }
-    .capital-automation-identitytext { min-width: 0; }
-    .capital-automation-tasktitlerow { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; min-width: 0; }
-    .capital-automation-tasktitlerow .capital-automation-tasktags { flex: 0 1 auto; flex-wrap: wrap; max-width: 100%; margin-top: 0; }
-    .capital-automation-tasktitle { display: block; flex: 0 1 auto; min-width: 0; overflow: hidden; color: var(--dsw-alias-label-primary); font-size: 13.5px; line-height: 20px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
-    .capital-automation-taskdesc { display: block; overflow: hidden; margin-top: 1px; color: var(--ca-muted); font-size: 11.5px; line-height: 17px; text-overflow: ellipsis; white-space: nowrap; }
-    .capital-automation-tasktags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 3px; }
-    .capital-automation-tag { display: inline-flex; align-items: center; gap: 4px; max-width: 13em; overflow: hidden; padding: 1px 6px; border-radius: 999px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-muted); font-size: 11px; font-weight: 500; line-height: 17px; white-space: nowrap; }
-    .capital-automation-tag[data-tone="news"] { color: #6ba6ff; }
-    .capital-automation-tag[data-tone="market"] { color: #ffb45c; }
-    .capital-automation-tag[data-tone="review"] { color: #b79aff; }
-    .capital-automation-tag[data-tone="research"] { color: #56d9b4; }
-    .capital-automation-tag[data-tone="portfolio"] { color: #a3e635; }
-    .capital-automation-tag[data-tone="monitor"] { color: #22d3ee; }
-    .capital-automation-tag[data-tone="custom"] { color: #f79bc3; }
-    body:not([data-ds-dark-theme]) .capital-automation-tag { background: color-mix(in srgb, currentColor 9%, var(--ca-card)); }
-    body:not([data-ds-dark-theme]) .capital-automation-tag[data-tone="news"] { color: var(--ca-tag-news); }
-    body:not([data-ds-dark-theme]) .capital-automation-tag[data-tone="market"] { color: var(--ca-tag-market); }
-    body:not([data-ds-dark-theme]) .capital-automation-tag[data-tone="review"] { color: var(--ca-tag-review); }
-    body:not([data-ds-dark-theme]) .capital-automation-tag[data-tone="research"] { color: var(--ca-tag-research); }
-    body:not([data-ds-dark-theme]) .capital-automation-tag[data-tone="portfolio"] { color: var(--ca-tag-portfolio); }
-    body:not([data-ds-dark-theme]) .capital-automation-tag[data-tone="monitor"] { color: var(--ca-tag-monitor); }
-    body:not([data-ds-dark-theme]) .capital-automation-tag[data-tone="custom"] { color: var(--ca-tag-custom); }
-    .capital-automation-schedule { display: block; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
-    .capital-automation-schedulesub { display: block; margin-top: 1px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
-    .capital-automation-nextmain { display: block; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
-    .capital-automation-nextsub { display: block; margin-top: 1px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
-    .capital-automation-state { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-muted); font-size: 11px; line-height: 22px; white-space: nowrap; }
-    .capital-automation-state[data-state="active"] { color: var(--ca-success-text); }
-    .capital-automation-state[data-state="paused"] { color: var(--ca-warn-text); }
-    .capital-automation-state[data-state="running"] { color: var(--ca-business-text); }
-    .capital-automation-state[data-state="dormant"] { color: var(--ca-muted); }
-    body:not([data-ds-dark-theme]) .capital-automation-state { background: color-mix(in srgb, currentColor 9%, var(--ca-card)); }
-    .capital-automation-statedot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
-    .capital-automation-state[data-state="running"] .capital-automation-statedot, .capital-automation-runstatus[data-status="running"] .capital-automation-rundot { animation: capital-automation-pulse 1.6s ease-in-out infinite; }
-    .capital-automation-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 42px 20px; border: .5px dashed var(--ca-line); border-radius: 16px; color: var(--ca-muted); text-align: center; }
-    .capital-automation-emptyicon { display: grid; place-items: center; width: 38px; height: 38px; margin-bottom: 4px; border-radius: 12px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-caption); }
-    .capital-automation-empty h3 { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 13.5px; font-weight: 500; line-height: 20px; }
-    .capital-automation-empty p { max-width: 460px; margin: 0; font-size: 12px; line-height: 18px; }
-    .capital-automation-empty .capital-automation-btn { margin-top: 8px; }
-    .capital-automation-loading { display: flex; flex-direction: column; pointer-events: none; }
-    .capital-automation-skeletonlabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-    .capital-automation-skeleton { display: block; flex: none; max-width: 100%; border-radius: 6px; background: var(--dsw-alias-bg-skeleton); animation: capital-automation-breathe 1.8s ease-in-out infinite; }
-    .capital-automation-skeletonheat { margin-top: 16px; padding-left: 36px; }
-    .capital-automation-skeletonmonths { display: grid; grid-template-columns: repeat(${HEATMAP_WEEKS}, minmax(0, 1fr)); gap: 3px; height: 16px; margin-bottom: 6px; }
-    .capital-automation-skeletonmonths > .capital-automation-skeleton { width: 22px; height: 8px; border-radius: 3px; }
-    .capital-automation-skeletongrid { display: grid; grid-template-columns: repeat(${HEATMAP_WEEKS}, minmax(0, 1fr)); grid-template-rows: repeat(7, auto); grid-auto-flow: column; gap: 3px; }
-    .capital-automation-skeletongrid > .capital-automation-skeleton { width: 100%; aspect-ratio: 1; border-radius: 2.5px; }
-    .capital-automation-skeletonstack { display: flex; flex: 1 1 auto; flex-direction: column; gap: 6px; min-width: 0; }
-    .capital-automation-skeletonrow .capital-automation-trowmain { min-height: 57px; cursor: default; }
-    .capital-automation-skeletonrow .capital-automation-cell[data-cell] { display: flex; flex-direction: column; gap: 5px; }
-    .capital-automation-skeletonrun .capital-automation-runline { min-height: 20px; }
-    .capital-automation-skeletonrun .capital-automation-runmetaline { min-height: 17px; }
-    .capital-automation-skeletontemplatemain { display: flex; align-items: flex-start; gap: 11px; min-width: 0; }
-    @keyframes capital-automation-breathe { 0% { opacity: 1; } 40% { opacity: .55; } 80%, 100% { opacity: 1; } }
-    .capital-automation-templates { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-    .capital-automation-template { box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; min-height: 152px; padding: 15px 16px 13px; border: .5px solid var(--ca-line); border-radius: 16px; background: var(--ca-card); transition: border-color .15s, background .15s; }
-    .capital-automation-template:hover { border-color: color-mix(in srgb, var(--ca-business) 28%, var(--ca-line)); background: color-mix(in srgb, var(--ca-hover) 55%, var(--ca-card)); }
-    .capital-automation-templatemain { display: flex; align-items: flex-start; gap: 11px; min-width: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-    .capital-automation-templatemain:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 4px; border-radius: 8px; }
-    .capital-automation-templatebody { min-width: 0; }
-    .capital-automation-templatetitlerow { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; min-width: 0; }
-    .capital-automation-templatetitlerow .capital-automation-tag { flex: none; }
-    .capital-automation-templatebody strong { display: block; min-width: 0; color: var(--dsw-alias-label-primary); font-size: 13.5px; line-height: 20px; font-weight: 500; }
-    .capital-automation-templatedesc { display: -webkit-box; overflow: hidden; margin-top: 3px; color: var(--ca-muted); font-size: 12px; line-height: 18px; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-    .capital-automation-templatefoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
-    .capital-automation-templatemeta { display: inline-flex; align-items: center; gap: 4px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
-    .capital-automation-detailbar { display: flex; align-items: center; min-height: 34px; margin: 0 0 6px; }
-    .capital-automation-back { display: inline-flex; align-items: center; gap: 2px; height: 30px; margin-left: -8px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: var(--ca-muted); font: inherit; font-size: 12.5px; cursor: pointer; }
-    .capital-automation-back:hover { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
-    .capital-automation-hero { display: flex; align-items: flex-start; gap: 14px; padding: 2px 0 18px; border-bottom: .5px solid var(--ca-line); }
-    .capital-automation-herobody { flex: 1 1 auto; min-width: 0; }
-    .capital-automation-herotitle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    .capital-automation-herotitle h2 { margin: 0; font-size: 22px; line-height: 30px; font-weight: 600; letter-spacing: .1px; overflow-wrap: anywhere; }
-    .capital-automation-herodesc { max-width: 760px; margin: 5px 0 0; color: var(--ca-muted); font-size: 12.5px; line-height: 19px; }
-    .capital-automation-heroactions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; flex: none; padding-top: 2px; }
-    .capital-automation-detailtabs { display: flex; align-items: center; gap: 26px; overflow-x: auto; overflow-y: hidden; border-bottom: .5px solid var(--ca-line); }
-    .capital-automation-detailtab { position: relative; flex: none; height: 42px; padding: 0 1px; border: 0; background: transparent; color: var(--ca-muted); font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; }
-    .capital-automation-detailtab:hover { color: var(--dsw-alias-label-primary); }
-    .capital-automation-detailtab[aria-selected="true"] { color: var(--ca-business-text); font-weight: 600; }
-    .capital-automation-detailtab[aria-selected="true"]:after { content: ""; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; border-radius: 2px; background: var(--ca-business-text); }
-    .capital-automation-detailtab:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: -2px; border-radius: 4px; }
-    .capital-automation-detailbody { display: flex; flex-direction: column; gap: 16px; padding-top: 18px; }
-    .capital-automation-overview { display: flex; flex-direction: column; gap: 16px; }
-    .capital-automation-statgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-    .capital-automation-stat { display: flex; flex-direction: column; gap: 4px; min-height: 78px; padding: 13px 14px; border: .5px solid var(--ca-line); border-radius: 14px; background: var(--ca-card); }
-    body:not([data-ds-dark-theme]) .capital-automation-card, body:not([data-ds-dark-theme]) .capital-automation-table, body:not([data-ds-dark-theme]) .capital-automation-template, body:not([data-ds-dark-theme]) .capital-automation-stat { box-shadow: 0 1px 2px rgba(15,17,21,.035), 0 10px 28px rgba(15,17,21,.025); }
-    .capital-automation-runmeta, .capital-automation-statvalue, .capital-automation-notificationtime { font-variant-numeric: tabular-nums; }
-    .capital-automation-statlabel { color: var(--ca-muted); font-size: 11px; line-height: 16px; }
-    .capital-automation-statvalue { color: var(--dsw-alias-label-primary); font-size: 15px; line-height: 22px; font-weight: 500; overflow-wrap: anywhere; }
-    .capital-automation-statvalue[data-tone="ok"] { color: var(--ca-success-text); }
-    .capital-automation-statvalue[data-tone="error"] { color: var(--ca-error-text); }
-    .capital-automation-statvalue[data-tone="running"] { color: var(--ca-business-text); }
-    .capital-automation-statvalue[data-tone="warn"] { color: var(--ca-warn-text); }
-    .capital-automation-statsub { color: var(--ca-caption); font-size: 11px; line-height: 16px; }
-    .capital-automation-panel { padding: 16px 18px; }
-    .capital-automation-panelhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 12px; }
-    .capital-automation-panelhead h3 { margin: 0; font-size: 13.5px; line-height: 20px; font-weight: 600; }
-    .capital-automation-panelhead .capital-automation-btn { margin-left: auto; }
-    .capital-automation-panelhead .capital-automation-select { margin-left: auto; }
-    .capital-automation-panelhead .capital-automation-btn[data-variant="ghost"] { padding-right: 0; }
-    .capital-automation-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 18px; }
-    .capital-automation-kvitem { min-width: 0; }
-    .capital-automation-kvlabel { display: block; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
-    .capital-automation-kvvalue { display: block; margin-top: 2px; color: var(--dsw-alias-label-secondary); font-size: 12.5px; line-height: 19px; overflow-wrap: anywhere; }
-    .capital-automation-policy { color: var(--ca-muted); font-size: 12px; line-height: 19px; }
-    .capital-automation-policy p { margin: 0; }
-    .capital-automation-policy p + p { margin-top: 5px; }
-    .capital-automation-hint { margin: 0; color: var(--ca-muted); font-size: 11.5px; line-height: 18px; }
-    .capital-automation-hint[data-tone="error"] { color: var(--ca-error-text); }
-    .capital-automation-notice { margin: 0; color: var(--ca-success-text); font-size: 12px; line-height: 18px; }
-    .capital-automation-error { margin: 0; color: var(--ca-error-text); font-size: 12px; line-height: 18px; }
-    .capital-automation-toast { position: fixed; bottom: 26px; left: 50%; z-index: 1300; max-width: min(520px, calc(100vw - 40px)); transform: translateX(-50%); padding: 8px 15px; border: .5px solid var(--ca-line-soft); border-radius: 999px; background: var(--dsw-alias-label-primary); color: var(--dsw-alias-bg-base); box-shadow: 0 8px 26px rgba(0,0,0,.22); font-size: 12px; line-height: 18px; }
-    .capital-automation-form { display: flex; flex-direction: column; gap: 16px; }
-    .capital-automation-instructionrow { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(420px, 520px); align-items: stretch; gap: 16px; }
-    .capital-automation-instructionside { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-    .capital-automation-formgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-    .capital-automation-titlerow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 210px); align-items: start; gap: 12px; }
-    .capital-automation-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-    .capital-automation-fieldhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
-    .capital-automation-fieldlabel { color: var(--ca-muted); font-size: 11.5px; line-height: 17px; }
-    .capital-automation-fieldhint { color: var(--ca-caption); font-size: 11px; line-height: 16px; font-variant-numeric: tabular-nums; }
-    .capital-automation-glyphbtn { display: inline-flex; flex: none; align-items: center; gap: 4px; padding: 0; border: 0; border-radius: 14px; background: transparent; cursor: pointer; }
-    .capital-automation-glyphbtn:hover:not(:disabled) .capital-automation-glyph { box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 0 0 2px color-mix(in srgb, var(--ca-business) 52%, transparent); }
-    .capital-automation-glyphbtn:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 2px; }
-    .capital-automation-glyphbtn:disabled { cursor: not-allowed; opacity: .55; }
-    .capital-automation-glyphbtnchevron { display: grid; flex: none; place-items: center; width: 12px; color: var(--ca-muted); }
-    .capital-automation-glyphbtn:hover:not(:disabled) .capital-automation-glyphbtnchevron { color: var(--ca-business-text); }
-    .capital-automation-iconrow { display: flex; align-items: center; gap: 12px; min-width: 0; }
-    .capital-automation-iconrowbody { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .automation-workbench-page, .automation-workbench-modal { --ca-card: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-layer-1)); --ca-line: var(--dsw-alias-border-l3, var(--dsw-alias-border-l1)); --ca-line-soft: var(--dsw-alias-border-l2, var(--dsw-alias-border-l1)); --ca-table-line: var(--ca-line); --ca-muted: var(--dsw-alias-label-tertiary); --ca-caption: var(--dsw-alias-label-caption, var(--dsw-alias-label-tertiary)); --ca-hover: var(--dsw-alias-interactive-bg-hover); --ca-field: var(--dsw-alias-bg-module-platform); --ca-business: var(--dsw-alias-state-business-primary, var(--dsw-alias-brand-primary)); --ca-success: var(--dsw-alias-state-success-primary); --ca-error: var(--dsw-alias-state-error-primary); --ca-warn: var(--dsw-alias-state-warn-label); --ca-business-text: var(--ca-business); --ca-success-text: var(--ca-success); --ca-error-text: var(--ca-error); --ca-warn-text: var(--ca-warn); --ca-heat-0: #262626; --ca-heat-1: #1b5e3a; --ca-heat-2: #2f8a56; --ca-heat-3: #40b366; --ca-heat-4: #56d364; --ca-heat-fail: #f85149; }
+    body:not([data-ds-dark-theme]) .automation-workbench-page, body:not([data-ds-dark-theme]) .automation-workbench-modal { --ca-line: #0000001f; --ca-line-soft: #0000001a; --ca-table-line: #00000026; --ca-muted: #5d626a; --ca-caption: #6a6f77; --ca-hover: #eef1f5; --ca-field: #f7f8fa; --ca-business: #2f63d6; --ca-success: #16a34a; --ca-error: #dc2626; --ca-warn: #d97706; --ca-business-text: #2f63d6; --ca-success-text: #15803d; --ca-error-text: #c81e1e; --ca-warn-text: #b45309; --ca-tag-news: #2f6fd0; --ca-tag-market: #a85a08; --ca-tag-review: #6d4ac4; --ca-tag-research: #0f766e; --ca-tag-portfolio: #4d7c0f; --ca-tag-monitor: #0e7490; --ca-tag-custom: #b3246d; --ca-heat-0: #eef1f4; --ca-heat-1: #b7e4c0; --ca-heat-2: #74c98a; --ca-heat-3: #3ba55c; --ca-heat-4: #1f7a3a; --ca-heat-fail: #cf222e; }
+    .automation-workbench-page { display: flex; flex-direction: column; min-height: 0; height: 100%; color: var(--dsw-alias-label-primary); }
+    .automation-workbench-head { flex: none; padding: 18px 0 0; }
+    .automation-workbench-headinner { box-sizing: border-box; width: min(1080px, 100%); margin: 0 auto 5px; padding: 0 clamp(20px, 3vw, 36px); }
+    .automation-workbench-topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px 18px; min-width: 0; }
+    .automation-workbench-brand { display: flex; align-items: center; gap: 10px; min-width: 0; justify-self: start; }
+    .automation-workbench-brandmark { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; color: #fff; background: linear-gradient(135deg, #4f8cff, #7c3aed); box-shadow: inset 0 1px 0 rgba(255,255,255,.24); }
+    .automation-workbench-brand h1 { margin: 0; font-size: 17px; line-height: 24px; font-weight: 600; letter-spacing: .1px; white-space: nowrap; }
+    .automation-workbench-tabs { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: .5px solid var(--ca-line-soft); border-radius: 999px; background: color-mix(in srgb, var(--dsw-alias-label-primary) 5%, var(--ca-card)); box-shadow: inset 0 1px 2px color-mix(in srgb, var(--dsw-alias-label-primary) 4%, transparent); justify-self: center; }
+    .automation-workbench-tab { height: 28px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--ca-muted); font: inherit; font-size: 12.5px; font-weight: 500; line-height: 28px; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s; }
+    .automation-workbench-tab:hover:not([aria-selected="true"]) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 5%, transparent); color: var(--dsw-alias-label-primary); }
+    .automation-workbench-tab[aria-selected="true"] { background: var(--dsw-alias-label-primary); color: var(--dsw-alias-bg-base); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.18), 0 2px 8px color-mix(in srgb, var(--dsw-alias-label-primary) 12%, transparent); }
+    .automation-workbench-tab:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 2px; }
+    .automation-workbench-topactions { display: flex; align-items: center; gap: 8px; justify-self: end; }
+    .automation-workbench-btn { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px; border: .5px solid var(--ca-line-soft); border-radius: 999px; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 12.5px; line-height: 20px; white-space: nowrap; cursor: pointer; transition: background .15s, border-color .15s, color .15s, opacity .15s; }
+    .automation-workbench-btn:hover:not(:disabled) { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
+    .automation-workbench-btn[data-variant="primary"] { border-color: transparent; background: var(--ca-business); color: var(--dsw-alias-bg-base); }
+    .automation-workbench-btn[data-variant="primary"]:hover:not(:disabled) { background: var(--ca-business); color: var(--dsw-alias-bg-base); filter: brightness(1.08); }
+    .automation-workbench-templatefoot .automation-workbench-btn[data-variant="primary"] { min-width: 54px; padding: 0 12px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 1px 2px rgba(0,0,0,.16); }
+    .automation-workbench-templatefoot .automation-workbench-btn[data-variant="primary"]:hover:not(:disabled) { box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 2px 8px color-mix(in srgb, var(--ca-business) 32%, transparent); }
+    .automation-workbench-btn[data-variant="contrast"] { border-color: transparent; background: var(--dsw-alias-label-primary); color: var(--dsw-alias-bg-base); }
+    .automation-workbench-btn[data-variant="contrast"]:hover:not(:disabled) { background: var(--dsw-alias-label-primary); color: var(--dsw-alias-bg-base); opacity: .88; }
+    .automation-workbench-btn[data-variant="ghost"] { border-color: transparent; background: transparent; color: var(--ca-muted); }
+    .automation-workbench-btn[data-variant="ghost"]:hover:not(:disabled) { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
+    .automation-workbench-btn[data-variant="danger"] { border-color: transparent; background: var(--ca-error); color: var(--dsw-alias-bg-base); }
+    .automation-workbench-btn[data-variant="danger"]:hover:not(:disabled) { background: var(--ca-error); color: var(--dsw-alias-bg-base); filter: brightness(1.08); }
+    .automation-workbench-btn[data-size="sm"] { height: 28px; padding: 0 10px; font-size: 12px; }
+    .automation-workbench-btn[data-size="icon"] { width: 30px; height: 30px; padding: 0; border-radius: 9px; }
+    .automation-workbench-btn:disabled { opacity: .42; cursor: not-allowed; }
+    .automation-workbench-iconbtn { display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--ca-muted); cursor: pointer; }
+    .automation-workbench-iconbtn:hover:not(:disabled) { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
+    .automation-workbench-iconbtn:disabled { opacity: .4; cursor: not-allowed; }
+    .automation-workbench-count { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--ca-business); color: var(--dsw-alias-bg-base); font-size: 10px; line-height: 16px; }
+    .automation-workbench-banner { box-sizing: border-box; width: min(1080px, 100%); margin: 12px auto 0; padding: 10px 13px; border: .5px solid var(--ca-line-soft); border-radius: 12px; background: var(--ca-card); color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 19px; }
+    .automation-workbench-banner[data-tone="warn"] { border-color: color-mix(in srgb, var(--ca-warn) 38%, var(--ca-line-soft)); color: var(--ca-warn-text); }
+    .automation-workbench-banner[data-tone="error"] { border-color: color-mix(in srgb, var(--ca-error) 38%, var(--ca-line-soft)); color: var(--ca-error-text); }
+    .automation-workbench-banner .automation-workbench-btn { margin-left: 8px; vertical-align: middle; }
+    .automation-workbench-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
+    .automation-workbench-container { box-sizing: border-box; width: min(1080px, 100%); margin: 0 auto; padding: 20px clamp(20px, 3vw, 36px) 72px; }
+    .automation-workbench-card { box-sizing: border-box; border: .5px solid var(--ca-line); border-radius: 16px; background: var(--ca-card); }
+    .automation-workbench-history { position: relative; padding: 18px 20px 14px; }
+    .automation-workbench-historyhead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 18px; }
+    .automation-workbench-historytitle { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+    .automation-workbench-historytitle h2 { margin: 0; font-size: 14px; line-height: 22px; font-weight: 600; }
+    .automation-workbench-historytitle span { color: var(--ca-muted); font-size: 12px; line-height: 20px; }
+    .automation-workbench-historystats { display: flex; align-items: center; gap: 14px; color: var(--ca-muted); font-size: 12px; line-height: 20px; }
+    .automation-workbench-historystat { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+    .automation-workbench-historystat[data-tone="ok"] { color: var(--ca-success-text); }
+    .automation-workbench-historystat[data-tone="error"] { color: var(--ca-error-text); }
+    .automation-workbench-historystat[data-tone="active"] { color: var(--ca-business-text); }
+    .automation-workbench-statusdot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+    .automation-workbench-historylink { display: inline-flex; align-items: center; gap: 2px; height: 24px; padding: 0 6px; border: 0; border-radius: 7px; background: transparent; color: var(--ca-muted); font: inherit; font-size: 12px; cursor: pointer; }
+    .automation-workbench-historylink:hover { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
+    .automation-workbench-heatmap { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; }
+    .automation-workbench-heatweekdays { flex: none; display: grid; grid-template-rows: repeat(7, 1fr); gap: 3px; width: 28px; padding-top: 22px; color: var(--ca-caption); font-size: 10.5px; line-height: 1; align-self: stretch; }
+    .automation-workbench-heatweekday { display: flex; align-items: center; }
+    .automation-workbench-heatscroll { flex: 1 1 auto; min-width: 0; overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; scrollbar-width: thin; }
+    .automation-workbench-heatscroll[data-faded="true"] { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 18px); mask-image: linear-gradient(to right, transparent 0, #000 18px); }
+    .automation-workbench-heatcanvas { min-width: 620px; }
+    .automation-workbench-heatmonths { display: grid; grid-template-columns: repeat(${HEATMAP_WEEKS}, minmax(0, 1fr)); gap: 3px; height: 16px; margin-bottom: 6px; }
+    .automation-workbench-heatmonth { color: var(--ca-caption); font-size: 10.5px; line-height: 16px; white-space: nowrap; letter-spacing: .01em; }
+    .automation-workbench-heatgrid { display: grid; grid-template-columns: repeat(${HEATMAP_WEEKS}, minmax(0, 1fr)); grid-template-rows: repeat(7, auto); grid-auto-flow: column; gap: 3px; }
+    .automation-workbench-heatcell { display: block; min-width: 0; aspect-ratio: 1; border-radius: 2.5px; background: var(--ca-heat-0); box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--dsw-alias-label-primary) 4%, transparent); transition: background .12s, box-shadow .12s, outline-color .12s; }
+    .automation-workbench-heatcell[data-level="1"] { background: var(--ca-heat-1); }
+    .automation-workbench-heatcell[data-level="2"] { background: var(--ca-heat-2); }
+    .automation-workbench-heatcell[data-level="3"] { background: var(--ca-heat-3); }
+    .automation-workbench-heatcell[data-level="4"] { background: var(--ca-heat-4); }
+    .automation-workbench-heatcell[data-future="true"] { opacity: .45; }
+    .automation-workbench-heatcell[data-failed="true"] { box-shadow: inset 0 0 0 1.5px var(--ca-heat-fail); }
+    .automation-workbench-heatcell[data-active="true"] { box-shadow: inset 0 0 0 1.5px var(--ca-business); animation: automation-workbench-heatpulse 1.8s ease-in-out infinite; }
+    .automation-workbench-heatcell:hover { outline: 1px solid var(--dsw-alias-label-primary); outline-offset: 1px; }
+    .automation-workbench-heattip { position: absolute; z-index: 5; min-width: 128px; max-width: 220px; padding: 7px 9px; border: .5px solid var(--ca-line); border-radius: 9px; background: var(--dsw-alias-bg-layer-3, var(--ca-card)); box-shadow: 0 8px 22px rgba(0, 0, 0, .28); color: var(--dsw-alias-label-primary); pointer-events: none; transform: translate(-50%, -100%); }
+    .automation-workbench-heattipdate { display: block; font-size: 11.5px; font-weight: 600; line-height: 16px; white-space: nowrap; }
+    .automation-workbench-heattipmeta { display: block; margin-top: 2px; color: var(--ca-muted); font-size: 11px; line-height: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .automation-workbench-heatfoot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin-top: 8px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
+    .automation-workbench-heatrange { font-variant-numeric: tabular-nums; }
+    .automation-workbench-heatlegend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 5px; }
+    .automation-workbench-heatlegendlabel { color: var(--ca-caption); }
+    .automation-workbench-heatsample { width: 10px; height: 10px; border-radius: 2px; background: var(--ca-heat-0); box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--dsw-alias-label-primary) 5%, transparent); }
+    .automation-workbench-heatsample[data-level="1"] { background: var(--ca-heat-1); }
+    .automation-workbench-heatsample[data-level="2"] { background: var(--ca-heat-2); }
+    .automation-workbench-heatsample[data-level="3"] { background: var(--ca-heat-3); }
+    .automation-workbench-heatsample[data-level="4"] { background: var(--ca-heat-4); }
+    .automation-workbench-heatkey { display: inline-flex; align-items: center; gap: 5px; margin-right: 7px; }
+    .automation-workbench-heatfailbox { width: 10px; height: 10px; border-radius: 2px; background: var(--ca-heat-0); box-shadow: inset 0 0 0 1.5px var(--ca-heat-fail); }
+    .automation-workbench-heatactivebox { width: 10px; height: 10px; border-radius: 2px; background: var(--ca-heat-0); box-shadow: inset 0 0 0 1.5px var(--ca-business); }
+    @keyframes automation-workbench-heatpulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    @media (prefers-reduced-motion: reduce) { .automation-workbench-heatcell[data-active="true"] { animation: none; } }
+    .automation-workbench-section { margin-top: 26px; }
+    .automation-workbench-sectionhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 10px; }
+    .automation-workbench-sectionhead h2 { margin: 0; font-size: 14px; line-height: 22px; font-weight: 600; }
+    .automation-workbench-sectionhead > span { color: var(--ca-muted); font-size: 12px; line-height: 18px; }
+    .automation-workbench-sectiontools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; }
+    .automation-workbench-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+    .automation-workbench-filter { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; color: var(--ca-muted); font: inherit; font-size: 12px; line-height: 28px; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s; }
+    .automation-workbench-filtercount { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: color-mix(in srgb, currentColor 13%, transparent); font-size: 10.5px; line-height: 17px; font-variant-numeric: tabular-nums; }
+    .automation-workbench-filter[aria-pressed="true"] .automation-workbench-filtercount { background: var(--ca-business); color: var(--dsw-alias-bg-base); }
+    .automation-workbench-filter:hover { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
+    .automation-workbench-filter[aria-pressed="true"] { background: color-mix(in srgb, var(--ca-business) 11%, var(--ca-card)); box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--ca-business) 28%, transparent); color: var(--ca-business-text); font-weight: 600; }
+    .automation-workbench-filter:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 1px; }
+    .automation-workbench-search { box-sizing: border-box; display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 9px; border: .5px solid var(--ca-line-soft); border-radius: 999px; background: var(--ca-card); color: var(--ca-muted); }
+    .automation-workbench-search:focus-within { border-color: var(--ca-business); }
+    .automation-workbench-search input { width: 128px; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; }
+    .automation-workbench-search input::placeholder { color: var(--ca-caption); }
+    .automation-workbench-running { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 10px; padding: 12px 14px; border: .5px solid color-mix(in srgb, var(--ca-business) 30%, var(--ca-line)); border-radius: 14px; background: color-mix(in srgb, var(--ca-business) 7%, var(--ca-card)); }
+    .automation-workbench-runningrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; width: 100%; min-width: 0; }
+    .automation-workbench-runningactions { display: flex; flex: none; align-items: center; gap: 8px; margin-left: auto; }
+    .automation-workbench-live { display: inline-flex; align-items: center; gap: 6px; color: var(--ca-business-text); font-size: 12px; }
+    .automation-workbench-livedot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: automation-workbench-pulse 1.6s ease-in-out infinite; }
+    @keyframes automation-workbench-pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 30%, transparent); } 50% { opacity: .55; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 0%, transparent); } }
+    @media (prefers-reduced-motion: reduce) { .automation-workbench-livedot { animation: none; } .automation-workbench-skeleton { animation: none; } }
+    .automation-workbench-table { overflow: hidden; border: .5px solid var(--ca-table-line); border-radius: 16px; background: var(--ca-card); }
+    .automation-workbench-thead { display: grid; grid-template-columns: minmax(0, 1fr) 36px; align-items: center; padding-right: 18px; border-bottom: .5px solid var(--ca-table-line); background: color-mix(in srgb, var(--dsw-alias-label-primary) 3.5%, var(--ca-card)); color: var(--ca-muted); font-size: 11.5px; font-weight: 500; letter-spacing: .02em; line-height: 16px; }
+    .automation-workbench-theadmain { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(110px, .85fr) minmax(128px, .95fr) 88px; gap: 14px; padding: 9px 0 9px 16px; }
+    .automation-workbench-trow { display: grid; grid-template-columns: minmax(0, 1fr) 36px; align-items: stretch; padding-right: 18px; border-top: .5px solid var(--ca-table-line); transition: background .15s; }
+    .automation-workbench-trow:first-of-type { border-top: 0; }
+    .automation-workbench-trow:hover { background: color-mix(in srgb, var(--dsw-alias-label-primary) 5%, var(--ca-card)); }
+    .automation-workbench-trowmain { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(110px, .85fr) minmax(128px, .95fr) 88px; align-items: center; gap: 14px; min-width: 0; padding: 11px 0 11px 16px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .automation-workbench-trowmain:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: -2px; }
+    .automation-workbench-trowmenu { display: flex; align-items: center; justify-content: center; }
+    .automation-workbench-cell { min-width: 0; }
+    .automation-workbench-identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .automation-workbench-glyph { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.22); }
+    .automation-workbench-glyph[data-tone="news"] { background: linear-gradient(135deg, #5b9dff, #2563eb); }
+    .automation-workbench-glyph[data-tone="market"] { background: linear-gradient(135deg, #ffbd4a, #f97316); }
+    .automation-workbench-glyph[data-tone="review"] { background: linear-gradient(135deg, #b18cff, #7c3aed); }
+    .automation-workbench-glyph[data-tone="research"] { background: linear-gradient(135deg, #39d7a8, #0d9488); }
+    .automation-workbench-glyph[data-tone="portfolio"] { background: linear-gradient(135deg, #84cc16, #4d7c0f); }
+    .automation-workbench-glyph[data-tone="monitor"] { background: linear-gradient(135deg, #06b6d4, #0e7490); }
+    .automation-workbench-glyph[data-tone="custom"] { background: linear-gradient(135deg, #f472b6, #db2777); }
+    .automation-workbench-identitytext { min-width: 0; }
+    .automation-workbench-tasktitlerow { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; min-width: 0; }
+    .automation-workbench-tasktitlerow .automation-workbench-tasktags { flex: 0 1 auto; flex-wrap: wrap; max-width: 100%; margin-top: 0; }
+    .automation-workbench-tasktitle { display: block; flex: 0 1 auto; min-width: 0; overflow: hidden; color: var(--dsw-alias-label-primary); font-size: 13.5px; line-height: 20px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+    .automation-workbench-taskdesc { display: block; overflow: hidden; margin-top: 1px; color: var(--ca-muted); font-size: 11.5px; line-height: 17px; text-overflow: ellipsis; white-space: nowrap; }
+    .automation-workbench-tasktags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 3px; }
+    .automation-workbench-tag { display: inline-flex; align-items: center; gap: 4px; max-width: 13em; overflow: hidden; padding: 1px 6px; border-radius: 999px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-muted); font-size: 11px; font-weight: 500; line-height: 17px; white-space: nowrap; }
+    .automation-workbench-tag[data-tone="news"] { color: #6ba6ff; }
+    .automation-workbench-tag[data-tone="market"] { color: #ffb45c; }
+    .automation-workbench-tag[data-tone="review"] { color: #b79aff; }
+    .automation-workbench-tag[data-tone="research"] { color: #56d9b4; }
+    .automation-workbench-tag[data-tone="portfolio"] { color: #a3e635; }
+    .automation-workbench-tag[data-tone="monitor"] { color: #22d3ee; }
+    .automation-workbench-tag[data-tone="custom"] { color: #f79bc3; }
+    body:not([data-ds-dark-theme]) .automation-workbench-tag { background: color-mix(in srgb, currentColor 9%, var(--ca-card)); }
+    body:not([data-ds-dark-theme]) .automation-workbench-tag[data-tone="news"] { color: var(--ca-tag-news); }
+    body:not([data-ds-dark-theme]) .automation-workbench-tag[data-tone="market"] { color: var(--ca-tag-market); }
+    body:not([data-ds-dark-theme]) .automation-workbench-tag[data-tone="review"] { color: var(--ca-tag-review); }
+    body:not([data-ds-dark-theme]) .automation-workbench-tag[data-tone="research"] { color: var(--ca-tag-research); }
+    body:not([data-ds-dark-theme]) .automation-workbench-tag[data-tone="portfolio"] { color: var(--ca-tag-portfolio); }
+    body:not([data-ds-dark-theme]) .automation-workbench-tag[data-tone="monitor"] { color: var(--ca-tag-monitor); }
+    body:not([data-ds-dark-theme]) .automation-workbench-tag[data-tone="custom"] { color: var(--ca-tag-custom); }
+    .automation-workbench-schedule { display: block; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
+    .automation-workbench-schedulesub { display: block; margin-top: 1px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
+    .automation-workbench-nextmain { display: block; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
+    .automation-workbench-nextsub { display: block; margin-top: 1px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
+    .automation-workbench-state { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-muted); font-size: 11px; line-height: 22px; white-space: nowrap; }
+    .automation-workbench-state[data-state="active"] { color: var(--ca-success-text); }
+    .automation-workbench-state[data-state="paused"] { color: var(--ca-warn-text); }
+    .automation-workbench-state[data-state="running"] { color: var(--ca-business-text); }
+    .automation-workbench-state[data-state="dormant"] { color: var(--ca-muted); }
+    body:not([data-ds-dark-theme]) .automation-workbench-state { background: color-mix(in srgb, currentColor 9%, var(--ca-card)); }
+    .automation-workbench-statedot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
+    .automation-workbench-state[data-state="running"] .automation-workbench-statedot, .automation-workbench-runstatus[data-status="running"] .automation-workbench-rundot { animation: automation-workbench-pulse 1.6s ease-in-out infinite; }
+    .automation-workbench-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 42px 20px; border: .5px dashed var(--ca-line); border-radius: 16px; color: var(--ca-muted); text-align: center; }
+    .automation-workbench-emptyicon { display: grid; place-items: center; width: 38px; height: 38px; margin-bottom: 4px; border-radius: 12px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-caption); }
+    .automation-workbench-empty h3 { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 13.5px; font-weight: 500; line-height: 20px; }
+    .automation-workbench-empty p { max-width: 460px; margin: 0; font-size: 12px; line-height: 18px; }
+    .automation-workbench-empty .automation-workbench-btn { margin-top: 8px; }
+    .automation-workbench-loading { display: flex; flex-direction: column; pointer-events: none; }
+    .automation-workbench-skeletonlabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .automation-workbench-skeleton { display: block; flex: none; max-width: 100%; border-radius: 6px; background: var(--dsw-alias-bg-skeleton); animation: automation-workbench-breathe 1.8s ease-in-out infinite; }
+    .automation-workbench-skeletonheat { margin-top: 16px; padding-left: 36px; }
+    .automation-workbench-skeletonmonths { display: grid; grid-template-columns: repeat(${HEATMAP_WEEKS}, minmax(0, 1fr)); gap: 3px; height: 16px; margin-bottom: 6px; }
+    .automation-workbench-skeletonmonths > .automation-workbench-skeleton { width: 22px; height: 8px; border-radius: 3px; }
+    .automation-workbench-skeletongrid { display: grid; grid-template-columns: repeat(${HEATMAP_WEEKS}, minmax(0, 1fr)); grid-template-rows: repeat(7, auto); grid-auto-flow: column; gap: 3px; }
+    .automation-workbench-skeletongrid > .automation-workbench-skeleton { width: 100%; aspect-ratio: 1; border-radius: 2.5px; }
+    .automation-workbench-skeletonstack { display: flex; flex: 1 1 auto; flex-direction: column; gap: 6px; min-width: 0; }
+    .automation-workbench-skeletonrow .automation-workbench-trowmain { min-height: 57px; cursor: default; }
+    .automation-workbench-skeletonrow .automation-workbench-cell[data-cell] { display: flex; flex-direction: column; gap: 5px; }
+    .automation-workbench-skeletonrun .automation-workbench-runline { min-height: 20px; }
+    .automation-workbench-skeletonrun .automation-workbench-runmetaline { min-height: 17px; }
+    .automation-workbench-skeletontemplatemain { display: flex; align-items: flex-start; gap: 11px; min-width: 0; }
+    @keyframes automation-workbench-breathe { 0% { opacity: 1; } 40% { opacity: .55; } 80%, 100% { opacity: 1; } }
+    .automation-workbench-templates { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+    .automation-workbench-template { box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; min-height: 152px; padding: 15px 16px 13px; border: .5px solid var(--ca-line); border-radius: 16px; background: var(--ca-card); transition: border-color .15s, background .15s; }
+    .automation-workbench-template:hover { border-color: color-mix(in srgb, var(--ca-business) 28%, var(--ca-line)); background: color-mix(in srgb, var(--ca-hover) 55%, var(--ca-card)); }
+    .automation-workbench-templatemain { display: flex; align-items: flex-start; gap: 11px; min-width: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .automation-workbench-templatemain:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 4px; border-radius: 8px; }
+    .automation-workbench-templatebody { min-width: 0; }
+    .automation-workbench-templatetitlerow { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; min-width: 0; }
+    .automation-workbench-templatetitlerow .automation-workbench-tag { flex: none; }
+    .automation-workbench-templatebody strong { display: block; min-width: 0; color: var(--dsw-alias-label-primary); font-size: 13.5px; line-height: 20px; font-weight: 500; }
+    .automation-workbench-templatedesc { display: -webkit-box; overflow: hidden; margin-top: 3px; color: var(--ca-muted); font-size: 12px; line-height: 18px; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .automation-workbench-templatefoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+    .automation-workbench-templatemeta { display: inline-flex; align-items: center; gap: 4px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
+    .automation-workbench-detailbar { display: flex; align-items: center; min-height: 34px; margin: 0 0 6px; }
+    .automation-workbench-back { display: inline-flex; align-items: center; gap: 2px; height: 30px; margin-left: -8px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: var(--ca-muted); font: inherit; font-size: 12.5px; cursor: pointer; }
+    .automation-workbench-back:hover { background: var(--ca-hover); color: var(--dsw-alias-label-primary); }
+    .automation-workbench-hero { display: flex; align-items: flex-start; gap: 14px; padding: 2px 0 18px; border-bottom: .5px solid var(--ca-line); }
+    .automation-workbench-herobody { flex: 1 1 auto; min-width: 0; }
+    .automation-workbench-herotitle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .automation-workbench-herotitle h2 { margin: 0; font-size: 22px; line-height: 30px; font-weight: 600; letter-spacing: .1px; overflow-wrap: anywhere; }
+    .automation-workbench-herodesc { max-width: 760px; margin: 5px 0 0; color: var(--ca-muted); font-size: 12.5px; line-height: 19px; }
+    .automation-workbench-heroactions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; flex: none; padding-top: 2px; }
+    .automation-workbench-detailtabs { display: flex; align-items: center; gap: 26px; overflow-x: auto; overflow-y: hidden; border-bottom: .5px solid var(--ca-line); }
+    .automation-workbench-detailtab { position: relative; flex: none; height: 42px; padding: 0 1px; border: 0; background: transparent; color: var(--ca-muted); font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+    .automation-workbench-detailtab:hover { color: var(--dsw-alias-label-primary); }
+    .automation-workbench-detailtab[aria-selected="true"] { color: var(--ca-business-text); font-weight: 600; }
+    .automation-workbench-detailtab[aria-selected="true"]:after { content: ""; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; border-radius: 2px; background: var(--ca-business-text); }
+    .automation-workbench-detailtab:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: -2px; border-radius: 4px; }
+    .automation-workbench-detailbody { display: flex; flex-direction: column; gap: 16px; padding-top: 18px; }
+    .automation-workbench-overview { display: flex; flex-direction: column; gap: 16px; }
+    .automation-workbench-statgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .automation-workbench-stat { display: flex; flex-direction: column; gap: 4px; min-height: 78px; padding: 13px 14px; border: .5px solid var(--ca-line); border-radius: 14px; background: var(--ca-card); }
+    body:not([data-ds-dark-theme]) .automation-workbench-card, body:not([data-ds-dark-theme]) .automation-workbench-table, body:not([data-ds-dark-theme]) .automation-workbench-template, body:not([data-ds-dark-theme]) .automation-workbench-stat { box-shadow: 0 1px 2px rgba(15,17,21,.035), 0 10px 28px rgba(15,17,21,.025); }
+    .automation-workbench-runmeta, .automation-workbench-statvalue, .automation-workbench-notificationtime { font-variant-numeric: tabular-nums; }
+    .automation-workbench-statlabel { color: var(--ca-muted); font-size: 11px; line-height: 16px; }
+    .automation-workbench-statvalue { color: var(--dsw-alias-label-primary); font-size: 15px; line-height: 22px; font-weight: 500; overflow-wrap: anywhere; }
+    .automation-workbench-statvalue[data-tone="ok"] { color: var(--ca-success-text); }
+    .automation-workbench-statvalue[data-tone="error"] { color: var(--ca-error-text); }
+    .automation-workbench-statvalue[data-tone="running"] { color: var(--ca-business-text); }
+    .automation-workbench-statvalue[data-tone="warn"] { color: var(--ca-warn-text); }
+    .automation-workbench-statsub { color: var(--ca-caption); font-size: 11px; line-height: 16px; }
+    .automation-workbench-panel { padding: 16px 18px; }
+    .automation-workbench-panelhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 12px; }
+    .automation-workbench-panelhead h3 { margin: 0; font-size: 13.5px; line-height: 20px; font-weight: 600; }
+    .automation-workbench-panelhead .automation-workbench-btn { margin-left: auto; }
+    .automation-workbench-panelhead .automation-workbench-select { margin-left: auto; }
+    .automation-workbench-panelhead .automation-workbench-btn[data-variant="ghost"] { padding-right: 0; }
+    .automation-workbench-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 18px; }
+    .automation-workbench-kvitem { min-width: 0; }
+    .automation-workbench-kvlabel { display: block; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
+    .automation-workbench-kvvalue { display: block; margin-top: 2px; color: var(--dsw-alias-label-secondary); font-size: 12.5px; line-height: 19px; overflow-wrap: anywhere; }
+    .automation-workbench-policy { color: var(--ca-muted); font-size: 12px; line-height: 19px; }
+    .automation-workbench-policy p { margin: 0; }
+    .automation-workbench-policy p + p { margin-top: 5px; }
+    .automation-workbench-hint { margin: 0; color: var(--ca-muted); font-size: 11.5px; line-height: 18px; }
+    .automation-workbench-hint[data-tone="error"] { color: var(--ca-error-text); }
+    .automation-workbench-notice { margin: 0; color: var(--ca-success-text); font-size: 12px; line-height: 18px; }
+    .automation-workbench-error { margin: 0; color: var(--ca-error-text); font-size: 12px; line-height: 18px; }
+    .automation-workbench-toast { position: fixed; bottom: 26px; left: 50%; z-index: 1300; max-width: min(520px, calc(100vw - 40px)); transform: translateX(-50%); padding: 8px 15px; border: .5px solid var(--ca-line-soft); border-radius: 999px; background: var(--dsw-alias-label-primary); color: var(--dsw-alias-bg-base); box-shadow: 0 8px 26px rgba(0,0,0,.22); font-size: 12px; line-height: 18px; }
+    .automation-workbench-form { display: flex; flex-direction: column; gap: 16px; }
+    .automation-workbench-instructionrow { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(420px, 520px); align-items: stretch; gap: 16px; }
+    .automation-workbench-instructionside { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .automation-workbench-formgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .automation-workbench-titlerow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 210px); align-items: start; gap: 12px; }
+    .automation-workbench-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .automation-workbench-fieldhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
+    .automation-workbench-fieldlabel { color: var(--ca-muted); font-size: 11.5px; line-height: 17px; }
+    .automation-workbench-fieldhint { color: var(--ca-caption); font-size: 11px; line-height: 16px; font-variant-numeric: tabular-nums; }
+    .automation-workbench-glyphbtn { display: inline-flex; flex: none; align-items: center; gap: 4px; padding: 0; border: 0; border-radius: 14px; background: transparent; cursor: pointer; }
+    .automation-workbench-glyphbtn:hover:not(:disabled) .automation-workbench-glyph { box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 0 0 2px color-mix(in srgb, var(--ca-business) 52%, transparent); }
+    .automation-workbench-glyphbtn:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 2px; }
+    .automation-workbench-glyphbtn:disabled { cursor: not-allowed; opacity: .55; }
+    .automation-workbench-glyphbtnchevron { display: grid; flex: none; place-items: center; width: 12px; color: var(--ca-muted); }
+    .automation-workbench-glyphbtn:hover:not(:disabled) .automation-workbench-glyphbtnchevron { color: var(--ca-business-text); }
+    .automation-workbench-iconrow { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .automation-workbench-iconrowbody { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     /* The menu is portaled to body, outside the page's --ca-* scope; use host tokens. */
-    .capital-automation-iconmenu { box-sizing: border-box; width: 400px; max-width: calc(100vw - 24px); padding: 10px; }
-    .capital-automation-iconmenu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap: 6px; }
-    button.capital-automation-iconmenu-item { box-sizing: border-box; display: inline-grid; place-items: center; width: 100%; max-width: 34px; aspect-ratio: 1; justify-self: center; padding: 0; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
-    button.capital-automation-iconmenu-item:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
-    button.capital-automation-iconmenu-item[data-selected="true"] { border-color: var(--dsw-alias-brand-primary); background: color-mix(in srgb, var(--dsw-alias-brand-primary) 14%, transparent); color: var(--dsw-alias-brand-primary); }
-    button.capital-automation-iconmenu-item:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary)); outline-offset: 2px; }
-    button.capital-automation-iconmenu-item:disabled { opacity: .4; cursor: not-allowed; }
-    .capital-automation-field input { box-sizing: border-box; width: 100%; padding: 0 10px; border: .5px solid var(--ca-line-soft); border-radius: 10px; background: var(--ca-field); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; line-height: 32px; }
-    .capital-automation-field input { height: 34px; }
-    .capital-automation-texteditor { color: var(--dsw-alias-label-primary); font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; overflow-y: auto; outline: 0; cursor: text; }
-    .capital-automation-field .capital-automation-texteditor { box-sizing: border-box; flex: 1 1 auto; min-height: 110px; padding: 9px 10px; border: .5px solid var(--ca-line-soft); border-radius: 10px; background: var(--ca-field); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; line-height: 19px; white-space: pre-wrap; overflow-wrap: anywhere; overflow-y: auto; outline: 0; cursor: text; }
-    .capital-automation-field .capital-automation-texteditor.capital-automation-descriptioninput { flex: none; height: 58px; min-height: 58px; }
-    .capital-automation-texteditor:empty:before { content: attr(data-placeholder); color: var(--ca-caption); pointer-events: none; }
-    .capital-automation-field .capital-automation-texteditor:hover { border-color: var(--ca-line); }
-    .capital-automation-field .capital-automation-texteditor:focus-visible { border-color: var(--ca-business); outline: 2px solid color-mix(in srgb, var(--ca-business) 22%, transparent); outline-offset: 0; }
-    .capital-automation-field[data-invalid="true"] .capital-automation-texteditor { border-color: color-mix(in srgb, var(--ca-error) 58%, var(--ca-line-soft)); }
-    .capital-automation-field[data-invalid="true"] .capital-automation-texteditor:focus-visible { border-color: var(--ca-error); outline-color: color-mix(in srgb, var(--ca-error) 22%, transparent); }
-    .capital-automation-field .capital-automation-texteditor[contenteditable="false"] { color: var(--ca-muted); opacity: .8; cursor: not-allowed; }
-    .capital-automation-field input:hover { border-color: var(--ca-line); }
-    .capital-automation-field input:focus-visible { border-color: var(--ca-business); outline: 2px solid color-mix(in srgb, var(--ca-business) 22%, transparent); outline-offset: 0; }
-    .capital-automation-field[data-invalid="true"] input { border-color: color-mix(in srgb, var(--ca-error) 58%, var(--ca-line-soft)); }
-    .capital-automation-field[data-invalid="true"] input:focus-visible { border-color: var(--ca-error); outline-color: color-mix(in srgb, var(--ca-error) 22%, transparent); }
-    .capital-automation-field input:disabled { color: var(--ca-muted); opacity: .8; }
-    .capital-automation-fielderror { color: var(--ca-error-text); font-size: 11px; line-height: 16px; }
-    .capital-automation-select { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; height: 34px; padding: 0 10px 0 12px; border: 0; border-radius: 10px; background: var(--ca-field); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; line-height: 20px; text-align: left; cursor: pointer; transition: background .15s, opacity .15s; }
-    .capital-automation-select:hover:not(:disabled) { background: var(--ca-hover); }
-    .capital-automation-select[data-block="true"] { width: 100%; }
-    .capital-automation-select[data-size="sm"] { height: 28px; padding: 0 8px 0 9px; border-radius: 8px; font-size: 11.5px; }
-    .capital-automation-select:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 0; }
-    .capital-automation-select:disabled { opacity: .5; cursor: not-allowed; }
-    .capital-automation-selectvalue { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .capital-automation-select > svg { flex: none; color: var(--ca-muted); }
-    .capital-automation-formactions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 14px; border-top: .5px solid var(--ca-line); }
-    .capital-automation-formactions[data-sticky="true"] { position: sticky; bottom: -1px; z-index: 2; margin-top: 2px; padding: 12px 0 4px; background: var(--dsw-alias-bg-base); }
-    .capital-automation-formstatus { margin-right: auto; color: var(--ca-caption); font-size: 11.5px; line-height: 18px; }
-    .capital-automation-autosavestate { min-width: 0; max-width: min(520px, 70%); overflow: hidden; color: var(--ca-caption); font-size: 11.5px; line-height: 18px; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
-    .capital-automation-autosavestate[data-tone="ok"] { color: var(--ca-success-text); }
-    .capital-automation-autosavestate[data-tone="error"] { color: var(--ca-error-text); }
-    .capital-automation-triggerbox { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border: .5px solid var(--ca-line); border-radius: 14px; background: var(--ca-field); }
-    .capital-automation-triggerbox[data-invalid="true"] { border-color: color-mix(in srgb, var(--ca-error) 52%, var(--ca-line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ca-error) 9%, transparent); }
-    .capital-automation-triggerhead { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
-    .capital-automation-triggerhead > .capital-automation-triggerfield:first-child { flex: 1 1 auto; min-width: 0; }
-    .capital-automation-triggerhead > .capital-automation-triggerfield:last-child { flex: none; }
-    .capital-automation-triggerfield { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
-    .capital-automation-triggerfield .capital-automation-select { flex: none; width: 96px; height: 32px; padding: 0 8px 0 10px; border: .5px solid var(--ca-line-soft); border-radius: 9px; background: var(--ca-card); font-size: 12.5px; }
-    .capital-automation-triggerfield .capital-automation-select:hover:not(:disabled) { border-color: var(--ca-line); background: var(--ca-card); }
-    .capital-automation-triggerlabel { color: var(--ca-muted); font-size: 11.5px; line-height: 16px; white-space: nowrap; }
-    .capital-automation-triggerbox input.capital-automation-triggertime, .capital-automation-triggerbox input.capital-automation-triggerdate { box-sizing: border-box; flex: none; width: 112px; height: 32px; padding: 0 8px; border: .5px solid var(--ca-line-soft); border-radius: 10px; background: var(--ca-card); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; font-variant-numeric: tabular-nums; line-height: normal; transition: border-color .15s, box-shadow .15s; }
-    .capital-automation-triggerbox input.capital-automation-triggerdate { flex: 0 1 146px; width: 146px; min-width: 120px; }
-    .capital-automation-triggerbox input.capital-automation-triggertime:hover:not(:disabled), .capital-automation-triggerbox input.capital-automation-triggerdate:hover:not(:disabled) { border-color: var(--ca-line); }
-    .capital-automation-triggerbox input.capital-automation-triggertime:focus-visible, .capital-automation-triggerbox input.capital-automation-triggerdate:focus-visible { border-color: var(--ca-business); outline: 2px solid color-mix(in srgb, var(--ca-business) 22%, transparent); outline-offset: 0; }
-    .capital-automation-triggerbox input.capital-automation-triggertime[data-invalid="true"], .capital-automation-triggerbox input.capital-automation-triggerdate[data-invalid="true"] { border-color: color-mix(in srgb, var(--ca-error) 58%, var(--ca-line-soft)); }
-    .capital-automation-triggerbox input.capital-automation-triggertime[data-invalid="true"]:focus-visible, .capital-automation-triggerbox input.capital-automation-triggerdate[data-invalid="true"]:focus-visible { border-color: var(--ca-error); outline-color: color-mix(in srgb, var(--ca-error) 22%, transparent); }
-    .capital-automation-triggerbox input.capital-automation-triggertime:disabled, .capital-automation-triggerbox input.capital-automation-triggerdate:disabled { opacity: .5; cursor: not-allowed; }
-    body[data-ds-dark-theme] .capital-automation-triggertime, body[data-ds-dark-theme] .capital-automation-triggerdate { color-scheme: dark; }
-    body:not([data-ds-dark-theme]) .capital-automation-triggertime, body:not([data-ds-dark-theme]) .capital-automation-triggerdate { color-scheme: light; }
-    .capital-automation-triggerdetail { display: flex; flex: 1 1 auto; align-items: center; gap: 6px; min-width: 0; min-height: 32px; }
-    .capital-automation-triggerdetail > .capital-automation-triggerfield { flex: 1 1 auto; min-width: 0; }
-    .capital-automation-triggerdetail .capital-automation-triggerpick { flex: 1 1 auto; width: auto; min-width: 0; max-width: 190px; height: 32px; padding: 0 8px 0 10px; border: .5px solid var(--ca-line-soft); border-radius: 9px; background: var(--ca-card); font-size: 12px; }
-    .capital-automation-triggerdetail .capital-automation-triggerpick:hover:not(:disabled) { border-color: var(--ca-line); background: var(--ca-card); }
-    .capital-automation-monthpick [role="menu"] [role="menu"] { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; width: 196px; min-width: 0; max-height: 252px; overflow-y: auto; padding: 6px; }
-    .capital-automation-monthpick [role="menu"] [role="menu"] button { justify-content: center; min-width: 0; min-height: 26px; padding: 3px 4px; font-size: 12px; line-height: 18px; }
-    .capital-automation-triggersettings { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-top: 12px; border-top: .5px solid var(--ca-line); }
-    .capital-automation-triggerzone { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-    .capital-automation-triggersettings .capital-automation-select { max-width: 190px; height: 28px; padding: 0 8px 0 10px; border: .5px solid var(--ca-line-soft); border-radius: 9px; background: var(--ca-card); font-size: 11.5px; }
-    .capital-automation-triggersettings .capital-automation-select:hover:not(:disabled) { border-color: var(--ca-line); background: var(--ca-card); }
-    .capital-automation-triggerswitch { display: inline-flex; flex: none; align-items: center; gap: 7px; color: var(--dsw-alias-label-secondary); font-size: 12px; cursor: pointer; user-select: none; }
-    .capital-automation-triggererrors { display: flex; flex-direction: column; gap: 4px; }
-    .capital-automation-switch { display: inline-flex; align-items: center; gap: 7px; color: var(--ca-muted); font-size: 12px; }
-    .capital-automation-advanced { border-top: .5px solid var(--ca-line); padding-top: 12px; }
-    .capital-automation-advanced summary { color: var(--ca-muted); font-size: 12px; line-height: 18px; cursor: pointer; user-select: none; }
-    .capital-automation-advanced summary:hover { color: var(--dsw-alias-label-primary); }
-    .capital-automation-advancedbody { display: flex; flex-direction: column; gap: 12px; padding-top: 12px; }
-    .capital-automation-switchlist { display: flex; flex-direction: column; }
-    .capital-automation-switchrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 38px; padding: 3px 0; border-bottom: .5px solid var(--ca-line); }
-    .capital-automation-switchrow:last-child { border-bottom: 0; }
-    .capital-automation-switchrow span { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
-    .capital-automation-switchrow small { display: block; margin-top: 1px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
-    .capital-automation-runs { display: flex; flex-direction: column; }
-    .capital-automation-run { padding: 13px 0; border-bottom: .5px solid var(--ca-line); }
-    .capital-automation-run:first-child { padding-top: 0; }
-    .capital-automation-run:last-child { padding-bottom: 0; border-bottom: 0; }
-    .capital-automation-runhead { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 16px; min-width: 0; }
-    .capital-automation-runmain { min-width: 0; }
-    .capital-automation-runline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; }
-    .capital-automation-runtitle { color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 20px; font-weight: 500; overflow-wrap: anywhere; }
-    .capital-automation-runmaintitle { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-    .capital-automation-runmaintitle:hover { color: var(--ca-business-text); }
-    .capital-automation-runmetaline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 4px; }
-    .capital-automation-runmeta { color: var(--ca-caption); font-size: 11px; line-height: 17px; }
-    .capital-automation-runactions { display: flex; align-items: center; gap: 8px; flex: none; }
-    .capital-automation-runstatus { display: inline-flex; align-items: center; gap: 5px; color: var(--ca-muted); font-size: 11.5px; font-weight: 500; line-height: 18px; }
-    .capital-automation-runstatus[data-status="succeeded"] { color: var(--ca-success-text); }
-    .capital-automation-runstatus[data-status="failed"], .capital-automation-runstatus[data-status="timed_out"], .capital-automation-runstatus[data-status="blocked_requires_user"], .capital-automation-runstatus[data-status="unknown_after_restart"] { color: var(--ca-error-text); }
-    .capital-automation-runstatus[data-status="queued"], .capital-automation-runstatus[data-status="starting"], .capital-automation-runstatus[data-status="running"] { color: var(--ca-business-text); }
-    .capital-automation-runstatus[data-status="skipped_overlap"], .capital-automation-runstatus[data-status="skipped_calendar_unavailable"], .capital-automation-runstatus[data-status="missed"] { color: var(--ca-warn-text); }
-    .capital-automation-rundot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
-    .capital-automation-runspacer { flex: 1 1 auto; }
-    .capital-automation-runerrorbadge { box-sizing: border-box; display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border: .5px solid color-mix(in srgb, currentColor 38%, var(--ca-line)); border-radius: 999px; background: color-mix(in srgb, currentColor 8%, var(--ca-card)); color: var(--ca-warn-text); font: inherit; font-size: 11px; font-weight: 500; line-height: 18px; white-space: nowrap; cursor: pointer; }
-    .capital-automation-runerrorbadge:hover { background: color-mix(in srgb, currentColor 14%, var(--ca-card)); }
-    .capital-automation-runerrorbadge[data-tone="error"] { color: var(--ca-error-text); }
-    .capital-automation-runerrorbadge svg:last-child { transition: transform .15s; }
-    .capital-automation-runerrorbadge[aria-expanded="true"] svg:last-child { transform: rotate(90deg); }
-    .capital-automation-runerrors { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding: 9px 11px; border: .5px solid var(--ca-line); border-radius: 10px; background: var(--ca-field); }
-    .capital-automation-runerror { display: grid; grid-template-columns: 6px minmax(0, 1fr) auto; align-items: start; gap: 8px; color: var(--ca-muted); font-size: 11.5px; line-height: 17px; }
-    .capital-automation-runerrordot { width: 6px; height: 6px; margin-top: 5px; border-radius: 50%; background: var(--ca-warn); flex: none; }
-    .capital-automation-runerror[data-severity="error"] .capital-automation-runerrordot { background: var(--ca-error); }
-    .capital-automation-runerrormessage { min-width: 0; overflow-wrap: anywhere; }
-    .capital-automation-runerrorcode { max-width: 220px; overflow: hidden; color: var(--ca-caption); font-size: 10.5px; line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
-    .capital-automation-notification { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 11px 0; border: 0; border-bottom: .5px solid var(--ca-line); background: transparent; color: inherit; font: inherit; text-align: left; }
-    .capital-automation-notification:last-child { border-bottom: 0; }
-    .capital-automation-notification[data-clickable="true"] { cursor: pointer; }
-    .capital-automation-notification[data-clickable="true"]:hover { color: var(--dsw-alias-label-primary); }
-    .capital-automation-notificationicon { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-top: 1px; border-radius: 9px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-muted); flex: none; }
-    .capital-automation-notificationicon[data-tone="error"] { color: var(--ca-error-text); }
-    .capital-automation-notificationicon[data-tone="warn"] { color: var(--ca-warn-text); }
-    .capital-automation-notificationbody { min-width: 0; }
-    .capital-automation-notificationtitle { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 19px; font-weight: 500; }
-    .capital-automation-notificationmessage { display: -webkit-box; overflow: hidden; margin-top: 2px; color: var(--ca-muted); font-size: 11.5px; line-height: 18px; overflow-wrap: anywhere; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-    .capital-automation-notificationtime { display: block; margin-top: 3px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
-    .capital-automation-systemstatus { margin-top: 22px; padding: 12px 0 4px; border-top: .5px solid var(--ca-line); color: var(--ca-caption); font-size: 11px; line-height: 17px; }
-    .capital-automation-systemline { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-    .capital-automation-systemtoggle { border: 0; padding: 0; background: transparent; color: var(--ca-muted); font: inherit; cursor: pointer; }
-    .capital-automation-systemtoggle:hover { color: var(--dsw-alias-label-primary); text-decoration: underline; }
-    .capital-automation-systemdetail { margin-top: 6px; color: var(--ca-muted); }
-    .capital-automation-systemdetail p { margin: 2px 0; }
-    .capital-automation-systemdetail summary { color: var(--ca-caption); cursor: pointer; }
-    .capital-automation-modal { width: min(720px, calc(100vw - 32px)); max-width: min(720px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); }
-    .capital-automation-modal-wizard { width: min(600px, calc(100vw - 32px)); max-width: min(600px, calc(100vw - 32px)); }
-    .capital-automation-modal-content { max-height: calc(100dvh - 128px); overflow: auto; }
-    .capital-automation-modal-narrow { width: min(480px, calc(100vw - 32px)); max-width: min(480px, calc(100vw - 32px)); }
-    .capital-automation-wizard { display: flex; flex-direction: column; gap: 14px; }
-    .capital-automation-modalheadline { display: flex; align-items: center; gap: 10px; }
-    .capital-automation-modaltitleinput { flex: 1 1 auto; min-width: 0; height: 42px; padding: 0 12px; border: .5px solid var(--ca-line-soft); border-radius: 12px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); font: inherit; font-size: 15px; font-weight: 500; }
-    .capital-automation-modaltitleinput:focus-visible { border-color: var(--ca-business); outline: 2px solid color-mix(in srgb, var(--ca-business) 22%, transparent); outline-offset: 0; }
-    .capital-automation-modalheadline[data-invalid="true"] .capital-automation-modaltitleinput { border-color: color-mix(in srgb, var(--ca-error) 58%, var(--ca-line-soft)); }
-    .capital-automation-formlabel { display: block; margin-bottom: 6px; color: var(--ca-muted); font-size: 11.5px; line-height: 17px; }
-    .capital-automation-promptfield { display: flex; flex-direction: column; gap: 5px; }
-    .capital-automation-promptfield[data-invalid="true"] .capital-automation-promptbox { border-color: color-mix(in srgb, var(--ca-error) 58%, var(--ca-line)); }
-    .capital-automation-promptbox { overflow: hidden; border: .5px solid var(--ca-line); border-radius: 16px; background: var(--dsw-alias-bg-module-platform); }
-    .capital-automation-promptbox .capital-automation-texteditor { box-sizing: border-box; width: 100%; height: 120px; min-height: 120px; padding: 13px 14px; border: 0; border-radius: 0; background: transparent; font-size: 13px; line-height: 21px; }
-    .capital-automation-promptbox .capital-automation-texteditor:focus-visible { outline: 0; }
-    .capital-automation-prompttoolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border-top: .5px solid var(--ca-line); }
-    .capital-automation-prompttoolbar label, .capital-automation-toolbarfield { display: inline-flex; align-items: center; gap: 5px; color: var(--ca-muted); font-size: 11.5px; }
-    .capital-automation-prompttoolbar .capital-automation-select { max-width: 168px; background: var(--ca-card); }
-    .capital-automation-prompttoolbar .capital-automation-presetchip { margin-left: auto; }
-    .capital-automation-presetchip { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border-radius: 999px; background: color-mix(in srgb, var(--ca-business) 12%, var(--ca-card)); color: var(--ca-business-text); font-size: 11px; font-weight: 500; white-space: nowrap; }
-    .capital-automation-checklist { display: flex; flex-direction: column; gap: 2px; }
-    .capital-automation-technical { margin-top: 14px; padding-top: 12px; border-top: .5px solid var(--ca-line); color: var(--ca-caption); font-size: 11px; line-height: 17px; }
-    .capital-automation-technicaltitle { margin: 0 0 7px; color: var(--ca-muted); font-size: 11.5px; line-height: 17px; font-weight: 500; }
-    .capital-automation-technical dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0; }
-    .capital-automation-technical dt { color: var(--ca-caption); }
-    .capital-automation-technical dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: var(--ca-muted); }
-    .capital-automation-page :focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 2px; }
-    .capital-automation-trowmain:focus-visible, .capital-automation-template .capital-automation-btn:focus-visible { outline-offset: 2px; }
+    .automation-workbench-iconmenu { box-sizing: border-box; width: 400px; max-width: calc(100vw - 24px); padding: 10px; }
+    .automation-workbench-iconmenu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap: 6px; }
+    button.automation-workbench-iconmenu-item { box-sizing: border-box; display: inline-grid; place-items: center; width: 100%; max-width: 34px; aspect-ratio: 1; justify-self: center; padding: 0; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+    button.automation-workbench-iconmenu-item:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+    button.automation-workbench-iconmenu-item[data-selected="true"] { border-color: var(--dsw-alias-brand-primary); background: color-mix(in srgb, var(--dsw-alias-brand-primary) 14%, transparent); color: var(--dsw-alias-brand-primary); }
+    button.automation-workbench-iconmenu-item:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-brand-primary)); outline-offset: 2px; }
+    button.automation-workbench-iconmenu-item:disabled { opacity: .4; cursor: not-allowed; }
+    .automation-workbench-field input { box-sizing: border-box; width: 100%; padding: 0 10px; border: .5px solid var(--ca-line-soft); border-radius: 10px; background: var(--ca-field); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; line-height: 32px; }
+    .automation-workbench-field input { height: 34px; }
+    .automation-workbench-texteditor { color: var(--dsw-alias-label-primary); font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; overflow-y: auto; outline: 0; cursor: text; }
+    .automation-workbench-field .automation-workbench-texteditor { box-sizing: border-box; flex: 1 1 auto; min-height: 110px; padding: 9px 10px; border: .5px solid var(--ca-line-soft); border-radius: 10px; background: var(--ca-field); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; line-height: 19px; white-space: pre-wrap; overflow-wrap: anywhere; overflow-y: auto; outline: 0; cursor: text; }
+    .automation-workbench-field .automation-workbench-texteditor.automation-workbench-descriptioninput { flex: none; height: 58px; min-height: 58px; }
+    .automation-workbench-texteditor:empty:before { content: attr(data-placeholder); color: var(--ca-caption); pointer-events: none; }
+    .automation-workbench-field .automation-workbench-texteditor:hover { border-color: var(--ca-line); }
+    .automation-workbench-field .automation-workbench-texteditor:focus-visible { border-color: var(--ca-business); outline: 2px solid color-mix(in srgb, var(--ca-business) 22%, transparent); outline-offset: 0; }
+    .automation-workbench-field[data-invalid="true"] .automation-workbench-texteditor { border-color: color-mix(in srgb, var(--ca-error) 58%, var(--ca-line-soft)); }
+    .automation-workbench-field[data-invalid="true"] .automation-workbench-texteditor:focus-visible { border-color: var(--ca-error); outline-color: color-mix(in srgb, var(--ca-error) 22%, transparent); }
+    .automation-workbench-field .automation-workbench-texteditor[contenteditable="false"] { color: var(--ca-muted); opacity: .8; cursor: not-allowed; }
+    .automation-workbench-field input:hover { border-color: var(--ca-line); }
+    .automation-workbench-field input:focus-visible { border-color: var(--ca-business); outline: 2px solid color-mix(in srgb, var(--ca-business) 22%, transparent); outline-offset: 0; }
+    .automation-workbench-field[data-invalid="true"] input { border-color: color-mix(in srgb, var(--ca-error) 58%, var(--ca-line-soft)); }
+    .automation-workbench-field[data-invalid="true"] input:focus-visible { border-color: var(--ca-error); outline-color: color-mix(in srgb, var(--ca-error) 22%, transparent); }
+    .automation-workbench-field input:disabled { color: var(--ca-muted); opacity: .8; }
+    .automation-workbench-fielderror { color: var(--ca-error-text); font-size: 11px; line-height: 16px; }
+    .automation-workbench-select { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; height: 34px; padding: 0 10px 0 12px; border: 0; border-radius: 10px; background: var(--ca-field); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; line-height: 20px; text-align: left; cursor: pointer; transition: background .15s, opacity .15s; }
+    .automation-workbench-select:hover:not(:disabled) { background: var(--ca-hover); }
+    .automation-workbench-select[data-block="true"] { width: 100%; }
+    .automation-workbench-select[data-size="sm"] { height: 28px; padding: 0 8px 0 9px; border-radius: 8px; font-size: 11.5px; }
+    .automation-workbench-select:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 0; }
+    .automation-workbench-select:disabled { opacity: .5; cursor: not-allowed; }
+    .automation-workbench-selectvalue { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .automation-workbench-select > svg { flex: none; color: var(--ca-muted); }
+    .automation-workbench-formactions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 14px; border-top: .5px solid var(--ca-line); }
+    .automation-workbench-formactions[data-sticky="true"] { position: sticky; bottom: -1px; z-index: 2; margin-top: 2px; padding: 12px 0 4px; background: var(--dsw-alias-bg-base); }
+    .automation-workbench-formstatus { margin-right: auto; color: var(--ca-caption); font-size: 11.5px; line-height: 18px; }
+    .automation-workbench-autosavestate { min-width: 0; max-width: min(520px, 70%); overflow: hidden; color: var(--ca-caption); font-size: 11.5px; line-height: 18px; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+    .automation-workbench-autosavestate[data-tone="ok"] { color: var(--ca-success-text); }
+    .automation-workbench-autosavestate[data-tone="error"] { color: var(--ca-error-text); }
+    .automation-workbench-triggerbox { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border: .5px solid var(--ca-line); border-radius: 14px; background: var(--ca-field); }
+    .automation-workbench-triggerbox[data-invalid="true"] { border-color: color-mix(in srgb, var(--ca-error) 52%, var(--ca-line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ca-error) 9%, transparent); }
+    .automation-workbench-triggerhead { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
+    .automation-workbench-triggerhead > .automation-workbench-triggerfield:first-child { flex: 1 1 auto; min-width: 0; }
+    .automation-workbench-triggerhead > .automation-workbench-triggerfield:last-child { flex: none; }
+    .automation-workbench-triggerfield { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+    .automation-workbench-triggerfield .automation-workbench-select { flex: none; width: 96px; height: 32px; padding: 0 8px 0 10px; border: .5px solid var(--ca-line-soft); border-radius: 9px; background: var(--ca-card); font-size: 12.5px; }
+    .automation-workbench-triggerfield .automation-workbench-select:hover:not(:disabled) { border-color: var(--ca-line); background: var(--ca-card); }
+    .automation-workbench-triggerlabel { color: var(--ca-muted); font-size: 11.5px; line-height: 16px; white-space: nowrap; }
+    .automation-workbench-triggerbox input.automation-workbench-triggertime, .automation-workbench-triggerbox input.automation-workbench-triggerdate { box-sizing: border-box; flex: none; width: 112px; height: 32px; padding: 0 8px; border: .5px solid var(--ca-line-soft); border-radius: 10px; background: var(--ca-card); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; font-variant-numeric: tabular-nums; line-height: normal; transition: border-color .15s, box-shadow .15s; }
+    .automation-workbench-triggerbox input.automation-workbench-triggerdate { flex: 0 1 146px; width: 146px; min-width: 120px; }
+    .automation-workbench-triggerbox input.automation-workbench-triggertime:hover:not(:disabled), .automation-workbench-triggerbox input.automation-workbench-triggerdate:hover:not(:disabled) { border-color: var(--ca-line); }
+    .automation-workbench-triggerbox input.automation-workbench-triggertime:focus-visible, .automation-workbench-triggerbox input.automation-workbench-triggerdate:focus-visible { border-color: var(--ca-business); outline: 2px solid color-mix(in srgb, var(--ca-business) 22%, transparent); outline-offset: 0; }
+    .automation-workbench-triggerbox input.automation-workbench-triggertime[data-invalid="true"], .automation-workbench-triggerbox input.automation-workbench-triggerdate[data-invalid="true"] { border-color: color-mix(in srgb, var(--ca-error) 58%, var(--ca-line-soft)); }
+    .automation-workbench-triggerbox input.automation-workbench-triggertime[data-invalid="true"]:focus-visible, .automation-workbench-triggerbox input.automation-workbench-triggerdate[data-invalid="true"]:focus-visible { border-color: var(--ca-error); outline-color: color-mix(in srgb, var(--ca-error) 22%, transparent); }
+    .automation-workbench-triggerbox input.automation-workbench-triggertime:disabled, .automation-workbench-triggerbox input.automation-workbench-triggerdate:disabled { opacity: .5; cursor: not-allowed; }
+    body[data-ds-dark-theme] .automation-workbench-triggertime, body[data-ds-dark-theme] .automation-workbench-triggerdate { color-scheme: dark; }
+    body:not([data-ds-dark-theme]) .automation-workbench-triggertime, body:not([data-ds-dark-theme]) .automation-workbench-triggerdate { color-scheme: light; }
+    .automation-workbench-triggerdetail { display: flex; flex: 1 1 auto; align-items: center; gap: 6px; min-width: 0; min-height: 32px; }
+    .automation-workbench-triggerdetail > .automation-workbench-triggerfield { flex: 1 1 auto; min-width: 0; }
+    .automation-workbench-triggerdetail .automation-workbench-triggerpick { flex: 1 1 auto; width: auto; min-width: 0; max-width: 190px; height: 32px; padding: 0 8px 0 10px; border: .5px solid var(--ca-line-soft); border-radius: 9px; background: var(--ca-card); font-size: 12px; }
+    .automation-workbench-triggerdetail .automation-workbench-triggerpick:hover:not(:disabled) { border-color: var(--ca-line); background: var(--ca-card); }
+    .automation-workbench-monthpick [role="menu"] [role="menu"] { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; width: 196px; min-width: 0; max-height: 252px; overflow-y: auto; padding: 6px; }
+    .automation-workbench-monthpick [role="menu"] [role="menu"] button { justify-content: center; min-width: 0; min-height: 26px; padding: 3px 4px; font-size: 12px; line-height: 18px; }
+    .automation-workbench-triggersettings { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-top: 12px; border-top: .5px solid var(--ca-line); }
+    .automation-workbench-triggerzone { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+    .automation-workbench-triggersettings .automation-workbench-select { max-width: 190px; height: 28px; padding: 0 8px 0 10px; border: .5px solid var(--ca-line-soft); border-radius: 9px; background: var(--ca-card); font-size: 11.5px; }
+    .automation-workbench-triggersettings .automation-workbench-select:hover:not(:disabled) { border-color: var(--ca-line); background: var(--ca-card); }
+    .automation-workbench-triggerswitch { display: inline-flex; flex: none; align-items: center; gap: 7px; color: var(--dsw-alias-label-secondary); font-size: 12px; cursor: pointer; user-select: none; }
+    .automation-workbench-triggererrors { display: flex; flex-direction: column; gap: 4px; }
+    .automation-workbench-switch { display: inline-flex; align-items: center; gap: 7px; color: var(--ca-muted); font-size: 12px; }
+    .automation-workbench-advanced { border-top: .5px solid var(--ca-line); padding-top: 12px; }
+    .automation-workbench-advanced summary { color: var(--ca-muted); font-size: 12px; line-height: 18px; cursor: pointer; user-select: none; }
+    .automation-workbench-advanced summary:hover { color: var(--dsw-alias-label-primary); }
+    .automation-workbench-advancedbody { display: flex; flex-direction: column; gap: 12px; padding-top: 12px; }
+    .automation-workbench-switchlist { display: flex; flex-direction: column; }
+    .automation-workbench-switchrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 38px; padding: 3px 0; border-bottom: .5px solid var(--ca-line); }
+    .automation-workbench-switchrow:last-child { border-bottom: 0; }
+    .automation-workbench-switchrow span { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }
+    .automation-workbench-switchrow small { display: block; margin-top: 1px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
+    .automation-workbench-runs { display: flex; flex-direction: column; }
+    .automation-workbench-run { padding: 13px 0; border-bottom: .5px solid var(--ca-line); }
+    .automation-workbench-run:first-child { padding-top: 0; }
+    .automation-workbench-run:last-child { padding-bottom: 0; border-bottom: 0; }
+    .automation-workbench-runhead { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 16px; min-width: 0; }
+    .automation-workbench-runmain { min-width: 0; }
+    .automation-workbench-runline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; }
+    .automation-workbench-runtitle { color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 20px; font-weight: 500; overflow-wrap: anywhere; }
+    .automation-workbench-runmaintitle { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .automation-workbench-runmaintitle:hover { color: var(--ca-business-text); }
+    .automation-workbench-runmetaline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 4px; }
+    .automation-workbench-runmeta { color: var(--ca-caption); font-size: 11px; line-height: 17px; }
+    .automation-workbench-runactions { display: flex; align-items: center; gap: 8px; flex: none; }
+    .automation-workbench-runstatus { display: inline-flex; align-items: center; gap: 5px; color: var(--ca-muted); font-size: 11.5px; font-weight: 500; line-height: 18px; }
+    .automation-workbench-runstatus[data-status="succeeded"] { color: var(--ca-success-text); }
+    .automation-workbench-runstatus[data-status="failed"], .automation-workbench-runstatus[data-status="timed_out"], .automation-workbench-runstatus[data-status="blocked_requires_user"], .automation-workbench-runstatus[data-status="unknown_after_restart"] { color: var(--ca-error-text); }
+    .automation-workbench-runstatus[data-status="queued"], .automation-workbench-runstatus[data-status="starting"], .automation-workbench-runstatus[data-status="running"] { color: var(--ca-business-text); }
+    .automation-workbench-runstatus[data-status="skipped_overlap"], .automation-workbench-runstatus[data-status="skipped_calendar_unavailable"], .automation-workbench-runstatus[data-status="missed"] { color: var(--ca-warn-text); }
+    .automation-workbench-rundot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
+    .automation-workbench-runspacer { flex: 1 1 auto; }
+    .automation-workbench-runerrorbadge { box-sizing: border-box; display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border: .5px solid color-mix(in srgb, currentColor 38%, var(--ca-line)); border-radius: 999px; background: color-mix(in srgb, currentColor 8%, var(--ca-card)); color: var(--ca-warn-text); font: inherit; font-size: 11px; font-weight: 500; line-height: 18px; white-space: nowrap; cursor: pointer; }
+    .automation-workbench-runerrorbadge:hover { background: color-mix(in srgb, currentColor 14%, var(--ca-card)); }
+    .automation-workbench-runerrorbadge[data-tone="error"] { color: var(--ca-error-text); }
+    .automation-workbench-runerrorbadge svg:last-child { transition: transform .15s; }
+    .automation-workbench-runerrorbadge[aria-expanded="true"] svg:last-child { transform: rotate(90deg); }
+    .automation-workbench-runerrors { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding: 9px 11px; border: .5px solid var(--ca-line); border-radius: 10px; background: var(--ca-field); }
+    .automation-workbench-runerror { display: grid; grid-template-columns: 6px minmax(0, 1fr) auto; align-items: start; gap: 8px; color: var(--ca-muted); font-size: 11.5px; line-height: 17px; }
+    .automation-workbench-runerrordot { width: 6px; height: 6px; margin-top: 5px; border-radius: 50%; background: var(--ca-warn); flex: none; }
+    .automation-workbench-runerror[data-severity="error"] .automation-workbench-runerrordot { background: var(--ca-error); }
+    .automation-workbench-runerrormessage { min-width: 0; overflow-wrap: anywhere; }
+    .automation-workbench-runerrorcode { max-width: 220px; overflow: hidden; color: var(--ca-caption); font-size: 10.5px; line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
+    .automation-workbench-notification { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 11px 0; border: 0; border-bottom: .5px solid var(--ca-line); background: transparent; color: inherit; font: inherit; text-align: left; }
+    .automation-workbench-notification:last-child { border-bottom: 0; }
+    .automation-workbench-notification[data-clickable="true"] { cursor: pointer; }
+    .automation-workbench-notification[data-clickable="true"]:hover { color: var(--dsw-alias-label-primary); }
+    .automation-workbench-notificationicon { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-top: 1px; border-radius: 9px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-muted); flex: none; }
+    .automation-workbench-notificationicon[data-tone="error"] { color: var(--ca-error-text); }
+    .automation-workbench-notificationicon[data-tone="warn"] { color: var(--ca-warn-text); }
+    .automation-workbench-notificationbody { min-width: 0; }
+    .automation-workbench-notificationtitle { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 19px; font-weight: 500; }
+    .automation-workbench-notificationmessage { display: -webkit-box; overflow: hidden; margin-top: 2px; color: var(--ca-muted); font-size: 11.5px; line-height: 18px; overflow-wrap: anywhere; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+    .automation-workbench-notificationtime { display: block; margin-top: 3px; color: var(--ca-caption); font-size: 11px; line-height: 16px; }
+    .automation-workbench-systemstatus { margin-top: 22px; padding: 12px 0 4px; border-top: .5px solid var(--ca-line); color: var(--ca-caption); font-size: 11px; line-height: 17px; }
+    .automation-workbench-systemline { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .automation-workbench-systemtoggle { border: 0; padding: 0; background: transparent; color: var(--ca-muted); font: inherit; cursor: pointer; }
+    .automation-workbench-systemtoggle:hover { color: var(--dsw-alias-label-primary); text-decoration: underline; }
+    .automation-workbench-systemdetail { margin-top: 6px; color: var(--ca-muted); }
+    .automation-workbench-systemdetail p { margin: 2px 0; }
+    .automation-workbench-systemdetail summary { color: var(--ca-caption); cursor: pointer; }
+    .automation-workbench-modal { width: min(720px, calc(100vw - 32px)); max-width: min(720px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); }
+    .automation-workbench-modal-wizard { width: min(600px, calc(100vw - 32px)); max-width: min(600px, calc(100vw - 32px)); }
+    .automation-workbench-modal-content { max-height: calc(100dvh - 128px); overflow: auto; }
+    .automation-workbench-modal-narrow { width: min(480px, calc(100vw - 32px)); max-width: min(480px, calc(100vw - 32px)); }
+    .automation-workbench-wizard { display: flex; flex-direction: column; gap: 14px; }
+    .automation-workbench-modalheadline { display: flex; align-items: center; gap: 10px; }
+    .automation-workbench-modaltitleinput { flex: 1 1 auto; min-width: 0; height: 42px; padding: 0 12px; border: .5px solid var(--ca-line-soft); border-radius: 12px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); font: inherit; font-size: 15px; font-weight: 500; }
+    .automation-workbench-modaltitleinput:focus-visible { border-color: var(--ca-business); outline: 2px solid color-mix(in srgb, var(--ca-business) 22%, transparent); outline-offset: 0; }
+    .automation-workbench-modalheadline[data-invalid="true"] .automation-workbench-modaltitleinput { border-color: color-mix(in srgb, var(--ca-error) 58%, var(--ca-line-soft)); }
+    .automation-workbench-formlabel { display: block; margin-bottom: 6px; color: var(--ca-muted); font-size: 11.5px; line-height: 17px; }
+    .automation-workbench-promptfield { display: flex; flex-direction: column; gap: 5px; }
+    .automation-workbench-promptfield[data-invalid="true"] .automation-workbench-promptbox { border-color: color-mix(in srgb, var(--ca-error) 58%, var(--ca-line)); }
+    .automation-workbench-promptbox { overflow: hidden; border: .5px solid var(--ca-line); border-radius: 16px; background: var(--dsw-alias-bg-module-platform); }
+    .automation-workbench-promptbox .automation-workbench-texteditor { box-sizing: border-box; width: 100%; height: 120px; min-height: 120px; padding: 13px 14px; border: 0; border-radius: 0; background: transparent; font-size: 13px; line-height: 21px; }
+    .automation-workbench-promptbox .automation-workbench-texteditor:focus-visible { outline: 0; }
+    .automation-workbench-prompttoolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border-top: .5px solid var(--ca-line); }
+    .automation-workbench-prompttoolbar label, .automation-workbench-toolbarfield { display: inline-flex; align-items: center; gap: 5px; color: var(--ca-muted); font-size: 11.5px; }
+    .automation-workbench-prompttoolbar .automation-workbench-select { max-width: 168px; background: var(--ca-card); }
+    .automation-workbench-prompttoolbar .automation-workbench-presetchip { margin-left: auto; }
+    .automation-workbench-presetchip { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border-radius: 999px; background: color-mix(in srgb, var(--ca-business) 12%, var(--ca-card)); color: var(--ca-business-text); font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .automation-workbench-checklist { display: flex; flex-direction: column; gap: 2px; }
+    .automation-workbench-technical { margin-top: 14px; padding-top: 12px; border-top: .5px solid var(--ca-line); color: var(--ca-caption); font-size: 11px; line-height: 17px; }
+    .automation-workbench-technicaltitle { margin: 0 0 7px; color: var(--ca-muted); font-size: 11.5px; line-height: 17px; font-weight: 500; }
+    .automation-workbench-technical dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0; }
+    .automation-workbench-technical dt { color: var(--ca-caption); }
+    .automation-workbench-technical dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: var(--ca-muted); }
+    .automation-workbench-page :focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 2px; }
+    .automation-workbench-trowmain:focus-visible, .automation-workbench-template .automation-workbench-btn:focus-visible { outline-offset: 2px; }
     @media (max-width: 1000px) {
-      .capital-automation-theadmain, .capital-automation-trowmain { grid-template-columns: minmax(0, 1.7fr) minmax(110px, .9fr) 88px; }
-      .capital-automation-theadmain > :nth-child(3), .capital-automation-cell[data-cell="next"] { display: none; }
-      .capital-automation-statgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .automation-workbench-theadmain, .automation-workbench-trowmain { grid-template-columns: minmax(0, 1.7fr) minmax(110px, .9fr) 88px; }
+      .automation-workbench-theadmain > :nth-child(3), .automation-workbench-cell[data-cell="next"] { display: none; }
+      .automation-workbench-statgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 960px) {
-      .capital-automation-instructionrow { grid-template-columns: minmax(0, 1fr); }
+      .automation-workbench-instructionrow { grid-template-columns: minmax(0, 1fr); }
     }
     @media (max-width: 760px) {
-      .capital-automation-head { padding-top: 14px; }
-      .capital-automation-topbar { display: flex; flex-wrap: wrap; gap: 10px; }
-      .capital-automation-brand { flex: 1 1 auto; }
-      .capital-automation-tabs { order: 3; width: 100%; max-width: 320px; margin: 0 auto; justify-content: center; }
-      .capital-automation-topactions { margin-left: auto; }
-      .capital-automation-theadmain, .capital-automation-trowmain { grid-template-columns: minmax(0, 1fr) 80px; gap: 10px; }
-      .capital-automation-theadmain > :nth-child(2), .capital-automation-theadmain > :nth-child(3), .capital-automation-cell[data-cell="schedule"], .capital-automation-cell[data-cell="next"] { display: none; }
-      .capital-automation-tasktitlerow .capital-automation-tasktags { gap: 3px; }
-      .capital-automation-tasktitlerow .capital-automation-tag { padding: 0 5px; font-size: 10px; line-height: 16px; }
-      .capital-automation-hero { flex-wrap: wrap; }
-      .capital-automation-heroactions { width: 100%; padding-left: 58px; }
-      .capital-automation-runhead { grid-template-columns: minmax(0, 1fr); }
-      .capital-automation-runactions { justify-content: flex-start; }
-      .capital-automation-templates { grid-template-columns: 1fr; }
-      .capital-automation-sectiontools { width: 100%; margin-left: 0; }
+      .automation-workbench-head { padding-top: 14px; }
+      .automation-workbench-topbar { display: flex; flex-wrap: wrap; gap: 10px; }
+      .automation-workbench-brand { flex: 1 1 auto; }
+      .automation-workbench-tabs { order: 3; width: 100%; max-width: 320px; margin: 0 auto; justify-content: center; }
+      .automation-workbench-topactions { margin-left: auto; }
+      .automation-workbench-theadmain, .automation-workbench-trowmain { grid-template-columns: minmax(0, 1fr) 80px; gap: 10px; }
+      .automation-workbench-theadmain > :nth-child(2), .automation-workbench-theadmain > :nth-child(3), .automation-workbench-cell[data-cell="schedule"], .automation-workbench-cell[data-cell="next"] { display: none; }
+      .automation-workbench-tasktitlerow .automation-workbench-tasktags { gap: 3px; }
+      .automation-workbench-tasktitlerow .automation-workbench-tag { padding: 0 5px; font-size: 10px; line-height: 16px; }
+      .automation-workbench-hero { flex-wrap: wrap; }
+      .automation-workbench-heroactions { width: 100%; padding-left: 58px; }
+      .automation-workbench-runhead { grid-template-columns: minmax(0, 1fr); }
+      .automation-workbench-runactions { justify-content: flex-start; }
+      .automation-workbench-templates { grid-template-columns: 1fr; }
+      .automation-workbench-sectiontools { width: 100%; margin-left: 0; }
     }
     @media (max-width: 560px) {
-      .capital-automation-triggerhead { flex-wrap: wrap; gap: 10px 12px; }
-      .capital-automation-triggerhead > .capital-automation-triggerfield:first-child { flex: 1 1 100%; flex-wrap: wrap; }
-      .capital-automation-triggerdetail { flex: 1 1 100%; }
-      .capital-automation-triggerhead > .capital-automation-triggerfield:last-child { flex: 1 1 100%; justify-content: flex-start; }
-      .capital-automation-monthpick [role="menu"] [role="menu"] { right: auto; left: 0; }
+      .automation-workbench-triggerhead { flex-wrap: wrap; gap: 10px 12px; }
+      .automation-workbench-triggerhead > .automation-workbench-triggerfield:first-child { flex: 1 1 100%; flex-wrap: wrap; }
+      .automation-workbench-triggerdetail { flex: 1 1 100%; }
+      .automation-workbench-triggerhead > .automation-workbench-triggerfield:last-child { flex: 1 1 100%; justify-content: flex-start; }
+      .automation-workbench-monthpick [role="menu"] [role="menu"] { right: auto; left: 0; }
     }
     @media (max-width: 520px) {
-      .capital-automation-brand h1 { font-size: 16px; }
-      .capital-automation-titlerow { grid-template-columns: minmax(0, 1fr); }
-      .capital-automation-topactions .capital-automation-btn:not([data-variant="contrast"]) { width: auto; min-width: 32px; padding: 0 8px; }
-      .capital-automation-topactions .capital-automation-btn[data-variant="contrast"] { width: 32px; padding: 0; }
-      .capital-automation-topactions .capital-automation-btn .capital-automation-btnlabel { display: none; }
-      .capital-automation-statgrid { grid-template-columns: 1fr; }
-      .capital-automation-heroactions { padding-left: 0; }
-      .capital-automation-modal-content { max-height: calc(100dvh - 112px); }
+      .automation-workbench-brand h1 { font-size: 16px; }
+      .automation-workbench-titlerow { grid-template-columns: minmax(0, 1fr); }
+      .automation-workbench-topactions .automation-workbench-btn:not([data-variant="contrast"]) { width: auto; min-width: 32px; padding: 0 8px; }
+      .automation-workbench-topactions .automation-workbench-btn[data-variant="contrast"] { width: 32px; padding: 0; }
+      .automation-workbench-topactions .automation-workbench-btn .automation-workbench-btnlabel { display: none; }
+      .automation-workbench-statgrid { grid-template-columns: 1fr; }
+      .automation-workbench-heroactions { padding-left: 0; }
+      .automation-workbench-modal-content { max-height: calc(100dvh - 112px); }
     }
 
-    .capital-automation-board { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-    .capital-automation-boardtoolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
-    .capital-automation-boardtools { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
-    .capital-automation-boardactions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-left: auto; }
-    .capital-automation-boardstats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
-    .capital-automation-boardstat { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-height: 62px; padding: 10px 12px; border: .5px solid var(--ca-line); border-radius: 12px; background: var(--ca-card); color: inherit; text-align: left; }
-    .capital-automation-boardstatlabel { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 3px; color: var(--ca-muted); font-size: 11.5px; line-height: 17px; }
-    .capital-automation-boardstatvalue { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 2px; color: var(--dsw-alias-label-primary); font-size: 18px; line-height: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
-    .capital-automation-boardstatnum { margin: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; font-variant-numeric: inherit; line-height: inherit; }
-    .capital-automation-boardstatnum[data-clickable="true"] { border-radius: 4px; cursor: pointer; transition: color .15s; }
-    .capital-automation-boardstatnum[data-clickable="true"]:hover { color: var(--ca-business-text); text-decoration: underline; text-underline-offset: 2px; }
-    .capital-automation-boardstatnum[data-clickable="true"]:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 1px; }
-    .capital-automation-boardstatsep { color: var(--dsw-alias-label-secondary); font-weight: 500; }
-    .capital-automation-boardstatvalue .capital-automation-boardstatsep { padding: 0 3px; }
-    .capital-automation-boardgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); align-items: start; gap: 20px; min-width: 0; }
-    .capital-automation-boardgrid[data-rail="closed"] { grid-template-columns: minmax(0, 1fr); }
-    .capital-automation-boardmain { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-    .capital-automation-briefcard { box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 13px; border: .5px solid var(--ca-line); border-radius: 16px; background: var(--ca-card); min-width: 0; transition: border-color .2s ease, box-shadow .2s ease; }
-    .capital-automation-briefcard[data-highlight="true"] { border-color: var(--ca-business); box-shadow: 0 0 0 1px var(--ca-business); }
-    .capital-automation-briefhead { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px 14px; }
-    .capital-automation-brieftitle { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 7px; min-width: 0; }
-    .capital-automation-brieftitle h3 { margin: 0; color: var(--dsw-alias-label-primary); font-size: 13.5px; line-height: 20px; font-weight: 600; overflow-wrap: anywhere; }
-    .capital-automation-brieftime { color: var(--ca-caption); font-size: 11.5px; line-height: 18px; font-variant-numeric: tabular-nums; }
-    .capital-automation-briefcard h4 { margin: 0; color: var(--dsw-alias-label-primary); font-size: 18px; line-height: 27px; font-weight: 600; letter-spacing: .1px; overflow-wrap: anywhere; }
-    .capital-automation-briefbody { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
-    .capital-automation-brieftext { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 14px; line-height: 1.68; overflow-wrap: anywhere; }
-    .capital-automation-briefstate { display: flex; flex-direction: column; gap: 7px; color: var(--ca-muted); font-size: 12.5px; line-height: 19px; }
-    .capital-automation-briefheadactions { display: flex; align-items: center; gap: 6px; }
-    .capital-automation-askdock { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin-top: 1px; padding-top: 10px; border-top: .5px solid var(--ca-line); }
-    .capital-automation-askinput { box-sizing: border-box; flex: 1 1 auto; min-width: 0; height: 34px; padding: 0 11px; border: .5px solid var(--ca-line-soft); border-radius: 10px; background: var(--ca-field); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; line-height: 20px; outline: 0; }
-    .capital-automation-askinput::placeholder { color: var(--ca-caption); }
-    .capital-automation-askinput:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 1px; }
-    .capital-automation-askinput:disabled { opacity: .62; cursor: not-allowed; }
-    .capital-automation-askthread { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-    .capital-automation-askuser { display: block; align-self: flex-end; max-width: min(100%, 620px); padding: 7px 10px; border: .5px solid color-mix(in srgb, var(--ca-business) 26%, var(--ca-line-soft)); border-radius: 12px 12px 4px 12px; background: color-mix(in srgb, var(--ca-business) 11%, var(--ca-field)); }
-    .capital-automation-askquestion { margin: 0; color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 18px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
-    .capital-automation-askreply { display: flex; flex-direction: column; gap: 5px; align-self: stretch; padding: 8px 10px; border: .5px solid var(--ca-line); border-left: 2px solid var(--ca-business); border-radius: 4px 12px 12px 12px; background: var(--ca-field); }
-    .capital-automation-askreply[data-status="failed"] { border-left-color: var(--ca-error); }
-    .capital-automation-askpreview { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
-    .capital-automation-askfull { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .capital-automation-askhint { margin: 0; color: var(--ca-muted); font-size: 12px; line-height: 19px; }
-    .capital-automation-askaction { align-self: flex-end; margin-top: 1px; }
-    .capital-automation-askaction[data-expanded="true"] { color: var(--ca-muted); }
-    .capital-automation-askerror { margin: 0; color: var(--ca-error-text); font-size: 11.5px; line-height: 18px; overflow-wrap: anywhere; }
-    .capital-automation-modal-chat { width: min(640px, calc(100vw - 32px)); max-width: min(640px, calc(100vw - 32px)); }
-    .capital-automation-chatshell { display: flex; flex-direction: column; height: min(640px, calc(100dvh - 40px)); max-height: calc(100dvh - 40px); min-height: 360px; overflow: hidden; border-radius: 16px; background: var(--ca-card); }
-    .capital-automation-chathead { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px 6px; }
-    .capital-automation-chaticonbtn { display: grid; flex: none; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--dsw-alias-label-primary); cursor: pointer; }
-    .capital-automation-chaticonbtn:hover { background: var(--ca-hover); }
-    .capital-automation-chaticonbtn:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 1px; }
-    .capital-automation-chatscroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 2px 18px 12px; }
-    .capital-automation-chatcontext { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 10px; padding: 8px 0 14px; }
-    .capital-automation-chatcontextbody { min-width: 0; }
-    .capital-automation-chatcontexthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
-    .capital-automation-chatcontexthead strong { color: var(--dsw-alias-label-primary); font-size: 13.5px; line-height: 20px; font-weight: 600; }
-    .capital-automation-chatcontextmeta { color: var(--ca-caption); font-size: 11.5px; line-height: 18px; }
-    .capital-automation-chatcontext h3 { margin: 5px 0 0; color: var(--dsw-alias-label-primary); font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: .1px; overflow-wrap: anywhere; }
-    .capital-automation-chatcontexttext { margin: 5px 0 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .capital-automation-chatthread { margin-left: 18px; padding: 12px 0 4px 30px; border-left: 2px solid var(--ca-line); }
-    .capital-automation-chatexchange + .capital-automation-chatexchange { margin-top: 18px; padding-top: 16px; border-top: .5px solid var(--ca-line); }
-    .capital-automation-chatempty { margin-left: 18px; padding: 12px 0 4px 30px; border-left: 2px solid var(--ca-line); }
-    .capital-automation-chatempty p { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; }
-    .capital-automation-chatcomposer { display: flex; align-items: center; gap: 8px; padding: 10px 16px 14px; border-top: .5px solid var(--ca-line); }
-    .capital-automation-chatcomposer .capital-automation-askinput { height: 38px; }
-    .capital-automation-chatsend { flex: none; height: 36px; padding: 0 16px; font-weight: 600; }
-    .capital-automation-chaterror { padding: 8px 0 0; }
-    .capital-automation-briefstate[data-tone="error"] { color: var(--ca-error-text); }
-    .capital-automation-briefstate p { margin: 0; }
-    .capital-automation-briefactions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 2px; }
-    .capital-automation-boardrail { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-    .capital-automation-boardrail[hidden] { display: none; }
-    .capital-automation-boardrail .capital-automation-panel { min-width: 0; }
-    .capital-automation-boardrail .capital-automation-panelhead { margin-bottom: 8px; }
-    .capital-automation-boardrail .capital-automation-panel[data-collapsed="true"] { padding-bottom: 13px; }
-    .capital-automation-boardrail .capital-automation-panel[data-collapsed="true"] .capital-automation-panelhead { margin-bottom: 0; }
-    .capital-automation-paneltoggle { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-    .capital-automation-paneltoggle:hover { color: var(--dsw-alias-label-primary); }
-    .capital-automation-paneltoggle:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 3px; border-radius: 4px; }
-    .capital-automation-panelchevron { flex: none; color: var(--ca-caption); transition: transform .15s; }
-    .capital-automation-panelchevron[data-open="false"] { transform: rotate(-90deg); }
-    .capital-automation-panelbody[hidden] { display: none; }
-    .capital-automation-boardempty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; min-height: min(440px, calc(100dvh - 260px)); padding: 44px 24px; border: .5px dashed var(--ca-line); border-radius: 20px; background: var(--ca-card); color: var(--ca-muted); text-align: center; }
-    .capital-automation-boardemptyicon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: color-mix(in srgb, var(--ca-business) 12%, var(--ca-card)); color: var(--ca-business-text); }
-    .capital-automation-boardempty h2 { margin: 3px 0 0; color: var(--dsw-alias-label-primary); font-size: 20px; line-height: 28px; font-weight: 600; }
-    .capital-automation-boardempty p { max-width: 520px; margin: 0; font-size: 13px; line-height: 20px; }
-    .capital-automation-boardemptyhint { color: var(--ca-caption); font-size: 11.5px !important; line-height: 18px !important; }
-    .capital-automation-boardemptyactions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; }
-    .capital-automation-todolist, .capital-automation-stocktodos, .capital-automation-gaplist, .capital-automation-gaprow { list-style: none; margin: 0; padding: 0; }
-    .capital-automation-todoitem { padding: 8px 0; border-top: .5px solid var(--ca-line); }
-    .capital-automation-todoitem:first-child { border-top: 0; }
-    .capital-automation-todoline { display: flex; flex-direction: column; align-items: stretch; gap: 5px; min-width: 0; }
-    .capital-automation-todotop { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
-    .capital-automation-todotags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 5px; min-width: 0; }
-    .capital-automation-todotitle { flex: none; width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; font: inherit; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-weight: 600; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
-    .capital-automation-todotitle:hover, .capital-automation-gaptitle:hover { color: var(--ca-business-text); }
-    .capital-automation-todotitle:focus-visible, .capital-automation-gaptitle:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 2px; border-radius: 4px; }
-    .capital-automation-basiscaret { display: inline-flex; align-items: center; margin-left: 4px; color: var(--ca-muted); vertical-align: -2px; transform: rotate(-90deg); transition: transform .16s ease; }
-    .capital-automation-todotitle[aria-expanded="true"] .capital-automation-basiscaret, .capital-automation-gaptitle[aria-expanded="true"] .capital-automation-basiscaret { transform: rotate(0deg); }
-    .capital-automation-tododesc { margin: 3px 0 0; color: var(--ca-muted); font-size: 12px; line-height: 20px; overflow-wrap: anywhere; }
-    .capital-automation-todometa { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 3px; color: var(--ca-caption); font-size: 11px; line-height: 17px; }
-    .capital-automation-todowatch { display: inline-flex; flex: none; align-items: center; min-height: 20px; padding: 0 6px; border-radius: 999px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-muted); font-size: 10px; line-height: 20px; white-space: nowrap; }
-    .capital-automation-todowatch[data-status="triggered"] { background: color-mix(in srgb, var(--ca-error) 12%, var(--ca-card)); color: var(--ca-error-text); }
-    .capital-automation-todowatch[data-status="needs_human"] { background: color-mix(in srgb, var(--ca-warn) 14%, var(--ca-card)); color: var(--ca-warn-text); }
-    .capital-automation-todowatch[data-status="watching"] { color: var(--ca-business-text); }
-    .capital-automation-todowatch[data-status="resolved"] { background: color-mix(in srgb, var(--ca-success) 14%, var(--ca-card)); color: var(--ca-success-text); }
-    .capital-automation-todowatch[data-status="tracking"] { color: var(--ca-muted); }
-    .capital-automation-todowatch[data-status="expired"] { color: var(--ca-caption); }
-    .capital-automation-todowatchcheck { margin-left: 3px; font-size: 10px; }
-    .capital-automation-todocheck { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 18px; height: 18px; padding: 0; border: 1.5px solid var(--ca-line); border-radius: 4px; background: var(--ca-card); cursor: pointer; transition: border-color .15s ease, background .15s ease; }
-    .capital-automation-todocheck:hover { border-color: var(--ca-business); background: color-mix(in srgb, var(--ca-business) 8%, var(--ca-card)); }
-    .capital-automation-todocheck:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 2px; }
-    .capital-automation-todocheck[disabled] { opacity: .55; cursor: default; }
-    .capital-automation-todocheckspin { width: 10px; height: 10px; border: 2px solid var(--ca-line); border-top-color: var(--ca-business); border-radius: 50%; animation: capital-automation-todospin .7s linear infinite; }
-    @keyframes capital-automation-todospin { to { transform: rotate(360deg); } }
-    .capital-automation-todowatchmsg { margin: 1px 0 0; padding: 6px 9px; border-left: 2px solid var(--ca-line); border-radius: 0 7px 7px 0; background: var(--ca-field); color: var(--ca-muted); font-size: 11.5px; line-height: 18px; overflow-wrap: anywhere; }
-    .capital-automation-todowatchmsg[data-status="triggered"] { border-left-color: var(--ca-error); color: var(--ca-error-text); }
-    .capital-automation-tododetail { margin: 6px 0 0; padding: 7px 9px; border-left: 2px solid var(--ca-line); background: var(--ca-field); border-radius: 0 7px 7px 0; }
-    .capital-automation-tododetail blockquote { margin: 0; color: var(--ca-muted); font-size: 11.5px; line-height: 19px; overflow-wrap: anywhere; }
-    .capital-automation-todosource { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 5px 8px; margin-top: 5px; color: var(--ca-caption); font-size: 11px; line-height: 17px; }
-    .capital-automation-stockfilters { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-    .capital-automation-stockfilters .capital-automation-select { margin-left: 0; }
-    .capital-automation-stockrow { border-top: .5px solid var(--ca-line); }
-    .capital-automation-stockrow:first-of-type { border-top: 0; }
-    .capital-automation-stockmain { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 7px; width: 100%; padding: 8px 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-    .capital-automation-stockmain:hover .capital-automation-stockname, .capital-automation-stockmain:hover .capital-automation-stockcode { color: var(--ca-business-text); }
-    .capital-automation-stockmain:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: -2px; }
-    .capital-automation-stockname { color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 19px; font-weight: 600; }
-    .capital-automation-stockcode { color: var(--ca-caption); font-size: 11px; line-height: 17px; }
-    .capital-automation-stockroles { display: inline-flex; flex-wrap: wrap; gap: 3px; }
-    .capital-automation-stockrole { display: inline-flex; align-items: center; padding: 0 5px; border-radius: 4px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-muted); font-size: 10px; line-height: 17px; cursor: help; }
-    .capital-automation-stockrole[data-role="holding"] { color: var(--ca-success-text); }
-    .capital-automation-stockrole[data-role="risk"] { color: var(--ca-error-text); }
-    .capital-automation-stockrole[data-role="event"] { color: var(--ca-warn-text); }
-    .capital-automation-stocknote { flex: 1 1 100%; color: var(--ca-muted); font-size: 12px; line-height: 19px; overflow-wrap: anywhere; }
-    .capital-automation-stockmeta { display: flex; flex-wrap: wrap; gap: 4px 9px; color: var(--ca-caption); font-size: 11px; line-height: 17px; }
-    .capital-automation-stocktodos { margin: 0 0 7px; padding: 0 0 0 8px; border-left: 2px solid var(--ca-line); }
-    .capital-automation-stocktodos li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; color: var(--ca-muted); font-size: 11.5px; line-height: 18px; }
-    .capital-automation-stocktodo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; width: 100%; padding: 4px 6px; border: 0; border-radius: 6px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
-    .capital-automation-stocktodo:hover { background: color-mix(in srgb, var(--ca-business) 8%, transparent); color: var(--ca-business-text); }
-    .capital-automation-stocktodo:hover .capital-automation-stocktodotitle { color: var(--ca-business-text); }
-    .capital-automation-stocktodo:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: -2px; }
-    .capital-automation-stocktodo[data-static="true"] { cursor: default; }
-    .capital-automation-stocktodo[data-static="true"]:hover { background: transparent; color: inherit; }
-    .capital-automation-stocktodo svg { flex: none; color: var(--ca-caption); opacity: .65; }
-    .capital-automation-stocktodo:hover svg { color: var(--ca-business-text); opacity: 1; }
-    .capital-automation-stocktodotitle { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
-    .capital-automation-stockmore { align-self: center; margin: 6px 0 2px; }
-    .capital-automation-gaprow { padding: 8px 0; border-top: .5px solid var(--ca-line); }
-    .capital-automation-gaprow:first-child { border-top: 0; }
-    .capital-automation-gaphead { display: flex; align-items: flex-start; min-width: 0; }
-    .capital-automation-gaptitle { flex: 1 1 auto; min-width: 0; padding: 0; border: 0; background: transparent; font: inherit; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-weight: 600; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
-    .capital-automation-gapdesc { margin: 3px 0 0; color: var(--ca-muted); font-size: 12px; line-height: 20px; overflow-wrap: anywhere; }
-    .capital-automation-healthgrid { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 10px; align-items: baseline; }
-    .capital-automation-healthkey { color: var(--ca-caption); font-size: 11.5px; line-height: 19px; }
-    .capital-automation-healthval { color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 19px; overflow-wrap: anywhere; }
-    .capital-automation-healthval[data-tone="warn"] { color: var(--ca-warn-text); }
-    .capital-automation-healthval[data-tone="bad"] { color: var(--ca-error-text); }
-    .capital-automation-healthempty { margin: 9px 0 0; color: var(--ca-muted); font-size: 12px; line-height: 19px; }
-    .capital-automation-healthissues { list-style: none; margin: 10px 0 0; padding: 0; border-top: .5px solid var(--ca-line); }
-    .capital-automation-healthissues li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; padding: 7px 0; border-bottom: .5px solid var(--ca-line); color: var(--ca-muted); font-size: 12px; line-height: 19px; }
-    .capital-automation-healthissues li:last-child { border-bottom: 0; }
-    .capital-automation-healthissue { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; }
-    .capital-automation-healthissuetitle { color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 19px; font-weight: 600; }
-    .capital-automation-healthissuestatus { font-size: 11px; line-height: 17px; }
-    .capital-automation-healthissuestatus[data-tone="bad"], .capital-automation-statusdot[data-tone="bad"] { color: var(--ca-error-text); }
-    .capital-automation-healthissuestatus[data-tone="warn"], .capital-automation-statusdot[data-tone="warn"] { color: var(--ca-warn-text); }
-    .capital-automation-healthrecovered { color: var(--ca-success-text); font-size: 11px; line-height: 17px; }
-    .capital-automation-board .capital-automation-tag { font-size: 10px; line-height: 16px; }
-    .capital-automation-boardmore { align-self: center; margin: 2px 0 6px; }
+    .automation-workbench-board { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .automation-workbench-boardtoolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+    .automation-workbench-boardtools { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+    .automation-workbench-boardactions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-left: auto; }
+    .automation-workbench-boardstats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+    .automation-workbench-boardstat { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-height: 62px; padding: 10px 12px; border: .5px solid var(--ca-line); border-radius: 12px; background: var(--ca-card); color: inherit; text-align: left; }
+    .automation-workbench-boardstatlabel { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 3px; color: var(--ca-muted); font-size: 11.5px; line-height: 17px; }
+    .automation-workbench-boardstatvalue { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 2px; color: var(--dsw-alias-label-primary); font-size: 18px; line-height: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .automation-workbench-boardstatnum { margin: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; font-variant-numeric: inherit; line-height: inherit; }
+    .automation-workbench-boardstatnum[data-clickable="true"] { border-radius: 4px; cursor: pointer; transition: color .15s; }
+    .automation-workbench-boardstatnum[data-clickable="true"]:hover { color: var(--ca-business-text); text-decoration: underline; text-underline-offset: 2px; }
+    .automation-workbench-boardstatnum[data-clickable="true"]:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 1px; }
+    .automation-workbench-boardstatsep { color: var(--dsw-alias-label-secondary); font-weight: 500; }
+    .automation-workbench-boardstatvalue .automation-workbench-boardstatsep { padding: 0 3px; }
+    .automation-workbench-boardgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); align-items: start; gap: 20px; min-width: 0; }
+    .automation-workbench-boardgrid[data-rail="closed"] { grid-template-columns: minmax(0, 1fr); }
+    .automation-workbench-boardmain { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .automation-workbench-briefcard { box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 13px; border: .5px solid var(--ca-line); border-radius: 16px; background: var(--ca-card); min-width: 0; transition: border-color .2s ease, box-shadow .2s ease; }
+    .automation-workbench-briefcard[data-highlight="true"] { border-color: var(--ca-business); box-shadow: 0 0 0 1px var(--ca-business); }
+    .automation-workbench-briefhead { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px 14px; }
+    .automation-workbench-brieftitle { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 7px; min-width: 0; }
+    .automation-workbench-brieftitle h3 { margin: 0; color: var(--dsw-alias-label-primary); font-size: 13.5px; line-height: 20px; font-weight: 600; overflow-wrap: anywhere; }
+    .automation-workbench-brieftime { color: var(--ca-caption); font-size: 11.5px; line-height: 18px; font-variant-numeric: tabular-nums; }
+    .automation-workbench-briefcard h4 { margin: 0; color: var(--dsw-alias-label-primary); font-size: 18px; line-height: 27px; font-weight: 600; letter-spacing: .1px; overflow-wrap: anywhere; }
+    .automation-workbench-briefbody { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+    .automation-workbench-brieftext { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 14px; line-height: 1.68; overflow-wrap: anywhere; }
+    .automation-workbench-briefstate { display: flex; flex-direction: column; gap: 7px; color: var(--ca-muted); font-size: 12.5px; line-height: 19px; }
+    .automation-workbench-briefheadactions { display: flex; align-items: center; gap: 6px; }
+    .automation-workbench-askdock { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin-top: 1px; padding-top: 10px; border-top: .5px solid var(--ca-line); }
+    .automation-workbench-askinput { box-sizing: border-box; flex: 1 1 auto; min-width: 0; height: 34px; padding: 0 11px; border: .5px solid var(--ca-line-soft); border-radius: 10px; background: var(--ca-field); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12.5px; line-height: 20px; outline: 0; }
+    .automation-workbench-askinput::placeholder { color: var(--ca-caption); }
+    .automation-workbench-askinput:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 1px; }
+    .automation-workbench-askinput:disabled { opacity: .62; cursor: not-allowed; }
+    .automation-workbench-askthread { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .automation-workbench-askuser { display: block; align-self: flex-end; max-width: min(100%, 620px); padding: 7px 10px; border: .5px solid color-mix(in srgb, var(--ca-business) 26%, var(--ca-line-soft)); border-radius: 12px 12px 4px 12px; background: color-mix(in srgb, var(--ca-business) 11%, var(--ca-field)); }
+    .automation-workbench-askquestion { margin: 0; color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 18px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+    .automation-workbench-askreply { display: flex; flex-direction: column; gap: 5px; align-self: stretch; padding: 8px 10px; border: .5px solid var(--ca-line); border-left: 2px solid var(--ca-business); border-radius: 4px 12px 12px 12px; background: var(--ca-field); }
+    .automation-workbench-askreply[data-status="failed"] { border-left-color: var(--ca-error); }
+    .automation-workbench-askpreview { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+    .automation-workbench-askfull { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .automation-workbench-askhint { margin: 0; color: var(--ca-muted); font-size: 12px; line-height: 19px; }
+    .automation-workbench-askaction { align-self: flex-end; margin-top: 1px; }
+    .automation-workbench-askaction[data-expanded="true"] { color: var(--ca-muted); }
+    .automation-workbench-askerror { margin: 0; color: var(--ca-error-text); font-size: 11.5px; line-height: 18px; overflow-wrap: anywhere; }
+    .automation-workbench-modal-chat { width: min(640px, calc(100vw - 32px)); max-width: min(640px, calc(100vw - 32px)); }
+    .automation-workbench-chatshell { display: flex; flex-direction: column; height: min(640px, calc(100dvh - 40px)); max-height: calc(100dvh - 40px); min-height: 360px; overflow: hidden; border-radius: 16px; background: var(--ca-card); }
+    .automation-workbench-chathead { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px 6px; }
+    .automation-workbench-chaticonbtn { display: grid; flex: none; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--dsw-alias-label-primary); cursor: pointer; }
+    .automation-workbench-chaticonbtn:hover { background: var(--ca-hover); }
+    .automation-workbench-chaticonbtn:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 1px; }
+    .automation-workbench-chatscroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 2px 18px 12px; }
+    .automation-workbench-chatcontext { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 10px; padding: 8px 0 14px; }
+    .automation-workbench-chatcontextbody { min-width: 0; }
+    .automation-workbench-chatcontexthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
+    .automation-workbench-chatcontexthead strong { color: var(--dsw-alias-label-primary); font-size: 13.5px; line-height: 20px; font-weight: 600; }
+    .automation-workbench-chatcontextmeta { color: var(--ca-caption); font-size: 11.5px; line-height: 18px; }
+    .automation-workbench-chatcontext h3 { margin: 5px 0 0; color: var(--dsw-alias-label-primary); font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: .1px; overflow-wrap: anywhere; }
+    .automation-workbench-chatcontexttext { margin: 5px 0 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .automation-workbench-chatthread { margin-left: 18px; padding: 12px 0 4px 30px; border-left: 2px solid var(--ca-line); }
+    .automation-workbench-chatexchange + .automation-workbench-chatexchange { margin-top: 18px; padding-top: 16px; border-top: .5px solid var(--ca-line); }
+    .automation-workbench-chatempty { margin-left: 18px; padding: 12px 0 4px 30px; border-left: 2px solid var(--ca-line); }
+    .automation-workbench-chatempty p { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; }
+    .automation-workbench-chatcomposer { display: flex; align-items: center; gap: 8px; padding: 10px 16px 14px; border-top: .5px solid var(--ca-line); }
+    .automation-workbench-chatcomposer .automation-workbench-askinput { height: 38px; }
+    .automation-workbench-chatsend { flex: none; height: 36px; padding: 0 16px; font-weight: 600; }
+    .automation-workbench-chaterror { padding: 8px 0 0; }
+    .automation-workbench-briefstate[data-tone="error"] { color: var(--ca-error-text); }
+    .automation-workbench-briefstate p { margin: 0; }
+    .automation-workbench-briefactions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 2px; }
+    .automation-workbench-boardrail { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .automation-workbench-boardrail[hidden] { display: none; }
+    .automation-workbench-boardrail .automation-workbench-panel { min-width: 0; }
+    .automation-workbench-boardrail .automation-workbench-panelhead { margin-bottom: 8px; }
+    .automation-workbench-boardrail .automation-workbench-panel[data-collapsed="true"] { padding-bottom: 13px; }
+    .automation-workbench-boardrail .automation-workbench-panel[data-collapsed="true"] .automation-workbench-panelhead { margin-bottom: 0; }
+    .automation-workbench-paneltoggle { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .automation-workbench-paneltoggle:hover { color: var(--dsw-alias-label-primary); }
+    .automation-workbench-paneltoggle:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 3px; border-radius: 4px; }
+    .automation-workbench-panelchevron { flex: none; color: var(--ca-caption); transition: transform .15s; }
+    .automation-workbench-panelchevron[data-open="false"] { transform: rotate(-90deg); }
+    .automation-workbench-panelbody[hidden] { display: none; }
+    .automation-workbench-boardempty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; min-height: min(440px, calc(100dvh - 260px)); padding: 44px 24px; border: .5px dashed var(--ca-line); border-radius: 20px; background: var(--ca-card); color: var(--ca-muted); text-align: center; }
+    .automation-workbench-boardemptyicon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: color-mix(in srgb, var(--ca-business) 12%, var(--ca-card)); color: var(--ca-business-text); }
+    .automation-workbench-boardempty h2 { margin: 3px 0 0; color: var(--dsw-alias-label-primary); font-size: 20px; line-height: 28px; font-weight: 600; }
+    .automation-workbench-boardempty p { max-width: 520px; margin: 0; font-size: 13px; line-height: 20px; }
+    .automation-workbench-boardemptyhint { color: var(--ca-caption); font-size: 11.5px !important; line-height: 18px !important; }
+    .automation-workbench-boardemptyactions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; }
+    .automation-workbench-todolist, .automation-workbench-stocktodos, .automation-workbench-gaplist, .automation-workbench-gaprow { list-style: none; margin: 0; padding: 0; }
+    .automation-workbench-todoitem { padding: 8px 0; border-top: .5px solid var(--ca-line); }
+    .automation-workbench-todoitem:first-child { border-top: 0; }
+    .automation-workbench-todoline { display: flex; flex-direction: column; align-items: stretch; gap: 5px; min-width: 0; }
+    .automation-workbench-todotop { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+    .automation-workbench-todotags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 5px; min-width: 0; }
+    .automation-workbench-todotitle { flex: none; width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; font: inherit; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-weight: 600; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+    .automation-workbench-todotitle:hover, .automation-workbench-gaptitle:hover { color: var(--ca-business-text); }
+    .automation-workbench-todotitle:focus-visible, .automation-workbench-gaptitle:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 2px; border-radius: 4px; }
+    .automation-workbench-basiscaret { display: inline-flex; align-items: center; margin-left: 4px; color: var(--ca-muted); vertical-align: -2px; transform: rotate(-90deg); transition: transform .16s ease; }
+    .automation-workbench-todotitle[aria-expanded="true"] .automation-workbench-basiscaret, .automation-workbench-gaptitle[aria-expanded="true"] .automation-workbench-basiscaret { transform: rotate(0deg); }
+    .automation-workbench-tododesc { margin: 3px 0 0; color: var(--ca-muted); font-size: 12px; line-height: 20px; overflow-wrap: anywhere; }
+    .automation-workbench-todometa { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 3px; color: var(--ca-caption); font-size: 11px; line-height: 17px; }
+    .automation-workbench-todowatch { display: inline-flex; flex: none; align-items: center; min-height: 20px; padding: 0 6px; border-radius: 999px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-muted); font-size: 10px; line-height: 20px; white-space: nowrap; }
+    .automation-workbench-todowatch[data-status="triggered"] { background: color-mix(in srgb, var(--ca-error) 12%, var(--ca-card)); color: var(--ca-error-text); }
+    .automation-workbench-todowatch[data-status="needs_human"] { background: color-mix(in srgb, var(--ca-warn) 14%, var(--ca-card)); color: var(--ca-warn-text); }
+    .automation-workbench-todowatch[data-status="watching"] { color: var(--ca-business-text); }
+    .automation-workbench-todowatch[data-status="resolved"] { background: color-mix(in srgb, var(--ca-success) 14%, var(--ca-card)); color: var(--ca-success-text); }
+    .automation-workbench-todowatch[data-status="tracking"] { color: var(--ca-muted); }
+    .automation-workbench-todowatch[data-status="expired"] { color: var(--ca-caption); }
+    .automation-workbench-todowatchcheck { margin-left: 3px; font-size: 10px; }
+    .automation-workbench-todocheck { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 18px; height: 18px; padding: 0; border: 1.5px solid var(--ca-line); border-radius: 4px; background: var(--ca-card); cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+    .automation-workbench-todocheck:hover { border-color: var(--ca-business); background: color-mix(in srgb, var(--ca-business) 8%, var(--ca-card)); }
+    .automation-workbench-todocheck:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: 2px; }
+    .automation-workbench-todocheck[disabled] { opacity: .55; cursor: default; }
+    .automation-workbench-todocheckspin { width: 10px; height: 10px; border: 2px solid var(--ca-line); border-top-color: var(--ca-business); border-radius: 50%; animation: automation-workbench-todospin .7s linear infinite; }
+    @keyframes automation-workbench-todospin { to { transform: rotate(360deg); } }
+    .automation-workbench-todowatchmsg { margin: 1px 0 0; padding: 6px 9px; border-left: 2px solid var(--ca-line); border-radius: 0 7px 7px 0; background: var(--ca-field); color: var(--ca-muted); font-size: 11.5px; line-height: 18px; overflow-wrap: anywhere; }
+    .automation-workbench-todowatchmsg[data-status="triggered"] { border-left-color: var(--ca-error); color: var(--ca-error-text); }
+    .automation-workbench-tododetail { margin: 6px 0 0; padding: 7px 9px; border-left: 2px solid var(--ca-line); background: var(--ca-field); border-radius: 0 7px 7px 0; }
+    .automation-workbench-tododetail blockquote { margin: 0; color: var(--ca-muted); font-size: 11.5px; line-height: 19px; overflow-wrap: anywhere; }
+    .automation-workbench-todosource { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 5px 8px; margin-top: 5px; color: var(--ca-caption); font-size: 11px; line-height: 17px; }
+    .automation-workbench-stockfilters { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .automation-workbench-stockfilters .automation-workbench-select { margin-left: 0; }
+    .automation-workbench-stockrow { border-top: .5px solid var(--ca-line); }
+    .automation-workbench-stockrow:first-of-type { border-top: 0; }
+    .automation-workbench-stockmain { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 7px; width: 100%; padding: 8px 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .automation-workbench-stockmain:hover .automation-workbench-stockname, .automation-workbench-stockmain:hover .automation-workbench-stockcode { color: var(--ca-business-text); }
+    .automation-workbench-stockmain:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: -2px; }
+    .automation-workbench-stockname { color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 19px; font-weight: 600; }
+    .automation-workbench-stockcode { color: var(--ca-caption); font-size: 11px; line-height: 17px; }
+    .automation-workbench-stockroles { display: inline-flex; flex-wrap: wrap; gap: 3px; }
+    .automation-workbench-stockrole { display: inline-flex; align-items: center; padding: 0 5px; border-radius: 4px; background: var(--dsw-alias-bg-module-platform); color: var(--ca-muted); font-size: 10px; line-height: 17px; cursor: help; }
+    .automation-workbench-stockrole[data-role="holding"] { color: var(--ca-success-text); }
+    .automation-workbench-stockrole[data-role="risk"] { color: var(--ca-error-text); }
+    .automation-workbench-stockrole[data-role="event"] { color: var(--ca-warn-text); }
+    .automation-workbench-stocknote { flex: 1 1 100%; color: var(--ca-muted); font-size: 12px; line-height: 19px; overflow-wrap: anywhere; }
+    .automation-workbench-stockmeta { display: flex; flex-wrap: wrap; gap: 4px 9px; color: var(--ca-caption); font-size: 11px; line-height: 17px; }
+    .automation-workbench-stocktodos { margin: 0 0 7px; padding: 0 0 0 8px; border-left: 2px solid var(--ca-line); }
+    .automation-workbench-stocktodos li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; color: var(--ca-muted); font-size: 11.5px; line-height: 18px; }
+    .automation-workbench-stocktodo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; width: 100%; padding: 4px 6px; border: 0; border-radius: 6px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
+    .automation-workbench-stocktodo:hover { background: color-mix(in srgb, var(--ca-business) 8%, transparent); color: var(--ca-business-text); }
+    .automation-workbench-stocktodo:hover .automation-workbench-stocktodotitle { color: var(--ca-business-text); }
+    .automation-workbench-stocktodo:focus-visible { outline: 2px solid var(--dsw-focus-ring-color, var(--ca-business)); outline-offset: -2px; }
+    .automation-workbench-stocktodo[data-static="true"] { cursor: default; }
+    .automation-workbench-stocktodo[data-static="true"]:hover { background: transparent; color: inherit; }
+    .automation-workbench-stocktodo svg { flex: none; color: var(--ca-caption); opacity: .65; }
+    .automation-workbench-stocktodo:hover svg { color: var(--ca-business-text); opacity: 1; }
+    .automation-workbench-stocktodotitle { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+    .automation-workbench-stockmore { align-self: center; margin: 6px 0 2px; }
+    .automation-workbench-gaprow { padding: 8px 0; border-top: .5px solid var(--ca-line); }
+    .automation-workbench-gaprow:first-child { border-top: 0; }
+    .automation-workbench-gaphead { display: flex; align-items: flex-start; min-width: 0; }
+    .automation-workbench-gaptitle { flex: 1 1 auto; min-width: 0; padding: 0; border: 0; background: transparent; font: inherit; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-weight: 600; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+    .automation-workbench-gapdesc { margin: 3px 0 0; color: var(--ca-muted); font-size: 12px; line-height: 20px; overflow-wrap: anywhere; }
+    .automation-workbench-healthgrid { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 10px; align-items: baseline; }
+    .automation-workbench-healthkey { color: var(--ca-caption); font-size: 11.5px; line-height: 19px; }
+    .automation-workbench-healthval { color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 19px; overflow-wrap: anywhere; }
+    .automation-workbench-healthval[data-tone="warn"] { color: var(--ca-warn-text); }
+    .automation-workbench-healthval[data-tone="bad"] { color: var(--ca-error-text); }
+    .automation-workbench-healthempty { margin: 9px 0 0; color: var(--ca-muted); font-size: 12px; line-height: 19px; }
+    .automation-workbench-healthissues { list-style: none; margin: 10px 0 0; padding: 0; border-top: .5px solid var(--ca-line); }
+    .automation-workbench-healthissues li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; padding: 7px 0; border-bottom: .5px solid var(--ca-line); color: var(--ca-muted); font-size: 12px; line-height: 19px; }
+    .automation-workbench-healthissues li:last-child { border-bottom: 0; }
+    .automation-workbench-healthissue { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; }
+    .automation-workbench-healthissuetitle { color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 19px; font-weight: 600; }
+    .automation-workbench-healthissuestatus { font-size: 11px; line-height: 17px; }
+    .automation-workbench-healthissuestatus[data-tone="bad"], .automation-workbench-statusdot[data-tone="bad"] { color: var(--ca-error-text); }
+    .automation-workbench-healthissuestatus[data-tone="warn"], .automation-workbench-statusdot[data-tone="warn"] { color: var(--ca-warn-text); }
+    .automation-workbench-healthrecovered { color: var(--ca-success-text); font-size: 11px; line-height: 17px; }
+    .automation-workbench-board .automation-workbench-tag { font-size: 10px; line-height: 16px; }
+    .automation-workbench-boardmore { align-self: center; margin: 2px 0 6px; }
     @media (max-width: 860px) {
-      .capital-automation-boardgrid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-      .capital-automation-boardrail { order: 2; }
-      .capital-automation-boardstats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .automation-workbench-boardgrid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      .automation-workbench-boardrail { order: 2; }
+      .automation-workbench-boardstats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
     @media (max-width: 560px) {
-      .capital-automation-boardtoolbar { align-items: flex-start; }
-      .capital-automation-boardstats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .capital-automation-boardempty { min-height: 320px; padding: 32px 16px; }
-      .capital-automation-briefcard { padding: 14px 14px 12px; }
-      .capital-automation-briefcard h4 { font-size: 17px; line-height: 25px; }
+      .automation-workbench-boardtoolbar { align-items: flex-start; }
+      .automation-workbench-boardstats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .automation-workbench-boardempty { min-height: 320px; padding: 32px 16px; }
+      .automation-workbench-briefcard { padding: 14px 14px 12px; }
+      .automation-workbench-briefcard h4 { font-size: 17px; line-height: 25px; }
     }
   `
   document.head.appendChild(style)
@@ -1381,7 +1381,7 @@ function Glyph(props) {
   const { task, size = 34, large = false, radius, glyphSize } = props
   const edge = large ? 44 : size
   return h('span', {
-    className: 'capital-automation-glyph',
+    className: 'automation-workbench-glyph',
     'data-tone': toneOf(task),
     style: { width: edge, height: edge, borderRadius: radius ?? (large ? 13 : 10) },
   }, h(TaskGlyph, { task, size: glyphSize ?? (large ? 22 : 17) }))
@@ -1400,7 +1400,7 @@ function IconPickerTrigger(props) {
     open,
     anchor: h('button', {
       type: 'button',
-      className: 'capital-automation-glyphbtn',
+      className: 'automation-workbench-glyphbtn',
       disabled,
       'aria-label': `${zh.iconField}：${selected.label}，点击更换`,
       'aria-haspopup': 'menu',
@@ -1409,15 +1409,15 @@ function IconPickerTrigger(props) {
       onClick: () => setOpen((current) => !current),
     },
     h(Glyph, { task, size, large }),
-    h('span', { className: 'capital-automation-glyphbtnchevron', 'aria-hidden': 'true' },
+    h('span', { className: 'automation-workbench-glyphbtnchevron', 'aria-hidden': 'true' },
       h(IconChevronDownOutlineRegular, { size: 12 }))),
     items: [],
     onClose: () => setOpen(false),
     align: 'start',
     side: 'bottom',
     portal: true,
-    listClassName: 'capital-automation-iconmenu',
-  }, h('div', { className: 'capital-automation-iconmenu-grid' },
+    listClassName: 'automation-workbench-iconmenu',
+  }, h('div', { className: 'automation-workbench-iconmenu-grid' },
     TASK_ICON_IDS.map((id) => {
       const icon = TASK_ICON_CATALOG[id]
       const active = id === selectedId
@@ -1428,7 +1428,7 @@ function IconPickerTrigger(props) {
         'aria-checked': active ? 'true' : 'false',
         'aria-label': icon.label,
         title: icon.label,
-        className: 'capital-automation-iconmenu-item',
+        className: 'automation-workbench-iconmenu-item',
         'data-selected': active ? 'true' : undefined,
         onClick: () => { onChange(id); setOpen(false) },
       }, h('svg', {
@@ -1450,8 +1450,8 @@ function StateBadge(props) {
   const { state, running } = props
   const label = running ? zh.status.running : stateLabel(state)
   const value = running ? 'running' : state
-  return h('span', { className: 'capital-automation-state', 'data-state': value },
-    h('span', { className: 'capital-automation-statedot' }),
+  return h('span', { className: 'automation-workbench-state', 'data-state': value },
+    h('span', { className: 'automation-workbench-statedot' }),
     label)
 }
 
@@ -1989,7 +1989,7 @@ function RunHistoryCard(props) {
 
   const monthLabels = weeks.map((week, index) => week.label === null ? null : h('span', {
     key: week.key,
-    className: 'capital-automation-heatmonth',
+    className: 'automation-workbench-heatmonth',
     style: index >= HEATMAP_WEEKS - 2
       ? { gridColumn: index + 1, justifySelf: 'end' }
       : { gridColumn: index + 1 },
@@ -1997,7 +1997,7 @@ function RunHistoryCard(props) {
 
   const cells = weeks.flatMap((week) => week.days.map((day) => h('span', {
     key: day.date,
-    className: 'capital-automation-heatcell',
+    className: 'automation-workbench-heatcell',
     'data-level': day.level,
     'data-future': day.future ? 'true' : undefined,
     'data-failed': day.failure > 0 ? 'true' : undefined,
@@ -2006,37 +2006,37 @@ function RunHistoryCard(props) {
     onMouseEnter: (event) => showTip(day, event),
   })))
 
-  return h('section', { ref: cardRef, className: 'capital-automation-card capital-automation-history', 'aria-label': zh.runHistory },
-    h('div', { className: 'capital-automation-historyhead' },
-      h('div', { className: 'capital-automation-historytitle' },
+  return h('section', { ref: cardRef, className: 'automation-workbench-card automation-workbench-history', 'aria-label': zh.runHistory },
+    h('div', { className: 'automation-workbench-historyhead' },
+      h('div', { className: 'automation-workbench-historytitle' },
         h('h2', null, zh.runHistory),
         h('span', null, zh.last12Months)),
-      h('div', { className: 'capital-automation-historystats' },
-        h('span', { className: 'capital-automation-historystat', 'data-tone': 'ok' },
-          h('span', { className: 'capital-automation-statusdot' }),
+      h('div', { className: 'automation-workbench-historystats' },
+        h('span', { className: 'automation-workbench-historystat', 'data-tone': 'ok' },
+          h('span', { className: 'automation-workbench-statusdot' }),
           zh.successCount.replace('{n}', String(success))),
-        h('span', { className: 'capital-automation-historystat', 'data-tone': 'error' },
-          h('span', { className: 'capital-automation-statusdot' }),
+        h('span', { className: 'automation-workbench-historystat', 'data-tone': 'error' },
+          h('span', { className: 'automation-workbench-statusdot' }),
           zh.failureCount.replace('{n}', String(failure))),
         active > 0
-          ? h('span', { className: 'capital-automation-historystat', 'data-tone': 'active' },
-            h('span', { className: 'capital-automation-statusdot' }),
+          ? h('span', { className: 'automation-workbench-historystat', 'data-tone': 'active' },
+            h('span', { className: 'automation-workbench-statusdot' }),
             zh.activeCount.replace('{n}', String(active)))
           : null,
         showLink && onViewAll !== undefined
-          ? h('button', { type: 'button', className: 'capital-automation-historylink', onClick: onViewAll },
+          ? h('button', { type: 'button', className: 'automation-workbench-historylink', onClick: onViewAll },
             zh.runCount.replace('{n}', String(total)),
             h(IconChevronRightOutlineRegular, { size: 13 }))
-          : h('span', { className: 'capital-automation-historystat' }, zh.runCount.replace('{n}', String(total))))),
-    h('div', { className: 'capital-automation-heatmap' },
-      h('div', { className: 'capital-automation-heatweekdays', 'aria-hidden': 'true' },
-        [0, 1, 2, 3, 4, 5, 6].map((index) => h('span', { key: index, className: 'capital-automation-heatweekday' },
+          : h('span', { className: 'automation-workbench-historystat' }, zh.runCount.replace('{n}', String(total))))),
+    h('div', { className: 'automation-workbench-heatmap' },
+      h('div', { className: 'automation-workbench-heatweekdays', 'aria-hidden': 'true' },
+        [0, 1, 2, 3, 4, 5, 6].map((index) => h('span', { key: index, className: 'automation-workbench-heatweekday' },
           index === 0 ? '周一' : index === 2 ? '周三' : index === 4 ? '周五' : ''))),
-      h('div', { ref: scrollRef, className: 'capital-automation-heatscroll' },
-        h('div', { className: 'capital-automation-heatcanvas' },
-          h('div', { className: 'capital-automation-heatmonths', 'aria-hidden': 'true' }, monthLabels),
+      h('div', { ref: scrollRef, className: 'automation-workbench-heatscroll' },
+        h('div', { className: 'automation-workbench-heatcanvas' },
+          h('div', { className: 'automation-workbench-heatmonths', 'aria-hidden': 'true' }, monthLabels),
           h('div', {
-            className: 'capital-automation-heatgrid',
+            className: 'automation-workbench-heatgrid',
             role: 'img',
             'aria-label': zh.heatSummary
               .replace('{total}', String(total))
@@ -2044,36 +2044,36 @@ function RunHistoryCard(props) {
               .replace('{failure}', String(failure)),
             onMouseLeave: () => setTip(null),
           }, cells)))),
-    h('div', { className: 'capital-automation-heatfoot' },
-      h('span', { className: 'capital-automation-heatrange' },
+    h('div', { className: 'automation-workbench-heatfoot' },
+      h('span', { className: 'automation-workbench-heatrange' },
         total === 0 ? zh.historyEmpty : formatHeatRange(model.first, model.last)),
-      h('div', { className: 'capital-automation-heatlegend' },
+      h('div', { className: 'automation-workbench-heatlegend' },
         active > 0
-          ? h('span', { className: 'capital-automation-heatkey' },
-            h('span', { className: 'capital-automation-heatactivebox' }),
+          ? h('span', { className: 'automation-workbench-heatkey' },
+            h('span', { className: 'automation-workbench-heatactivebox' }),
             zh.heatActive)
           : null,
         failure > 0
-          ? h('span', { className: 'capital-automation-heatkey' },
-            h('span', { className: 'capital-automation-heatfailbox' }),
+          ? h('span', { className: 'automation-workbench-heatkey' },
+            h('span', { className: 'automation-workbench-heatfailbox' }),
             zh.heatFailed)
           : null,
-        h('span', { className: 'capital-automation-heatlegendlabel' }, zh.heatLess),
-        [0, 1, 2, 3, 4].map((level) => h('span', { key: level, className: 'capital-automation-heatsample', 'data-level': level })),
-        h('span', { className: 'capital-automation-heatlegendlabel' }, zh.heatMore))),
+        h('span', { className: 'automation-workbench-heatlegendlabel' }, zh.heatLess),
+        [0, 1, 2, 3, 4].map((level) => h('span', { key: level, className: 'automation-workbench-heatsample', 'data-level': level })),
+        h('span', { className: 'automation-workbench-heatlegendlabel' }, zh.heatMore))),
     tip === null ? null : h('div', {
-      className: 'capital-automation-heattip',
+      className: 'automation-workbench-heattip',
       role: 'tooltip',
       style: { left: `${tip.left}px`, top: `${tip.top}px` },
     },
-    h('span', { className: 'capital-automation-heattipdate' }, formatHeatDay(tip.day.date)),
-    h('span', { className: 'capital-automation-heattipmeta' }, heatDayMeta(tip.day))))
+    h('span', { className: 'automation-workbench-heattipdate' }, formatHeatDay(tip.day.date)),
+    h('span', { className: 'automation-workbench-heattipmeta' }, heatDayMeta(tip.day))))
 }
 
 function RunStatus(props) {
   const { status } = props
-  return h('span', { className: 'capital-automation-runstatus', 'data-status': status },
-    h('span', { className: 'capital-automation-rundot' }),
+  return h('span', { className: 'automation-workbench-runstatus', 'data-status': status },
+    h('span', { className: 'automation-workbench-rundot' }),
     statusLabel(status))
 }
 
@@ -2082,11 +2082,11 @@ function RunRow(props) {
   const active = isActiveRun(run)
   const errorCount = Array.isArray(run.errors) ? run.errors.length : 0
   const [errorsOpen, setErrorsOpen] = useState(false)
-  const errorPanelId = `capital-automation-run-errors-${run.id}`
+  const errorPanelId = `automation-workbench-run-errors-${run.id}`
   const errorBadge = errorCount > 0
     ? h('button', {
       type: 'button',
-      className: 'capital-automation-runerrorbadge',
+      className: 'automation-workbench-runerrorbadge',
       'data-tone': isFailureStatus(run.status) ? 'error' : 'warn',
       'aria-expanded': errorsOpen ? 'true' : 'false',
       'aria-controls': errorPanelId,
@@ -2098,33 +2098,33 @@ function RunRow(props) {
     zh.runErrors.replace('{n}', String(errorCount)),
     h(IconChevronRightOutlineRegular, { size: 12 }))
     : null
-  return h('div', { className: 'capital-automation-run' },
-    h('div', { className: 'capital-automation-runhead' },
-      h('div', { className: 'capital-automation-runmain' },
-        h('div', { className: 'capital-automation-runline' },
+  return h('div', { className: 'automation-workbench-run' },
+    h('div', { className: 'automation-workbench-runhead' },
+      h('div', { className: 'automation-workbench-runmain' },
+        h('div', { className: 'automation-workbench-runline' },
           task !== undefined && onOpenTask !== undefined
-            ? h('button', { type: 'button', className: 'capital-automation-runtitle capital-automation-runmaintitle', onClick: () => onOpenTask(task.id) }, task.title)
-            : h('span', { className: 'capital-automation-runtitle' }, run.taskTitle),
+            ? h('button', { type: 'button', className: 'automation-workbench-runtitle automation-workbench-runmaintitle', onClick: () => onOpenTask(task.id) }, task.title)
+            : h('span', { className: 'automation-workbench-runtitle' }, run.taskTitle),
           h(RunStatus, { status: run.status })),
-        h('div', { className: 'capital-automation-runmetaline' },
-          h('span', { className: 'capital-automation-runmeta' }, `${formatShortTime(run.queuedAt, task?.trigger?.timezone)} · ${run.trigger === 'manual' ? zh.triggerManual : zh.triggerScheduled}`),
-          typeof run.durationMs === 'number' ? h('span', { className: 'capital-automation-runmeta' }, `${zh.duration} ${formatDuration(run.durationMs)}`) : null,
-          h('span', { className: 'capital-automation-runmeta' }, `${zh.steps} ${run.steps} · ${zh.tools} ${run.toolCalls}`),
+        h('div', { className: 'automation-workbench-runmetaline' },
+          h('span', { className: 'automation-workbench-runmeta' }, `${formatShortTime(run.queuedAt, task?.trigger?.timezone)} · ${run.trigger === 'manual' ? zh.triggerManual : zh.triggerScheduled}`),
+          typeof run.durationMs === 'number' ? h('span', { className: 'automation-workbench-runmeta' }, `${zh.duration} ${formatDuration(run.durationMs)}`) : null,
+          h('span', { className: 'automation-workbench-runmeta' }, `${zh.steps} ${run.steps} · ${zh.tools} ${run.toolCalls}`),
           errorBadge)),
-      h('div', { className: 'capital-automation-runactions' },
+      h('div', { className: 'automation-workbench-runactions' },
         active && typeof onCancel === 'function'
-          ? h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', 'data-variant': 'danger', disabled: busy, onClick: () => onCancel(run) }, zh.cancelRun)
+          ? h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', 'data-variant': 'danger', disabled: busy, onClick: () => onCancel(run) }, zh.cancelRun)
           : run.sessionId && onOpenSession
-            ? h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', 'data-variant': 'primary', onClick: () => onOpenSession(run.sessionId) },
+            ? h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', 'data-variant': 'primary', onClick: () => onOpenSession(run.sessionId) },
               h(IconRightUpOutlineRegular, { size: 13 }),
               zh.openSession)
             : null)),
     errorsOpen && errorCount > 0
-      ? h('div', { id: errorPanelId, className: 'capital-automation-runerrors', role: 'region', 'aria-label': zh.errorDetailsLabel },
-        run.errors.map((item, index) => h('div', { key: `${run.id}-error-${index}`, className: 'capital-automation-runerror', 'data-severity': item.severity },
-          h('span', { className: 'capital-automation-runerrordot' }),
-          h('span', { className: 'capital-automation-runerrormessage' }, item.message),
-          item.code ? h('code', { className: 'capital-automation-runerrorcode', title: item.code }, item.code) : null)))
+      ? h('div', { id: errorPanelId, className: 'automation-workbench-runerrors', role: 'region', 'aria-label': zh.errorDetailsLabel },
+        run.errors.map((item, index) => h('div', { key: `${run.id}-error-${index}`, className: 'automation-workbench-runerror', 'data-severity': item.severity },
+          h('span', { className: 'automation-workbench-runerrordot' }),
+          h('span', { className: 'automation-workbench-runerrormessage' }, item.message),
+          item.code ? h('code', { className: 'automation-workbench-runerrorcode', title: item.code }, item.code) : null)))
       : null)
 }
 
@@ -2132,13 +2132,13 @@ function RunList(props) {
   const { runs, tasks, onCancel, onOpenSession, onOpenTask, busy, compact } = props
   const taskMap = new Map(tasks.map((task) => [task.id, task]))
   if (runs.length === 0) {
-    if (compact) return h('p', { className: 'capital-automation-hint' }, zh.detailNoRuns)
-    return h('div', { className: 'capital-automation-empty' },
-      h('span', { className: 'capital-automation-emptyicon' }, h(IconClockOutlineRegular, { size: 19 })),
+    if (compact) return h('p', { className: 'automation-workbench-hint' }, zh.detailNoRuns)
+    return h('div', { className: 'automation-workbench-empty' },
+      h('span', { className: 'automation-workbench-emptyicon' }, h(IconClockOutlineRegular, { size: 19 })),
       h('h3', null, zh.detailNoRuns),
       h('p', null, zh.runsEmptyBody))
   }
-  return h('div', { className: 'capital-automation-runs' },
+  return h('div', { className: 'automation-workbench-runs' },
     runs.map((run) => h(RunRow, {
       key: run.id,
       run,
@@ -2154,15 +2154,15 @@ function NotificationsButton(props) {
   const { unread, onClick } = props
   return h('button', {
     type: 'button',
-    className: 'capital-automation-btn',
+    className: 'automation-workbench-btn',
     'data-variant': 'ghost',
     onClick,
     title: zh.notificationsEntry,
     'aria-label': zh.notificationsEntry,
   },
   h(IconAlarmClockOutlineRegular, { size: 14 }),
-  h('span', { className: 'capital-automation-btnlabel' }, zh.notificationsEntry),
-  unread > 0 ? h('span', { className: 'capital-automation-count' }, String(unread > 99 ? '99+' : unread)) : null)
+  h('span', { className: 'automation-workbench-btnlabel' }, zh.notificationsEntry),
+  unread > 0 ? h('span', { className: 'automation-workbench-count' }, String(unread > 99 ? '99+' : unread)) : null)
 }
 
 function systemStatusReason(code) {
@@ -2189,17 +2189,17 @@ function SystemStatus(props) {
           : zh.systemUnavailable
   const calendarSummary = meta.calendar?.available === false ? zh.systemCalendarUnavailable : zh.systemCalendarOk
   const lastStandbyAt = scheduler.lastStandbyAt
-  return h('section', { className: 'capital-automation-systemstatus', 'aria-label': zh.systemStatus },
-    h('div', { className: 'capital-automation-systemline' },
+  return h('section', { className: 'automation-workbench-systemstatus', 'aria-label': zh.systemStatus },
+    h('div', { className: 'automation-workbench-systemline' },
       h('span', null, `${zh.systemStatus}：${summary} · ${calendarSummary}`),
       h('button', {
         type: 'button',
-        className: 'capital-automation-systemtoggle',
+        className: 'automation-workbench-systemtoggle',
         'aria-expanded': open ? 'true' : 'false',
         onClick: () => setOpen((value) => !value),
       }, open ? zh.systemHideDetails : zh.systemDetails)),
     open
-      ? h('div', { className: 'capital-automation-systemdetail' },
+      ? h('div', { className: 'automation-workbench-systemdetail' },
         lastStandbyAt
           ? h('p', null, `${zh.systemLastStandby}：${formatShortTime(lastStandbyAt)} · ${systemStatusReason(scheduler.lastStandbyCode)}`)
           : h('p', null, zh.systemNoStandby),
@@ -2213,68 +2213,68 @@ function SystemStatus(props) {
 
 function Header(props) {
   const { tab, onTab, onNewTask, unread, onOpenInbox } = props
-  return h('header', { className: 'capital-automation-head' },
-    h('div', { className: 'capital-automation-headinner' },
-      h('div', { className: 'capital-automation-topbar' },
-        h('div', { className: 'capital-automation-brand' },
-          h('span', { className: 'capital-automation-brandmark', 'aria-hidden': 'true' }, h(IconChecklistOutlineRegular, { size: 16 })),
+  return h('header', { className: 'automation-workbench-head' },
+    h('div', { className: 'automation-workbench-headinner' },
+      h('div', { className: 'automation-workbench-topbar' },
+        h('div', { className: 'automation-workbench-brand' },
+          h('span', { className: 'automation-workbench-brandmark', 'aria-hidden': 'true' }, h(IconChecklistOutlineRegular, { size: 16 })),
           h('h1', null, zh.title)),
-        h('div', { className: 'capital-automation-tabs', role: 'tablist', 'aria-label': zh.title },
+        h('div', { className: 'automation-workbench-tabs', role: 'tablist', 'aria-label': zh.title },
           ['board', 'tasks', 'runs'].map((value) => h('button', {
             key: value,
             type: 'button',
             role: 'tab',
-            className: 'capital-automation-tab',
+            className: 'automation-workbench-tab',
             'aria-selected': tab === value ? 'true' : 'false',
             onClick: () => onTab(value),
           }, zh.tabs[value]))),
-        h('div', { className: 'capital-automation-topactions' },
+        h('div', { className: 'automation-workbench-topactions' },
           h(NotificationsButton, { unread, onClick: onOpenInbox }),
-          h('button', { type: 'button', className: 'capital-automation-btn', 'data-variant': 'contrast', onClick: onNewTask, title: zh.newTask, 'aria-label': zh.newTask },
+          h('button', { type: 'button', className: 'automation-workbench-btn', 'data-variant': 'contrast', onClick: onNewTask, title: zh.newTask, 'aria-label': zh.newTask },
             h(IconPlusOutlineRegular, { size: 14 }),
-            h('span', { className: 'capital-automation-btnlabel' }, zh.newTask))))))
+            h('span', { className: 'automation-workbench-btnlabel' }, zh.newTask))))))
 }
 
 function PageBanners(props) {
   const { meta, loadError, onRetry } = props
   const banners = []
   if (meta?.storage?.state === 'unavailable') {
-    banners.push(h('div', { key: 'storage', className: 'capital-automation-banner', 'data-tone': 'error', role: 'alert' },
+    banners.push(h('div', { key: 'storage', className: 'automation-workbench-banner', 'data-tone': 'error', role: 'alert' },
       `${zh.storageBanner}${meta.storage.error ? `：${meta.storage.error}` : ''}`))
   }
   const schedulerState = meta?.scheduler?.state
   if (meta !== null && meta !== undefined && meta.storage?.state !== 'unavailable' && (schedulerState === 'standby' || schedulerState === 'stopped')) {
-    banners.push(h('div', { key: 'standby', className: 'capital-automation-banner', 'data-tone': 'warn', role: 'status' }, zh.standbyBanner))
+    banners.push(h('div', { key: 'standby', className: 'automation-workbench-banner', 'data-tone': 'warn', role: 'status' }, zh.standbyBanner))
   }
   const calendarUnavailable = meta !== null && meta !== undefined && meta.calendar?.available === false
   if (meta !== null && meta !== undefined && meta.storage?.state !== 'unavailable' && calendarUnavailable) {
-    banners.push(h('div', { key: 'calendar', className: 'capital-automation-banner', 'data-tone': 'warn', role: 'status' }, zh.calendarBanner))
+    banners.push(h('div', { key: 'calendar', className: 'automation-workbench-banner', 'data-tone': 'warn', role: 'status' }, zh.calendarBanner))
   }
   const calendarCoverage = meta?.calendar?.coverageDays
   if (meta !== null && meta !== undefined && meta.storage?.state !== 'unavailable' && !calendarUnavailable
     && typeof calendarCoverage === 'number' && calendarCoverage >= 0 && calendarCoverage < 30) {
-    banners.push(h('div', { key: 'calendar-coverage', className: 'capital-automation-banner', 'data-tone': 'warn', role: 'status' },
+    banners.push(h('div', { key: 'calendar-coverage', className: 'automation-workbench-banner', 'data-tone': 'warn', role: 'status' },
       zh.calendarCoverageBanner.replace('{through}', meta.calendar.through ?? zh.calendarUnknown)))
   }
   if (loadError.length > 0) {
-    banners.push(h('div', { key: 'load', className: 'capital-automation-banner', 'data-tone': 'error', role: 'alert' },
+    banners.push(h('div', { key: 'load', className: 'automation-workbench-banner', 'data-tone': 'error', role: 'alert' },
       loadError,
-      h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', onClick: onRetry }, zh.loadRetry)))
+      h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', onClick: onRetry }, zh.loadRetry)))
   }
   if (banners.length === 0) return null
-  return h('div', { className: 'capital-automation-headinner', style: { paddingBottom: 0 } }, banners)
+  return h('div', { className: 'automation-workbench-headinner', style: { paddingBottom: 0 } }, banners)
 }
 
 function FilterButton(props) {
   const { active, count, label, onClick } = props
   return h('button', {
     type: 'button',
-    className: 'capital-automation-filter',
+    className: 'automation-workbench-filter',
     'aria-pressed': active ? 'true' : 'false',
     onClick,
   },
-  h('span', { className: 'capital-automation-filterlabel' }, label),
-  count > 0 ? h('span', { className: 'capital-automation-filtercount' }, String(count)) : null)
+  h('span', { className: 'automation-workbench-filterlabel' }, label),
+  count > 0 ? h('span', { className: 'automation-workbench-filtercount' }, String(count)) : null)
 }
 
 function TaskTags(props) {
@@ -2282,10 +2282,10 @@ function TaskTags(props) {
   const tags = [[categoryLabel(task.category), toneOf(task)]]
   if (task.origin === 'builtin') tags.push([zh.origin.builtin, undefined])
   if (task.origin === 'custom') tags.push([zh.origin.custom, undefined])
-  return h('span', { className: 'capital-automation-tasktags' },
+  return h('span', { className: 'automation-workbench-tasktags' },
     tags.map(([label, tone]) => h('span', {
       key: label,
-      className: 'capital-automation-tag',
+      className: 'automation-workbench-tag',
       'data-tone': tone,
       title: label,
     }, clipTagLabel(label))))
@@ -2331,7 +2331,7 @@ function TaskActionsMenu(props) {
     open,
     anchor: h('button', {
       type: 'button',
-      className: 'capital-automation-iconbtn',
+      className: 'automation-workbench-iconbtn',
       disabled: busy,
       title: zh.more,
       'aria-label': `${zh.more}：${task.title}`,
@@ -2360,25 +2360,25 @@ function TaskRow(props) {
   const run = task.lastRun
   const running = isActiveRun(run)
   const next = nextRunView(task)
-  return h('div', { className: 'capital-automation-trow' },
-    h('button', { type: 'button', className: 'capital-automation-trowmain', onClick: () => onOpen(task.id) },
-      h('span', { className: 'capital-automation-cell capital-automation-identity' },
+  return h('div', { className: 'automation-workbench-trow' },
+    h('button', { type: 'button', className: 'automation-workbench-trowmain', onClick: () => onOpen(task.id) },
+      h('span', { className: 'automation-workbench-cell automation-workbench-identity' },
         h(Glyph, { task }),
-        h('span', { className: 'capital-automation-identitytext' },
-          h('span', { className: 'capital-automation-tasktitlerow' },
-            h('span', { className: 'capital-automation-tasktitle' }, task.title),
+        h('span', { className: 'automation-workbench-identitytext' },
+          h('span', { className: 'automation-workbench-tasktitlerow' },
+            h('span', { className: 'automation-workbench-tasktitle' }, task.title),
             h(TaskTags, { task }),
-            (task.unread ?? 0) > 0 ? h('span', { className: 'capital-automation-count', title: zh.unread }, String(task.unread)) : null),
-          h('span', { className: 'capital-automation-taskdesc' }, task.description || zh.subtitle))),
-      h('span', { className: 'capital-automation-cell', 'data-cell': 'schedule' },
-        h('span', { className: 'capital-automation-schedule' }, scheduleSummary(task.trigger)),
-        h('span', { className: 'capital-automation-schedulesub' }, task.trigger?.timezone ?? '')),
-      h('span', { className: 'capital-automation-cell', 'data-cell': 'next' },
-        h('span', { className: 'capital-automation-nextmain' }, next.value),
-        h('span', { className: 'capital-automation-nextsub' }, next.sub)),
-      h('span', { className: 'capital-automation-cell' },
+            (task.unread ?? 0) > 0 ? h('span', { className: 'automation-workbench-count', title: zh.unread }, String(task.unread)) : null),
+          h('span', { className: 'automation-workbench-taskdesc' }, task.description || zh.subtitle))),
+      h('span', { className: 'automation-workbench-cell', 'data-cell': 'schedule' },
+        h('span', { className: 'automation-workbench-schedule' }, scheduleSummary(task.trigger)),
+        h('span', { className: 'automation-workbench-schedulesub' }, task.trigger?.timezone ?? '')),
+      h('span', { className: 'automation-workbench-cell', 'data-cell': 'next' },
+        h('span', { className: 'automation-workbench-nextmain' }, next.value),
+        h('span', { className: 'automation-workbench-nextsub' }, next.sub)),
+      h('span', { className: 'automation-workbench-cell' },
         h(StateBadge, { state: task.state, running }))),
-    h('div', { className: 'capital-automation-trowmenu' },
+    h('div', { className: 'automation-workbench-trowmenu' },
       h(TaskActionsMenu, {
         task,
         open: menuOpen,
@@ -2398,9 +2398,9 @@ function TaskTable(props) {
   const { tasks, onOpen, onAction, onRequestConfirm, onEdit, schedulerActive, storageReady, busyTaskId } = props
   const [menuTaskId, setMenuTaskId] = useState(null)
   const canRun = storageReady && schedulerActive
-  return h('div', { className: 'capital-automation-table', 'aria-label': zh.taskSection },
-    h('div', { className: 'capital-automation-thead' },
-      h('div', { className: 'capital-automation-theadmain' },
+  return h('div', { className: 'automation-workbench-table', 'aria-label': zh.taskSection },
+    h('div', { className: 'automation-workbench-thead' },
+      h('div', { className: 'automation-workbench-theadmain' },
         h('span', null, zh.taskSection),
         h('span', null, zh.triggerSummary),
         h('span', null, zh.nextRun),
@@ -2424,108 +2424,108 @@ function TaskTable(props) {
 
 function TemplateCard(props) {
   const { task, onOpen, onEnable, busy, disabled } = props
-  return h('article', { className: 'capital-automation-template' },
-    h('button', { type: 'button', className: 'capital-automation-templatemain', onClick: () => onOpen(task.id) },
+  return h('article', { className: 'automation-workbench-template' },
+    h('button', { type: 'button', className: 'automation-workbench-templatemain', onClick: () => onOpen(task.id) },
       h(Glyph, { task, size: 38 }),
-      h('span', { className: 'capital-automation-templatebody' },
-        h('span', { className: 'capital-automation-templatetitlerow' },
+      h('span', { className: 'automation-workbench-templatebody' },
+        h('span', { className: 'automation-workbench-templatetitlerow' },
           h('strong', null, task.title),
           h('span', {
-            className: 'capital-automation-tag',
+            className: 'automation-workbench-tag',
             'data-tone': toneOf(task),
             title: categoryLabel(task.category),
           }, clipTagLabel(categoryLabel(task.category)))),
-        h('span', { className: 'capital-automation-templatedesc' }, task.description || zh.subtitle))),
-    h('div', { className: 'capital-automation-templatefoot' },
-      h('span', { className: 'capital-automation-templatemeta' },
+        h('span', { className: 'automation-workbench-templatedesc' }, task.description || zh.subtitle))),
+    h('div', { className: 'automation-workbench-templatefoot' },
+      h('span', { className: 'automation-workbench-templatemeta' },
         h(IconClockOutlineRegular, { size: 12 }),
         `${zh.templateMeta} · ${scheduleSummary(task.trigger)}`),
-      h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', 'data-variant': 'primary', onClick: () => onEnable(task), disabled: busy || disabled },
+      h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', 'data-variant': 'primary', onClick: () => onEnable(task), disabled: busy || disabled },
         h(IconPlusOutlineRegular, { size: 12 }),
         busy ? zh.templateAdding : zh.templateAdd)))
 }
 
 function EmptyState(props) {
   const { title, body, action, actionLabel, icon } = props
-  return h('div', { className: 'capital-automation-empty' },
-    h('span', { className: 'capital-automation-emptyicon' }, h(icon ?? IconChecklistOutlineRegular, { size: 19 })),
+  return h('div', { className: 'automation-workbench-empty' },
+    h('span', { className: 'automation-workbench-emptyicon' }, h(icon ?? IconChecklistOutlineRegular, { size: 19 })),
     h('h3', null, title),
     h('p', null, body),
-    action && actionLabel ? h('button', { type: 'button', className: 'capital-automation-btn', onClick: action }, actionLabel) : null)
+    action && actionLabel ? h('button', { type: 'button', className: 'automation-workbench-btn', onClick: action }, actionLabel) : null)
 }
 
 // Skeleton mirrors the real dashboard/runs layout so the first paint never claims "no tasks".
 function SkeletonBlock(props) {
   const { width = '100%', height = 10, radius = 6 } = props
   return h('span', {
-    className: 'capital-automation-skeleton',
+    className: 'automation-workbench-skeleton',
     style: { width, height, borderRadius: radius },
     'aria-hidden': 'true',
   })
 }
 
 function SkeletonHistory() {
-  return h('section', { className: 'capital-automation-card capital-automation-history', 'aria-hidden': 'true' },
-    h('div', { className: 'capital-automation-historyhead' },
-      h('div', { className: 'capital-automation-historytitle' },
+  return h('section', { className: 'automation-workbench-card automation-workbench-history', 'aria-hidden': 'true' },
+    h('div', { className: 'automation-workbench-historyhead' },
+      h('div', { className: 'automation-workbench-historytitle' },
         h(SkeletonBlock, { width: 92, height: 14 }),
         h(SkeletonBlock, { width: 52, height: 11 })),
-      h('div', { className: 'capital-automation-historystats' },
+      h('div', { className: 'automation-workbench-historystats' },
         h(SkeletonBlock, { width: 64, height: 12 }),
         h(SkeletonBlock, { width: 64, height: 12 }),
         h(SkeletonBlock, { width: 56, height: 12 }))),
-    h('div', { className: 'capital-automation-skeletonheat' },
-      h('div', { className: 'capital-automation-skeletonmonths' },
+    h('div', { className: 'automation-workbench-skeletonheat' },
+      h('div', { className: 'automation-workbench-skeletonmonths' },
         Array.from({ length: 12 }, (_, index) => h('span', {
           key: index,
-          className: 'capital-automation-skeleton',
+          className: 'automation-workbench-skeleton',
           style: { gridColumn: 1 + index * 4, width: 22, height: 8 },
         }))),
-      h('div', { className: 'capital-automation-skeletongrid' },
+      h('div', { className: 'automation-workbench-skeletongrid' },
         Array.from({ length: HEATMAP_WEEKS * 7 }, (_, index) => h('span', {
           key: index,
-          className: 'capital-automation-skeleton',
+          className: 'automation-workbench-skeleton',
         })))),
-    h('div', { className: 'capital-automation-heatfoot' },
+    h('div', { className: 'automation-workbench-heatfoot' },
       h(SkeletonBlock, { width: 108, height: 9 }),
       h(SkeletonBlock, { width: 96, height: 9 })))
 }
 
 function SkeletonSectionHead(props) {
   const { trailing = [210, 132] } = props
-  return h('div', { className: 'capital-automation-sectionhead' },
+  return h('div', { className: 'automation-workbench-sectionhead' },
     h(SkeletonBlock, { width: 78, height: 14 }),
     h(SkeletonBlock, { width: 210, height: 11 }),
-    trailing.length === 0 ? null : h('div', { className: 'capital-automation-sectiontools' },
+    trailing.length === 0 ? null : h('div', { className: 'automation-workbench-sectiontools' },
       trailing.map((width, index) => h(SkeletonBlock, { key: index, width, height: index === 0 ? 28 : 30, radius: 999 }))))
 }
 
 function SkeletonTaskRow() {
-  return h('div', { className: 'capital-automation-trow capital-automation-skeletonrow', 'aria-hidden': 'true' },
-    h('div', { className: 'capital-automation-trowmain' },
-      h('span', { className: 'capital-automation-cell capital-automation-identity' },
+  return h('div', { className: 'automation-workbench-trow automation-workbench-skeletonrow', 'aria-hidden': 'true' },
+    h('div', { className: 'automation-workbench-trowmain' },
+      h('span', { className: 'automation-workbench-cell automation-workbench-identity' },
         h(SkeletonBlock, { width: 34, height: 34, radius: 10 }),
-        h('span', { className: 'capital-automation-skeletonstack' },
+        h('span', { className: 'automation-workbench-skeletonstack' },
           h(SkeletonBlock, { width: '52%', height: 12 }),
           h(SkeletonBlock, { width: '82%', height: 9 }),
           h(SkeletonBlock, { width: 92, height: 16, radius: 999 }))),
-      h('span', { className: 'capital-automation-cell', 'data-cell': 'schedule' },
+      h('span', { className: 'automation-workbench-cell', 'data-cell': 'schedule' },
         h(SkeletonBlock, { width: '64%', height: 10 }),
         h(SkeletonBlock, { width: '42%', height: 8 })),
-      h('span', { className: 'capital-automation-cell', 'data-cell': 'next' },
+      h('span', { className: 'automation-workbench-cell', 'data-cell': 'next' },
         h(SkeletonBlock, { width: '58%', height: 10 }),
         h(SkeletonBlock, { width: '36%', height: 8 })),
-      h('span', { className: 'capital-automation-cell' },
+      h('span', { className: 'automation-workbench-cell' },
         h(SkeletonBlock, { width: 52, height: 22, radius: 999 }))),
-    h('div', { className: 'capital-automation-trowmenu' },
+    h('div', { className: 'automation-workbench-trowmenu' },
       h(SkeletonBlock, { width: 18, height: 18, radius: 6 })))
 }
 
 function SkeletonTaskTable(props) {
   const { rows = 4 } = props
-  return h('div', { className: 'capital-automation-table', 'aria-hidden': 'true' },
-    h('div', { className: 'capital-automation-thead' },
-      h('div', { className: 'capital-automation-theadmain' },
+  return h('div', { className: 'automation-workbench-table', 'aria-hidden': 'true' },
+    h('div', { className: 'automation-workbench-thead' },
+      h('div', { className: 'automation-workbench-theadmain' },
         h(SkeletonBlock, { width: '52%', height: 9 }),
         h(SkeletonBlock, { width: '58%', height: 9 }),
         h(SkeletonBlock, { width: '56%', height: 9 }),
@@ -2535,39 +2535,39 @@ function SkeletonTaskTable(props) {
 }
 
 function SkeletonTemplateCard() {
-  return h('div', { className: 'capital-automation-template capital-automation-skeletontemplate', 'aria-hidden': 'true' },
-    h('div', { className: 'capital-automation-skeletontemplatemain' },
+  return h('div', { className: 'automation-workbench-template automation-workbench-skeletontemplate', 'aria-hidden': 'true' },
+    h('div', { className: 'automation-workbench-skeletontemplatemain' },
       h(SkeletonBlock, { width: 38, height: 38, radius: 11 }),
-      h('div', { className: 'capital-automation-skeletonstack' },
+      h('div', { className: 'automation-workbench-skeletonstack' },
         h(SkeletonBlock, { width: '58%', height: 11 }),
         h(SkeletonBlock, { width: '100%', height: 9 }),
         h(SkeletonBlock, { width: '76%', height: 9 }))),
-    h('div', { className: 'capital-automation-templatefoot' },
+    h('div', { className: 'automation-workbench-templatefoot' },
       h(SkeletonBlock, { width: 118, height: 11 }),
       h(SkeletonBlock, { width: 64, height: 28, radius: 999 })))
 }
 
 function SkeletonRunRow() {
-  return h('div', { className: 'capital-automation-run capital-automation-skeletonrun', 'aria-hidden': 'true' },
-    h('div', { className: 'capital-automation-runhead' },
-      h('div', { className: 'capital-automation-runmain' },
-        h('div', { className: 'capital-automation-runline' },
+  return h('div', { className: 'automation-workbench-run automation-workbench-skeletonrun', 'aria-hidden': 'true' },
+    h('div', { className: 'automation-workbench-runhead' },
+      h('div', { className: 'automation-workbench-runmain' },
+        h('div', { className: 'automation-workbench-runline' },
           h(SkeletonBlock, { width: 168, height: 11 }),
           h(SkeletonBlock, { width: 54, height: 10, radius: 999 })),
-        h('div', { className: 'capital-automation-runmetaline' },
+        h('div', { className: 'automation-workbench-runmetaline' },
           h(SkeletonBlock, { width: 86, height: 9 }),
           h(SkeletonBlock, { width: 58, height: 9 }),
           h(SkeletonBlock, { width: 104, height: 9 }))),
-      h('div', { className: 'capital-automation-runactions' },
+      h('div', { className: 'automation-workbench-runactions' },
         h(SkeletonBlock, { width: 64, height: 26, radius: 999 }))))
 }
 
 function LoadingSkeleton(props) {
   const { children } = props
   // aria-busy on the live region would suppress its announcement until false; it unmounts instead.
-  return h('div', { className: 'capital-automation-loading', 'aria-busy': 'true' },
+  return h('div', { className: 'automation-workbench-loading', 'aria-busy': 'true' },
     h('span', {
-      className: 'capital-automation-skeletonlabel',
+      className: 'automation-workbench-skeletonlabel',
       role: 'status',
       'aria-live': 'polite',
     }, zh.loading),
@@ -2576,22 +2576,22 @@ function LoadingSkeleton(props) {
 
 function TaskDashboardSkeleton() {
   return h(LoadingSkeleton, null,
-    h('section', { className: 'capital-automation-section', style: { marginTop: 0 } },
+    h('section', { className: 'automation-workbench-section', style: { marginTop: 0 } },
       h(SkeletonSectionHead),
       h(SkeletonTaskTable, { rows: 4 })),
-    h('section', { className: 'capital-automation-section' },
+    h('section', { className: 'automation-workbench-section' },
       h(SkeletonSectionHead, { trailing: [64] }),
-      h('div', { className: 'capital-automation-templates' },
+      h('div', { className: 'automation-workbench-templates' },
         [0, 1, 2].map((index) => h(SkeletonTemplateCard, { key: index })))))
 }
 
 function RunsSkeleton() {
   return h(LoadingSkeleton, null,
     h(SkeletonHistory),
-    h('section', { className: 'capital-automation-section' },
+    h('section', { className: 'automation-workbench-section' },
       h(SkeletonSectionHead, { trailing: [260] }),
-      h('section', { className: 'capital-automation-card capital-automation-panel' },
-        h('div', { className: 'capital-automation-runs' },
+      h('section', { className: 'automation-workbench-card automation-workbench-panel' },
+        h('div', { className: 'automation-workbench-runs' },
           [0, 1, 2, 3].map((index) => h(SkeletonRunRow, { key: index }))))))
 }
 
@@ -2621,12 +2621,12 @@ function TaskDashboard(props) {
   }
   const filters = ['all', 'custom', 'news', 'market', 'review', 'research', 'portfolio', 'monitor']
   return h('div', null,
-    h('section', { className: 'capital-automation-section', style: { marginTop: 0 } },
-      h('div', { className: 'capital-automation-sectionhead' },
+    h('section', { className: 'automation-workbench-section', style: { marginTop: 0 } },
+      h('div', { className: 'automation-workbench-sectionhead' },
         h('h2', null, zh.taskSection),
         h('span', null, zh.taskSectionHint),
-        h('div', { className: 'capital-automation-sectiontools' },
-          h('div', { className: 'capital-automation-filters', role: 'group', 'aria-label': zh.filterLabel },
+        h('div', { className: 'automation-workbench-sectiontools' },
+          h('div', { className: 'automation-workbench-filters', role: 'group', 'aria-label': zh.filterLabel },
             filters.map((value) => h(FilterButton, {
               key: value,
               label: value === 'all' ? zh.filterAll : value === 'custom' ? zh.filterCustom : categoryLabel(value),
@@ -2634,7 +2634,7 @@ function TaskDashboard(props) {
               active: filter === value,
               onClick: () => setFilter(value),
             }))),
-          h('label', { className: 'capital-automation-search' },
+          h('label', { className: 'automation-workbench-search' },
             h(IconSearchOutlineRegular, { size: 13 }),
             h('input', {
               type: 'search',
@@ -2644,17 +2644,17 @@ function TaskDashboard(props) {
               onChange: (event) => setQuery(event.target.value),
             })))),
       runningTasks.length > 0
-        ? h('div', { className: 'capital-automation-running', role: 'status' },
-          runningTasks.map((task) => h('div', { key: task.id, className: 'capital-automation-runningrow' },
-            h('span', { className: 'capital-automation-live' },
-              h('span', { className: 'capital-automation-livedot' }),
+        ? h('div', { className: 'automation-workbench-running', role: 'status' },
+          runningTasks.map((task) => h('div', { key: task.id, className: 'automation-workbench-runningrow' },
+            h('span', { className: 'automation-workbench-live' },
+              h('span', { className: 'automation-workbench-livedot' }),
               zh.status.running),
             h(Glyph, { task, size: 28 }),
-            h('button', { type: 'button', className: 'capital-automation-tasktitle', style: { padding: 0, border: 0, background: 'transparent', cursor: 'pointer' }, onClick: () => onOpenTask(task.id) }, task.title),
-            h('span', { className: 'capital-automation-runmeta' }, `${zh.runningSince} ${formatRelative(task.lastRun.startedAt ?? task.lastRun.queuedAt)} · ${zh.steps} ${task.lastRun.steps} · ${zh.tools} ${task.lastRun.toolCalls}`),
-            h('span', { className: 'capital-automation-runningactions' },
-              h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', 'data-variant': 'danger', onClick: () => onRequestCancelRun(task, task.lastRun) }, zh.cancelRun),
-              h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', onClick: () => onOpenTask(task.id) }, zh.details)))))
+            h('button', { type: 'button', className: 'automation-workbench-tasktitle', style: { padding: 0, border: 0, background: 'transparent', cursor: 'pointer' }, onClick: () => onOpenTask(task.id) }, task.title),
+            h('span', { className: 'automation-workbench-runmeta' }, `${zh.runningSince} ${formatRelative(task.lastRun.startedAt ?? task.lastRun.queuedAt)} · ${zh.steps} ${task.lastRun.steps} · ${zh.tools} ${task.lastRun.toolCalls}`),
+            h('span', { className: 'automation-workbench-runningactions' },
+              h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', 'data-variant': 'danger', onClick: () => onRequestCancelRun(task, task.lastRun) }, zh.cancelRun),
+              h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', onClick: () => onOpenTask(task.id) }, zh.details)))))
         : null,
       visible.length > 0
         ? h(TaskTable, {
@@ -2683,10 +2683,10 @@ function TaskDashboard(props) {
             actionLabel: zh.clearFilter,
           })),
     templatesAvailable.length > 0
-      ? h('section', { className: 'capital-automation-section' },
-        h('div', { className: 'capital-automation-sectionhead' },
+      ? h('section', { className: 'automation-workbench-section' },
+        h('div', { className: 'automation-workbench-sectionhead' },
           h('h2', null, zh.templateSection)),
-        h('div', { className: 'capital-automation-templates' },
+        h('div', { className: 'automation-workbench-templates' },
           templatesAvailable.map((task) => h(TemplateCard, {
             key: task.id,
             task,
@@ -2742,7 +2742,7 @@ function WeekdaySelect(props) {
     open,
     anchor: h('button', {
       type: 'button',
-      className: 'capital-automation-select capital-automation-triggerpick',
+      className: 'automation-workbench-select automation-workbench-triggerpick',
       disabled,
       'aria-label': `${zh.weekdayField}：${summary}`,
       'aria-haspopup': 'menu',
@@ -2750,7 +2750,7 @@ function WeekdaySelect(props) {
       title: `${zh.weekdayField}：${summary}`,
       onClick: () => setOpen((current) => !current),
     },
-    h('span', { className: 'capital-automation-selectvalue' }, summary),
+    h('span', { className: 'automation-workbench-selectvalue' }, summary),
     h(IconChevronDownOutlineRegular, { size: 14 })),
     items,
     selectedIds,
@@ -2800,10 +2800,10 @@ function MonthlySelect(props) {
   }
   return h(Menu, {
     open,
-    className: 'capital-automation-monthpick',
+    className: 'automation-workbench-monthpick',
     anchor: h('button', {
       type: 'button',
-      className: 'capital-automation-select capital-automation-triggerpick',
+      className: 'automation-workbench-select automation-workbench-triggerpick',
       disabled,
       'aria-label': `${zh.monthlyField}：${summary}`,
       'aria-haspopup': 'menu',
@@ -2811,7 +2811,7 @@ function MonthlySelect(props) {
       title: `${zh.monthlyField}：${summary}`,
       onClick: () => setOpen((current) => !current),
     },
-    h('span', { className: 'capital-automation-selectvalue' }, summary),
+    h('span', { className: 'automation-workbench-selectvalue' }, summary),
     h(IconChevronDownOutlineRegular, { size: 14 })),
     items,
     selectedId,
@@ -2839,13 +2839,13 @@ function TriggerFields(props) {
   const cadenceOptions = Object.entries(zh.cadence).map(([value, label]) => ({ value, label }))
 
   return h('div', {
-    className: 'capital-automation-triggerbox',
+    className: 'automation-workbench-triggerbox',
     'data-cadence': trigger.cadence,
     'data-invalid': errors.length > 0 ? 'true' : undefined,
   },
-  h('div', { className: 'capital-automation-triggerhead' },
-    h('div', { className: 'capital-automation-triggerfield' },
-      h('span', { className: 'capital-automation-triggerlabel' }, zh.cadenceField),
+  h('div', { className: 'automation-workbench-triggerhead' },
+    h('div', { className: 'automation-workbench-triggerfield' },
+      h('span', { className: 'automation-workbench-triggerlabel' }, zh.cadenceField),
       h(Select, {
         value: trigger.cadence,
         options: cadenceOptions,
@@ -2853,29 +2853,29 @@ function TriggerFields(props) {
         disabled,
         label: zh.cadenceField,
       }),
-      h('div', { className: 'capital-automation-triggerdetail', 'data-cadence': trigger.cadence },
+      h('div', { className: 'automation-workbench-triggerdetail', 'data-cadence': trigger.cadence },
         trigger.cadence === 'weekly'
-          ? h('div', { className: 'capital-automation-triggerfield' },
-            h('span', { className: 'capital-automation-triggerlabel' }, zh.weekdayField),
+          ? h('div', { className: 'automation-workbench-triggerfield' },
+            h('span', { className: 'automation-workbench-triggerlabel' }, zh.weekdayField),
             h(WeekdaySelect, {
               value: trigger.weekdays ?? [],
               onChange: (weekdays) => update({ weekdays }),
               disabled,
             }))
           : trigger.cadence === 'monthly'
-            ? h('div', { className: 'capital-automation-triggerfield' },
-              h('span', { className: 'capital-automation-triggerlabel' }, zh.dayField),
+            ? h('div', { className: 'automation-workbench-triggerfield' },
+              h('span', { className: 'automation-workbench-triggerlabel' }, zh.dayField),
               h(MonthlySelect, {
                 value: trigger.dayOfMonth ?? 1,
                 onChange: (dayOfMonth) => update({ dayOfMonth }),
                 disabled,
               }))
             : trigger.cadence === 'once'
-              ? h('div', { className: 'capital-automation-triggerfield' },
-                h('span', { className: 'capital-automation-triggerlabel' }, zh.dayField),
+              ? h('div', { className: 'automation-workbench-triggerfield' },
+                h('span', { className: 'automation-workbench-triggerlabel' }, zh.dayField),
                 h('input', {
                   type: 'date',
-                  className: 'capital-automation-triggerdate',
+                  className: 'automation-workbench-triggerdate',
                   value: trigger.date ?? '',
                   disabled,
                   title: zh.onceHint,
@@ -2886,11 +2886,11 @@ function TriggerFields(props) {
                   onBlur: () => { touchField('date'); commit() },
                 }))
               : null)),
-    h('div', { className: 'capital-automation-triggerfield' },
-      h('span', { className: 'capital-automation-triggerlabel' }, zh.timeField),
+    h('div', { className: 'automation-workbench-triggerfield' },
+      h('span', { className: 'automation-workbench-triggerlabel' }, zh.timeField),
       h('input', {
         type: 'time',
-        className: 'capital-automation-triggertime',
+        className: 'automation-workbench-triggertime',
         value: trigger.time,
         disabled,
         'aria-label': zh.timeField,
@@ -2899,9 +2899,9 @@ function TriggerFields(props) {
         onChange: (event) => update({ time: event.target.value }),
         onBlur: () => { touchField('time'); commit() },
       }))),
-  h('div', { className: 'capital-automation-triggersettings' },
-    h('span', { className: 'capital-automation-triggerzone' },
-      h('span', { className: 'capital-automation-triggerlabel' }, zh.timezoneField),
+  h('div', { className: 'automation-workbench-triggersettings' },
+    h('span', { className: 'automation-workbench-triggerzone' },
+      h('span', { className: 'automation-workbench-triggerlabel' }, zh.timezoneField),
       h(Select, {
         value: trigger.timezone,
         options: timezoneOptions(trigger.timezone),
@@ -2911,7 +2911,7 @@ function TriggerFields(props) {
         size: 'sm',
         align: 'end',
       })),
-    h('label', { className: 'capital-automation-triggerswitch' },
+    h('label', { className: 'automation-workbench-triggerswitch' },
       h(Switch, {
         checked: trigger.tradingDaysOnly === true,
         onChange: (value) => update({ tradingDaysOnly: value }),
@@ -2920,15 +2920,15 @@ function TriggerFields(props) {
       }),
       h('span', null, zh.tradingDaysField))),
   errors.length > 0
-    ? h('div', { className: 'capital-automation-triggererrors' },
-      errors.map((message) => h('span', { key: message, className: 'capital-automation-fielderror', role: 'alert' }, message)))
+    ? h('div', { className: 'automation-workbench-triggererrors' },
+      errors.map((message) => h('span', { key: message, className: 'automation-workbench-fielderror', role: 'alert' }, message)))
     : null,
-  meta?.calendar?.available === false ? h('p', { className: 'capital-automation-hint' }, zh.nextRunUnavailable) : null)
+  meta?.calendar?.available === false ? h('p', { className: 'automation-workbench-hint' }, zh.nextRunUnavailable) : null)
 }
 
 function SwitchRow(props) {
   const { label, hint, checked, onChange, disabled } = props
-  return h('div', { className: 'capital-automation-switchrow' },
+  return h('div', { className: 'automation-workbench-switchrow' },
     h('div', null,
       h('span', null, label),
       hint ? h('small', null, hint) : null),
@@ -2938,11 +2938,11 @@ function SwitchRow(props) {
 function FieldHead(props) {
   const { label, note, error } = props
   const invalid = typeof error === 'string' && error.length > 0
-  return h('span', { className: 'capital-automation-fieldhead' },
-    h('span', { className: 'capital-automation-fieldlabel' }, label),
+  return h('span', { className: 'automation-workbench-fieldhead' },
+    h('span', { className: 'automation-workbench-fieldlabel' }, label),
     invalid
-      ? h('span', { className: 'capital-automation-fielderror', role: 'alert' }, error)
-      : note ? h('span', { className: 'capital-automation-fieldhint' }, note) : null)
+      ? h('span', { className: 'automation-workbench-fielderror', role: 'alert' }, error)
+      : note ? h('span', { className: 'automation-workbench-fieldhint' }, note) : null)
 }
 
 /**
@@ -3011,10 +3011,10 @@ function PlainTextEditor(props) {
 function Field(props) {
   const { label, hint, note, error, children } = props
   const invalid = typeof error === 'string' && error.length > 0
-  return h('label', { className: 'capital-automation-field', 'data-invalid': invalid ? 'true' : undefined },
+  return h('label', { className: 'automation-workbench-field', 'data-invalid': invalid ? 'true' : undefined },
     h(FieldHead, { label, note, error }),
     children,
-    hint ? h('span', { className: 'capital-automation-hint' }, hint) : null)
+    hint ? h('span', { className: 'automation-workbench-hint' }, hint) : null)
 }
 
 /**
@@ -3044,7 +3044,7 @@ function Select(props) {
   const trigger = h('button', {
     ref: triggerRef,
     type: 'button',
-    className: 'capital-automation-select',
+    className: 'automation-workbench-select',
     'data-block': block === true ? 'true' : undefined,
     'data-size': size,
     disabled,
@@ -3055,7 +3055,7 @@ function Select(props) {
     onClick: () => setOpen((currentOpen) => !currentOpen),
   },
   h('span', {
-    className: 'capital-automation-selectvalue',
+    className: 'automation-workbench-selectvalue',
     title: title ?? current?.label,
   }, current?.label ?? ''),
   h(IconChevronDownOutlineRegular, { size: size === 'sm' ? 12 : 14 }))
@@ -3074,10 +3074,10 @@ function Select(props) {
 function SelectField(props) {
   const { label, hint, note, error, ariaLabel, block = true, title, ...rest } = props
   const invalid = typeof error === 'string' && error.length > 0
-  return h('div', { className: 'capital-automation-field', title, 'data-invalid': invalid ? 'true' : undefined },
+  return h('div', { className: 'automation-workbench-field', title, 'data-invalid': invalid ? 'true' : undefined },
     h(FieldHead, { label, note, error }),
     h(Select, { ...rest, label: ariaLabel ?? label, block, title }),
-    hint ? h('span', { className: 'capital-automation-hint' }, hint) : null)
+    hint ? h('span', { className: 'automation-workbench-hint' }, hint) : null)
 }
 
 function NumberField(props) {
@@ -3103,7 +3103,7 @@ function RunFilters(props) {
     ['succeeded', zh.runFilterSucceeded],
     ['failed', zh.runFilterFailed],
   ]
-  return h('div', { className: 'capital-automation-filters', role: 'group', 'aria-label': zh.runFilterLabel },
+  return h('div', { className: 'automation-workbench-filters', role: 'group', 'aria-label': zh.runFilterLabel },
     options.map(([id, label]) => h(FilterButton, {
       key: id,
       label,
@@ -3130,25 +3130,25 @@ function RunsPage(props) {
   })
   return h('div', null,
     h(RunHistoryCard, { history, showLink: false }),
-    h('section', { className: 'capital-automation-section' },
-      h('div', { className: 'capital-automation-sectionhead' },
+    h('section', { className: 'automation-workbench-section' },
+      h('div', { className: 'automation-workbench-sectionhead' },
         h('h2', null, zh.runsTitle),
         h('span', null, zh.runsHint),
-        h('div', { className: 'capital-automation-sectiontools' },
+        h('div', { className: 'automation-workbench-sectiontools' },
           h(RunFilters, { value: filter, counts, onChange: setFilter }))),
       runs.length === 0
-        ? h('div', { className: 'capital-automation-empty' },
-          h('span', { className: 'capital-automation-emptyicon' }, h(IconClockOutlineRegular, { size: 19 })),
+        ? h('div', { className: 'automation-workbench-empty' },
+          h('span', { className: 'automation-workbench-emptyicon' }, h(IconClockOutlineRegular, { size: 19 })),
           h('h3', null, zh.runsEmptyTitle),
           h('p', null, zh.runsEmptyBody),
           h('div', { style: { display: 'flex', gap: 8, marginTop: 8 } },
-            h('button', { type: 'button', className: 'capital-automation-btn', onClick: onGoTasks }, zh.runsEmptyAction),
-            h('button', { type: 'button', className: 'capital-automation-btn', 'data-variant': 'primary', onClick: onNewTask }, zh.newTask)))
+            h('button', { type: 'button', className: 'automation-workbench-btn', onClick: onGoTasks }, zh.runsEmptyAction),
+            h('button', { type: 'button', className: 'automation-workbench-btn', 'data-variant': 'primary', onClick: onNewTask }, zh.newTask)))
         : visible.length === 0
           ? h(EmptyState, { title: zh.emptyFiltered, body: zh.filterNoRuns, action: () => setFilter('all'), actionLabel: zh.clearFilter })
-          : h('section', { className: 'capital-automation-card capital-automation-panel' },
+          : h('section', { className: 'automation-workbench-card automation-workbench-panel' },
             h(RunList, { runs: visible, tasks, onCancel, onOpenSession, onOpenTask, busy }),
-            runs.length >= 200 ? h('p', { className: 'capital-automation-hint', style: { paddingTop: 10 } }, zh.runsLimitHint.replace('{n}', '200')) : null)))
+            runs.length >= 200 ? h('p', { className: 'automation-workbench-hint', style: { paddingTop: 10 } }, zh.runsLimitHint.replace('{n}', '200')) : null)))
 }
 
 function OverviewTab(props) {
@@ -3163,28 +3163,28 @@ function OverviewTab(props) {
   const scheduleHint = detail.task.trigger.cadence === 'once'
     ? zh.triggerHintOnce
     : detail.task.trigger.tradingDaysOnly === true ? zh.triggerHint : zh.triggerHintNatural
-  return h('div', { className: 'capital-automation-overview' },
-    h('div', { className: 'capital-automation-statgrid' },
-      h('div', { className: 'capital-automation-stat' },
-        h('span', { className: 'capital-automation-statlabel' }, zh.stateLabel),
-        h('span', { className: 'capital-automation-statvalue', 'data-tone': anyRunning ? 'running' : undefined }, stateText),
-        h('span', { className: 'capital-automation-statsub' }, originLabel)),
-      h('div', { className: 'capital-automation-stat' },
-        h('span', { className: 'capital-automation-statlabel' }, zh.nextRun),
-        h('span', { className: 'capital-automation-statvalue' }, next.value),
-        h('span', { className: 'capital-automation-statsub' }, next.sub)),
-      h('div', { className: 'capital-automation-stat' },
-        h('span', { className: 'capital-automation-statlabel' }, zh.lastResult),
-        h('span', { className: 'capital-automation-statvalue', 'data-tone': last.tone }, last.value),
-        h('span', { className: 'capital-automation-statsub' }, last.sub)),
-      h('div', { className: 'capital-automation-stat', title: scheduleHint },
-        h('span', { className: 'capital-automation-statlabel' }, zh.triggerSummary),
-        h('span', { className: 'capital-automation-statvalue' }, scheduleText),
-        h('span', { className: 'capital-automation-statsub' }, `${detail.task.trigger.time} · ${detail.task.trigger.timezone}`))),
-    h('section', { className: 'capital-automation-card capital-automation-panel' },
-      h('div', { className: 'capital-automation-panelhead' },
+  return h('div', { className: 'automation-workbench-overview' },
+    h('div', { className: 'automation-workbench-statgrid' },
+      h('div', { className: 'automation-workbench-stat' },
+        h('span', { className: 'automation-workbench-statlabel' }, zh.stateLabel),
+        h('span', { className: 'automation-workbench-statvalue', 'data-tone': anyRunning ? 'running' : undefined }, stateText),
+        h('span', { className: 'automation-workbench-statsub' }, originLabel)),
+      h('div', { className: 'automation-workbench-stat' },
+        h('span', { className: 'automation-workbench-statlabel' }, zh.nextRun),
+        h('span', { className: 'automation-workbench-statvalue' }, next.value),
+        h('span', { className: 'automation-workbench-statsub' }, next.sub)),
+      h('div', { className: 'automation-workbench-stat' },
+        h('span', { className: 'automation-workbench-statlabel' }, zh.lastResult),
+        h('span', { className: 'automation-workbench-statvalue', 'data-tone': last.tone }, last.value),
+        h('span', { className: 'automation-workbench-statsub' }, last.sub)),
+      h('div', { className: 'automation-workbench-stat', title: scheduleHint },
+        h('span', { className: 'automation-workbench-statlabel' }, zh.triggerSummary),
+        h('span', { className: 'automation-workbench-statvalue' }, scheduleText),
+        h('span', { className: 'automation-workbench-statsub' }, `${detail.task.trigger.time} · ${detail.task.trigger.timezone}`))),
+    h('section', { className: 'automation-workbench-card automation-workbench-panel' },
+      h('div', { className: 'automation-workbench-panelhead' },
         h('h3', null, zh.detailRecentRuns.replace('{n}', String(DETAIL_RECENT_RUN_LIMIT))),
-        h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', 'data-variant': 'ghost', onClick: onGoRuns },
+        h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', 'data-variant': 'ghost', onClick: onGoRuns },
           zh.detailAllRuns,
           h(IconChevronRightOutlineRegular, { size: 13 }))),
       h(RunList, {
@@ -3194,21 +3194,21 @@ function OverviewTab(props) {
         onOpenSession,
         compact: true,
       })),
-    h('section', { className: 'capital-automation-card capital-automation-panel' },
-      h('div', { className: 'capital-automation-panelhead' },
+    h('section', { className: 'automation-workbench-card automation-workbench-panel' },
+      h('div', { className: 'automation-workbench-panelhead' },
         h('h3', null, zh.environment)),
-      h('div', { className: 'capital-automation-kv' },
-        h('div', { className: 'capital-automation-kvitem' },
-          h('span', { className: 'capital-automation-kvlabel' }, zh.presetLabel),
-          h('span', { className: 'capital-automation-kvvalue' }, zh.presetValue)),
-        h('div', { className: 'capital-automation-kvitem' },
-          h('span', { className: 'capital-automation-kvlabel' }, zh.workspaceField),
-          h('span', { className: 'capital-automation-kvvalue' }, workspaceTitle(meta, detail.task.workspaceId))),
-        h('div', { className: 'capital-automation-kvitem' },
-          h('span', { className: 'capital-automation-kvlabel' }, zh.categoryField),
-          h('span', { className: 'capital-automation-kvvalue' }, categoryLabel(detail.task.category)))),
-      h('section', { className: 'capital-automation-technical' },
-        h('h4', { className: 'capital-automation-technicaltitle' }, zh.techInfo),
+      h('div', { className: 'automation-workbench-kv' },
+        h('div', { className: 'automation-workbench-kvitem' },
+          h('span', { className: 'automation-workbench-kvlabel' }, zh.presetLabel),
+          h('span', { className: 'automation-workbench-kvvalue' }, zh.presetValue)),
+        h('div', { className: 'automation-workbench-kvitem' },
+          h('span', { className: 'automation-workbench-kvlabel' }, zh.workspaceField),
+          h('span', { className: 'automation-workbench-kvvalue' }, workspaceTitle(meta, detail.task.workspaceId))),
+        h('div', { className: 'automation-workbench-kvitem' },
+          h('span', { className: 'automation-workbench-kvlabel' }, zh.categoryField),
+          h('span', { className: 'automation-workbench-kvvalue' }, categoryLabel(detail.task.category)))),
+      h('section', { className: 'automation-workbench-technical' },
+        h('h4', { className: 'automation-workbench-technicaltitle' }, zh.techInfo),
         h('dl', null,
           h('dt', null, zh.profileKey),
           h('dd', { title: 'profileKey 是 profile 名称的稳定哈希；与 session 标题里的 run id 无关。' }, meta?.profile?.key ?? '—'),
@@ -3241,7 +3241,7 @@ function ConfigTab(props) {
   const toolsRange = limitValue(meta, 'maxToolCalls', [100, 5000])
   const instructionEditor = h(Field, { label: zh.instructionField, error: instructionError },
     h(PlainTextEditor, {
-      className: 'capital-automation-texteditor',
+      className: 'automation-workbench-texteditor',
       value: task.instruction,
       maxLength: INSTRUCTION_MAX_LENGTH,
       disabled: busy || disabled,
@@ -3251,7 +3251,7 @@ function ConfigTab(props) {
       onChange: (instruction) => set({ instruction }),
       onBlur: () => { touch('instruction'); flush() },
     }))
-  const instructionSide = h('div', { className: 'capital-automation-instructionside' },
+  const instructionSide = h('div', { className: 'automation-workbench-instructionside' },
     h(SelectField, {
       label: zh.workspaceField,
       value: task.workspaceId ?? '',
@@ -3259,26 +3259,26 @@ function ConfigTab(props) {
       disabled: busy || disabled,
       onChange: (workspaceId) => set({ workspaceId }),
     }),
-    meta?.workspaceError ? h('p', { className: 'capital-automation-hint', 'data-tone': 'error' }, zh.workspaceUnavailable) : null,
+    meta?.workspaceError ? h('p', { className: 'automation-workbench-hint', 'data-tone': 'error' }, zh.workspaceUnavailable) : null,
     h('div', null,
-      h('span', { className: 'capital-automation-formlabel' }, zh.triggerField),
+      h('span', { className: 'automation-workbench-formlabel' }, zh.triggerField),
       h(TriggerFields, { trigger: task.trigger, disabled: busy || disabled, onChange: (trigger) => set({ trigger }), meta, errorFor, touch, onFlush: flush })))
-  const advanced = h('details', { className: 'capital-automation-advanced' },
+  const advanced = h('details', { className: 'automation-workbench-advanced' },
     h('summary', null, zh.advanced),
-    h('div', { className: 'capital-automation-advancedbody' },
-      h('div', { className: 'capital-automation-formgrid' },
+    h('div', { className: 'automation-workbench-advancedbody' },
+      h('div', { className: 'automation-workbench-formgrid' },
         h(NumberField, { label: zh.runTimeout, value: task.limits.runTimeoutMinutes, min: timeoutRange[0], max: timeoutRange[1], disabled: busy || disabled, error: errorFor('runTimeoutMinutes'), onBlur: () => { touch('runTimeoutMinutes'); flush() }, onChange: (value) => set((current) => ({ limits: { ...current.limits, runTimeoutMinutes: value } })) }),
         h(NumberField, { label: zh.idleTimeout, value: task.limits.idleTimeoutMinutes, min: idleRange[0], max: idleRange[1], disabled: busy || disabled, error: errorFor('idleTimeoutMinutes'), onBlur: () => { touch('idleTimeoutMinutes'); flush() }, onChange: (value) => set((current) => ({ limits: { ...current.limits, idleTimeoutMinutes: value } })) }),
         h(NumberField, { label: zh.maxSteps, value: task.limits.maxSteps, min: stepsRange[0], max: stepsRange[1], disabled: busy || disabled, error: errorFor('maxSteps'), onBlur: () => { touch('maxSteps'); flush() }, onChange: (value) => set((current) => ({ limits: { ...current.limits, maxSteps: value } })) }),
         h(NumberField, { label: zh.maxToolCalls, value: task.limits.maxToolCalls, min: toolsRange[0], max: toolsRange[1], disabled: busy || disabled, error: errorFor('maxToolCalls'), onBlur: () => { touch('maxToolCalls'); flush() }, onChange: (value) => set((current) => ({ limits: { ...current.limits, maxToolCalls: value } })) })),
-      h('p', { className: 'capital-automation-hint' }, zh.budgetHint)))
+      h('p', { className: 'automation-workbench-hint' }, zh.budgetHint)))
   const notificationRows = h('div', null,
-    h('span', { className: 'capital-automation-formlabel' }, zh.notifyField),
-    h('div', { className: 'capital-automation-switchlist' },
+    h('span', { className: 'automation-workbench-formlabel' }, zh.notifyField),
+    h('div', { className: 'automation-workbench-switchlist' },
       h(SwitchRow, { label: zh.notifyInApp, checked: task.notifications.inApp, disabled: busy || disabled, onChange: (value) => set((current) => ({ notifications: { ...current.notifications, inApp: value } })) }),
       h(SwitchRow, { label: zh.notifyFailure, checked: task.notifications.onFailure, disabled: busy || disabled || task.notifications.inApp !== true, onChange: (value) => set((current) => ({ notifications: { ...current.notifications, onFailure: value } })) }),
       h(SwitchRow, { label: zh.notifySuccess, checked: task.notifications.onSuccess, disabled: busy || disabled || task.notifications.inApp !== true, onChange: (value) => set((current) => ({ notifications: { ...current.notifications, onSuccess: value } })) })),
-    h('p', { className: 'capital-automation-hint' }, zh.notifyHint))
+    h('p', { className: 'automation-workbench-hint' }, zh.notifyHint))
   const state = disabled
     ? 'disabled'
     : dirty && (saveState === 'idle' || saveState === 'saved')
@@ -3298,8 +3298,8 @@ function ConfigTab(props) {
             ? zh.autosaveSaved
             : zh.noDirty
   const statusTone = state === 'error' ? 'error' : state === 'saved' ? 'ok' : undefined
-  return h('div', { className: 'capital-automation-form' },
-    h('div', { className: 'capital-automation-titlerow' },
+  return h('div', { className: 'automation-workbench-form' },
+    h('div', { className: 'automation-workbench-titlerow' },
       h(Field, {
         label: zh.titleField,
         error: titleError,
@@ -3322,23 +3322,23 @@ function ConfigTab(props) {
         onChange: (category) => set({ category }),
       })),
     task.origin === 'custom'
-      ? h('div', { className: 'capital-automation-iconrow' },
+      ? h('div', { className: 'automation-workbench-iconrow' },
         h(IconPickerTrigger, {
           task,
           size: 38,
           disabled: busy || disabled,
           onChange: (icon) => set({ icon }),
         }),
-        h('div', { className: 'capital-automation-iconrowbody' },
-          h('span', { className: 'capital-automation-formlabel' }, zh.iconField),
-          h('span', { className: 'capital-automation-hint' }, `${taskIcon(task).label} · ${zh.iconPickHint}`)))
-      : h('p', { className: 'capital-automation-hint' }, zh.iconBuiltinHint),
+        h('div', { className: 'automation-workbench-iconrowbody' },
+          h('span', { className: 'automation-workbench-formlabel' }, zh.iconField),
+          h('span', { className: 'automation-workbench-hint' }, `${taskIcon(task).label} · ${zh.iconPickHint}`)))
+      : h('p', { className: 'automation-workbench-hint' }, zh.iconBuiltinHint),
     h(Field, {
       label: zh.descriptionField,
       note: zh.charCount.replace('{n}', String(Array.from(task.description ?? '').length)).replace('{max}', String(DESCRIPTION_MAX_LENGTH)),
     },
     h(PlainTextEditor, {
-      className: 'capital-automation-texteditor capital-automation-descriptioninput',
+      className: 'automation-workbench-texteditor automation-workbench-descriptioninput',
       value: task.description ?? '',
       maxLength: DESCRIPTION_MAX_LENGTH,
       disabled: busy || disabled,
@@ -3347,23 +3347,23 @@ function ConfigTab(props) {
       onChange: (description) => set({ description }),
       onBlur: flush,
     })),
-    h('div', { className: 'capital-automation-instructionrow' },
+    h('div', { className: 'automation-workbench-instructionrow' },
       instructionEditor,
       instructionSide),
     advanced,
     notificationRows,
-    h('div', { className: 'capital-automation-formactions', 'data-sticky': 'true' },
-      h('span', { className: 'capital-automation-formstatus' }, disabled ? zh.storageUnavailable : zh.autosaveHint),
+    h('div', { className: 'automation-workbench-formactions', 'data-sticky': 'true' },
+      h('span', { className: 'automation-workbench-formstatus' }, disabled ? zh.storageUnavailable : zh.autosaveHint),
       state === 'disabled'
         ? null
         : h('span', {
-          className: 'capital-automation-autosavestate',
+          className: 'automation-workbench-autosavestate',
           role: 'status',
           'data-tone': statusTone,
           title: state === 'error' ? saveError : undefined,
         }, statusText),
       state === 'error'
-        ? h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', disabled: busy || disabled, onClick: retry }, zh.autosaveRetry)
+        ? h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', disabled: busy || disabled, onClick: retry }, zh.autosaveRetry)
         : null))
 }
 
@@ -3371,14 +3371,14 @@ function NotificationsTab(props) {
   const { detail, busy, onMarkTaskRead } = props
   const items = detail.notifications
   const unread = items.filter((item) => item.readAt === undefined).length
-  return h('section', { className: 'capital-automation-card capital-automation-panel' },
-    h('div', { className: 'capital-automation-panelhead' },
+  return h('section', { className: 'automation-workbench-card automation-workbench-panel' },
+    h('div', { className: 'automation-workbench-panelhead' },
       h('h3', null, zh.detailTaskNotifications),
       unread > 0
-        ? h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', disabled: busy, onClick: onMarkTaskRead }, zh.markTaskRead)
+        ? h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', disabled: busy, onClick: onMarkTaskRead }, zh.markTaskRead)
         : null),
     items.length === 0
-      ? h('p', { className: 'capital-automation-hint' }, zh.notificationsEmpty)
+      ? h('p', { className: 'automation-workbench-hint' }, zh.notificationsEmpty)
       : h('div', null, items.map((item) => h(NotificationItem, { key: item.id, item }))))
 }
 
@@ -3388,26 +3388,26 @@ function NotificationItem(props) {
   const tag = clickable ? 'button' : 'div'
   return h(tag, {
     type: clickable ? 'button' : undefined,
-    className: 'capital-automation-notification',
+    className: 'automation-workbench-notification',
     'data-clickable': clickable ? 'true' : 'false',
     onClick: clickable ? onClick : undefined,
   },
-  h('span', { className: 'capital-automation-notificationicon', 'data-tone': eventTone(item.kind) },
+  h('span', { className: 'automation-workbench-notificationicon', 'data-tone': eventTone(item.kind) },
     eventTone(item.kind) === 'error' ? h(IconWarningOutlineRegular, { size: 15 }) : eventTone(item.kind) === 'warn' ? h(IconInfoOutlineRegular, { size: 15 }) : h(IconAlarmClockOutlineRegular, { size: 15 })),
-  h('span', { className: 'capital-automation-notificationbody' },
-    h('span', { className: 'capital-automation-notificationtitle' },
+  h('span', { className: 'automation-workbench-notificationbody' },
+    h('span', { className: 'automation-workbench-notificationtitle' },
       item.title,
-      item.readAt === undefined ? h('span', { className: 'capital-automation-count' }, zh.unread) : null),
-    h('span', { className: 'capital-automation-notificationmessage' }, notificationMessage(item)),
-    h('span', { className: 'capital-automation-notificationtime' }, formatShortTime(item.createdAt))),
+      item.readAt === undefined ? h('span', { className: 'automation-workbench-count' }, zh.unread) : null),
+    h('span', { className: 'automation-workbench-notificationmessage' }, notificationMessage(item)),
+    h('span', { className: 'automation-workbench-notificationtime' }, formatShortTime(item.createdAt))),
   onOpenTask !== undefined && (item.taskId !== undefined || item.todoId !== undefined)
-    ? h('span', { className: 'capital-automation-hint' }, item.todoId !== undefined ? zh.notificationOpenTodo : zh.notificationOpenTask)
+    ? h('span', { className: 'automation-workbench-hint' }, item.todoId !== undefined ? zh.notificationOpenTodo : zh.notificationOpenTask)
     : null)
 }
 
 function DetailBar(props) {
-  return h('div', { className: 'capital-automation-detailbar' },
-    h('button', { type: 'button', className: 'capital-automation-back', onClick: props.onBack },
+  return h('div', { className: 'automation-workbench-detailbar' },
+    h('button', { type: 'button', className: 'automation-workbench-back', onClick: props.onBack },
       h(IconChevronLeftOutlineRegular, { size: 14 }),
       zh.backToTasks))
 }
@@ -3533,7 +3533,7 @@ function TaskDetailPage(props) {
     return () => document.removeEventListener?.('visibilitychange', onHide)
   }, [])
 
-  if (draft === null) return h('p', { className: 'capital-automation-empty' }, zh.loading)
+  if (draft === null) return h('p', { className: 'automation-workbench-empty' }, zh.loading)
   const task = draft
   const running = detail.runs.some((run) => isActiveRun(run))
   const activeRun = detail.runs.find((run) => isActiveRun(run))
@@ -3682,14 +3682,14 @@ function TaskDetailPage(props) {
   const runButton = running
     ? h('button', {
       type: 'button',
-      className: 'capital-automation-btn',
+      className: 'automation-workbench-btn',
       'data-variant': 'danger',
       disabled: busy || !storageReadyNow || activeRun === undefined,
       onClick: () => { if (activeRun !== undefined) onRequestCancelRun(activeRun) },
     }, zh.cancelRun)
     : h('button', {
       type: 'button',
-      className: 'capital-automation-btn',
+      className: 'automation-workbench-btn',
       'data-variant': detail.task.state === 'active' ? 'primary' : undefined,
       disabled: busy || !canRun,
       title: schedulerActive === false ? zh.schedulerBlocked : running ? zh.runBlocked : undefined,
@@ -3697,21 +3697,21 @@ function TaskDetailPage(props) {
     }, h(IconPlayOutlineRegular, { size: 14 }), zh.runNow)
 
   return h('div', null,
-    h('div', { className: 'capital-automation-hero' },
+    h('div', { className: 'automation-workbench-hero' },
       h(Glyph, { task, large: true }),
-      h('div', { className: 'capital-automation-herobody' },
-        h('div', { className: 'capital-automation-herotitle' },
+      h('div', { className: 'automation-workbench-herobody' },
+        h('div', { className: 'automation-workbench-herotitle' },
           h('h2', null, detail.task.title),
           h(StateBadge, { state: detail.task.state, running }),
-          unread > 0 ? h('span', { className: 'capital-automation-count', title: zh.unread }, String(unread)) : null),
-        h('p', { className: 'capital-automation-herodesc' }, detail.task.description || zh.subtitle)),
-      h('div', { className: 'capital-automation-heroactions' },
+          unread > 0 ? h('span', { className: 'automation-workbench-count', title: zh.unread }, String(unread)) : null),
+        h('p', { className: 'automation-workbench-herodesc' }, detail.task.description || zh.subtitle)),
+      h('div', { className: 'automation-workbench-heroactions' },
         runButton,
         running
           ? null
           : h('button', {
             type: 'button',
-            className: 'capital-automation-btn',
+            className: 'automation-workbench-btn',
             'data-variant': detail.task.state === 'active' ? undefined : 'primary',
             disabled: busy || !storageReadyNow,
             onClick: () => { void toggleState() },
@@ -3745,22 +3745,22 @@ function TaskDetailPage(props) {
           disabled: !storageReadyNow,
           align: 'end',
         }))),
-    h('div', { className: 'capital-automation-detailtabs', role: 'tablist', 'aria-label': zh.details },
+    h('div', { className: 'automation-workbench-detailtabs', role: 'tablist', 'aria-label': zh.details },
       [['overview', zh.overview], ['config', zh.config], ['runs', zh.runs], ['notifications', zh.notifications]].map(([id, label]) => h('button', {
         key: id,
         type: 'button',
         role: 'tab',
-        className: 'capital-automation-detailtab',
+        className: 'automation-workbench-detailtab',
         'aria-selected': tab === id ? 'true' : 'false',
         onClick: () => onTab(id),
       }, label))),
     notice.length > 0 || error.length > 0
       ? h('div', { style: { paddingTop: 12 } },
-        notice.length > 0 ? h('p', { className: 'capital-automation-notice', role: 'status' }, notice) : null,
-        error.length > 0 ? h('p', { className: 'capital-automation-error', role: 'alert' }, error) : null)
+        notice.length > 0 ? h('p', { className: 'automation-workbench-notice', role: 'status' }, notice) : null,
+        error.length > 0 ? h('p', { className: 'automation-workbench-error', role: 'alert' }, error) : null)
       : null,
-    running ? h('p', { className: 'capital-automation-hint', style: { paddingTop: 10 } }, zh.configWhileRunning) : null,
-    h('div', { className: 'capital-automation-detailbody' },
+    running ? h('p', { className: 'automation-workbench-hint', style: { paddingTop: 10 } }, zh.configWhileRunning) : null,
+    h('div', { className: 'automation-workbench-detailbody' },
       tab === 'overview' ? h(OverviewTab, {
         detail,
         meta,
@@ -3780,10 +3780,10 @@ function TaskDetailPage(props) {
         onFlush: () => { void flushRef.current?.() },
         disabled: !storageReadyNow,
       }) : null,
-      tab === 'runs' ? h('section', { className: 'capital-automation-card capital-automation-panel' },
-        h('div', { className: 'capital-automation-panelhead' },
+      tab === 'runs' ? h('section', { className: 'automation-workbench-card automation-workbench-panel' },
+        h('div', { className: 'automation-workbench-panelhead' },
           h('h3', null, zh.runs),
-          h('span', { className: 'capital-automation-hint' }, zh.taskRunsLimit)),
+          h('span', { className: 'automation-workbench-hint' }, zh.taskRunsLimit)),
         h(RunList, {
           runs: detail.runs,
           tasks: [detail.task],
@@ -3842,17 +3842,17 @@ function NewTaskModal(props) {
     onClose: () => { if (!busy) onClose() },
     title: zh.newTaskTitle,
     closeLabel: zh.close,
-    className: 'capital-automation-modal capital-automation-modal-wizard',
-    contentClassName: 'capital-automation-modal-content',
-    footer: h('div', { className: 'capital-automation-formactions', style: { borderTop: 0, paddingTop: 0 } },
-      h('button', { type: 'button', className: 'capital-automation-btn', disabled: busy, onClick: onClose }, zh.cancel),
-      h('button', { type: 'button', className: 'capital-automation-btn', 'data-variant': 'primary', disabled: busy || meta?.storage?.state === 'unavailable', onClick: create }, busy ? zh.creating : zh.create)),
+    className: 'automation-workbench-modal automation-workbench-modal-wizard',
+    contentClassName: 'automation-workbench-modal-content',
+    footer: h('div', { className: 'automation-workbench-formactions', style: { borderTop: 0, paddingTop: 0 } },
+      h('button', { type: 'button', className: 'automation-workbench-btn', disabled: busy, onClick: onClose }, zh.cancel),
+      h('button', { type: 'button', className: 'automation-workbench-btn', 'data-variant': 'primary', disabled: busy || meta?.storage?.state === 'unavailable', onClick: create }, busy ? zh.creating : zh.create)),
   },
-  h('div', { className: 'capital-automation-wizard' },
-    h('div', { className: 'capital-automation-modalheadline', 'data-invalid': titleError ? 'true' : undefined },
+  h('div', { className: 'automation-workbench-wizard' },
+    h('div', { className: 'automation-workbench-modalheadline', 'data-invalid': titleError ? 'true' : undefined },
       h(IconPickerTrigger, { task: draft, size: 42, onChange: (icon) => set({ icon }) }),
       h('input', {
-        className: 'capital-automation-modaltitleinput',
+        className: 'automation-workbench-modaltitleinput',
         value: draft.title,
         maxLength: TITLE_MAX_LENGTH,
         placeholder: zh.titlePlaceholder,
@@ -3861,7 +3861,7 @@ function NewTaskModal(props) {
         onChange: (event) => set({ title: event.target.value }),
         onBlur: () => touch('title'),
       })),
-    titleError ? h('span', { className: 'capital-automation-fielderror', role: 'alert' }, titleError) : null,
+    titleError ? h('span', { className: 'automation-workbench-fielderror', role: 'alert' }, titleError) : null,
     h(Field, {
       label: zh.descriptionField,
       note: zh.charCount.replace('{n}', String(Array.from(draft.description ?? '').length)).replace('{max}', String(DESCRIPTION_MAX_LENGTH)),
@@ -3873,14 +3873,14 @@ function NewTaskModal(props) {
       onChange: (event) => set({ description: event.target.value }),
     })),
     h('div', null,
-      h('span', { className: 'capital-automation-formlabel' }, zh.triggerField),
+      h('span', { className: 'automation-workbench-formlabel' }, zh.triggerField),
       h(TriggerFields, { trigger: draft.trigger, onChange: (trigger) => set({ trigger }), meta, errorFor, touch })),
     h('div', null,
-      h('span', { className: 'capital-automation-formlabel' }, zh.instructionField),
-      h('div', { className: 'capital-automation-promptfield', 'data-invalid': instructionError ? 'true' : undefined },
-        h('div', { className: 'capital-automation-promptbox' },
+      h('span', { className: 'automation-workbench-formlabel' }, zh.instructionField),
+      h('div', { className: 'automation-workbench-promptfield', 'data-invalid': instructionError ? 'true' : undefined },
+        h('div', { className: 'automation-workbench-promptbox' },
           h(PlainTextEditor, {
-            className: 'capital-automation-texteditor',
+            className: 'automation-workbench-texteditor',
             value: draft.instruction,
             maxLength: INSTRUCTION_MAX_LENGTH,
             placeholder: zh.instructionPlaceholder,
@@ -3889,8 +3889,8 @@ function NewTaskModal(props) {
             onChange: (instruction) => set({ instruction }),
             onBlur: () => touch('instruction'),
           }),
-          h('div', { className: 'capital-automation-prompttoolbar' },
-            h('div', { className: 'capital-automation-toolbarfield' },
+          h('div', { className: 'automation-workbench-prompttoolbar' },
+            h('div', { className: 'automation-workbench-toolbarfield' },
               h(IconFolderOpenOutlineRegular, { size: 13 }),
               h('span', null, zh.workspaceField),
               h(Select, {
@@ -3901,7 +3901,7 @@ function NewTaskModal(props) {
                 size: 'sm',
                 align: 'end',
               })),
-            h('div', { className: 'capital-automation-toolbarfield' },
+            h('div', { className: 'automation-workbench-toolbarfield' },
               h('span', null, zh.categoryField),
               h(Select, {
                 value: draft.category,
@@ -3911,28 +3911,28 @@ function NewTaskModal(props) {
                 size: 'sm',
                 align: 'end',
               })),
-            h('span', { className: 'capital-automation-presetchip', title: zh.presetHint },
+            h('span', { className: 'automation-workbench-presetchip', title: zh.presetHint },
               h(IconSparkleRegular, { size: 12 }),
               zh.presetValue))),
-        instructionError ? h('span', { className: 'capital-automation-fielderror', role: 'alert' }, instructionError) : null)),
-    meta?.workspaceError ? h('p', { className: 'capital-automation-hint', 'data-tone': 'error' }, zh.workspaceUnavailable) : null,
-    h('details', { className: 'capital-automation-advanced' },
+        instructionError ? h('span', { className: 'automation-workbench-fielderror', role: 'alert' }, instructionError) : null)),
+    meta?.workspaceError ? h('p', { className: 'automation-workbench-hint', 'data-tone': 'error' }, zh.workspaceUnavailable) : null,
+    h('details', { className: 'automation-workbench-advanced' },
       h('summary', null, zh.advanced),
-      h('div', { className: 'capital-automation-advancedbody' },
-        h('div', { className: 'capital-automation-formgrid' },
+      h('div', { className: 'automation-workbench-advancedbody' },
+        h('div', { className: 'automation-workbench-formgrid' },
           h(NumberField, { label: zh.runTimeout, value: draft.limits.runTimeoutMinutes, min: timeoutRange[0], max: timeoutRange[1], error: errorFor('runTimeoutMinutes'), onBlur: () => touch('runTimeoutMinutes'), onChange: (value) => set((current) => ({ limits: { ...current.limits, runTimeoutMinutes: value } })) }),
           h(NumberField, { label: zh.idleTimeout, value: draft.limits.idleTimeoutMinutes, min: idleRange[0], max: idleRange[1], error: errorFor('idleTimeoutMinutes'), onBlur: () => touch('idleTimeoutMinutes'), onChange: (value) => set((current) => ({ limits: { ...current.limits, idleTimeoutMinutes: value } })) }),
           h(NumberField, { label: zh.maxSteps, value: draft.limits.maxSteps, min: stepsRange[0], max: stepsRange[1], error: errorFor('maxSteps'), onBlur: () => touch('maxSteps'), onChange: (value) => set((current) => ({ limits: { ...current.limits, maxSteps: value } })) }),
           h(NumberField, { label: zh.maxToolCalls, value: draft.limits.maxToolCalls, min: toolsRange[0], max: toolsRange[1], error: errorFor('maxToolCalls'), onBlur: () => touch('maxToolCalls'), onChange: (value) => set((current) => ({ limits: { ...current.limits, maxToolCalls: value } })) })),
-        h('p', { className: 'capital-automation-hint' }, zh.advancedHint))),
+        h('p', { className: 'automation-workbench-hint' }, zh.advancedHint))),
     h('div', null,
-      h('span', { className: 'capital-automation-formlabel' }, zh.notifyField),
-      h('div', { className: 'capital-automation-switchlist' },
+      h('span', { className: 'automation-workbench-formlabel' }, zh.notifyField),
+      h('div', { className: 'automation-workbench-switchlist' },
         h(SwitchRow, { label: zh.notifyInApp, checked: draft.notifications.inApp, onChange: (value) => set((current) => ({ notifications: { ...current.notifications, inApp: value } })) }),
         h(SwitchRow, { label: zh.notifyFailure, checked: draft.notifications.onFailure, disabled: draft.notifications.inApp !== true, onChange: (value) => set((current) => ({ notifications: { ...current.notifications, onFailure: value } })) }),
         h(SwitchRow, { label: zh.notifySuccess, checked: draft.notifications.onSuccess, disabled: draft.notifications.inApp !== true, onChange: (value) => set((current) => ({ notifications: { ...current.notifications, onSuccess: value } })) })),
-      h('p', { className: 'capital-automation-hint' }, zh.notifyHint)),
-    error.length > 0 ? h('p', { className: 'capital-automation-error', role: 'alert' }, error) : null))
+      h('p', { className: 'automation-workbench-hint' }, zh.notifyHint)),
+    error.length > 0 ? h('p', { className: 'automation-workbench-error', role: 'alert' }, error) : null))
 }
 
 function ConfirmModal(props) {
@@ -3948,20 +3948,20 @@ function ConfirmModal(props) {
     onClose: () => { if (!busy) onCancel() },
     title,
     closeLabel: zh.close,
-    className: 'capital-automation-modal capital-automation-modal-narrow',
-    footer: h('div', { className: 'capital-automation-formactions', style: { borderTop: 0, paddingTop: 0 } },
-      h('button', { type: 'button', className: 'capital-automation-btn', disabled: busy, onClick: onCancel }, zh.cancel),
+    className: 'automation-workbench-modal automation-workbench-modal-narrow',
+    footer: h('div', { className: 'automation-workbench-formactions', style: { borderTop: 0, paddingTop: 0 } },
+      h('button', { type: 'button', className: 'automation-workbench-btn', disabled: busy, onClick: onCancel }, zh.cancel),
       h('button', {
         type: 'button',
-        className: 'capital-automation-btn',
+        className: 'automation-workbench-btn',
         'data-variant': 'danger',
         disabled: busy,
         onClick: onConfirm,
       }, busy ? zh.processing : confirmLabel)),
   },
   h('div', null,
-    h('p', { className: 'capital-automation-policy' }, body),
-    error.length > 0 ? h('p', { className: 'capital-automation-error', role: 'alert', style: { marginTop: 8 } }, error) : null))
+    h('p', { className: 'automation-workbench-policy' }, body),
+    error.length > 0 ? h('p', { className: 'automation-workbench-error', role: 'alert', style: { marginTop: 8 } }, error) : null))
 }
 
 function InboxModal(props) {
@@ -3972,21 +3972,21 @@ function InboxModal(props) {
     onClose,
     title: zh.notificationsTitle,
     closeLabel: zh.close,
-    className: 'capital-automation-modal',
-    contentClassName: 'capital-automation-modal-content',
-    footer: h('div', { className: 'capital-automation-formactions', style: { borderTop: 0, paddingTop: 0 } },
-      h('span', { className: 'capital-automation-formstatus' },
+    className: 'automation-workbench-modal',
+    contentClassName: 'automation-workbench-modal-content',
+    footer: h('div', { className: 'automation-workbench-formactions', style: { borderTop: 0, paddingTop: 0 } },
+      h('span', { className: 'automation-workbench-formstatus' },
         unread > 0 ? zh.notificationsUnread.replace('{n}', String(unread)) : notifications.length > 0 ? zh.allRead : zh.notificationsEmpty),
-      h('button', { type: 'button', className: 'capital-automation-btn', disabled: busy || unread === 0, onClick: onMarkAllRead }, zh.markRead),
-      h('button', { type: 'button', className: 'capital-automation-btn', 'data-variant': 'primary', onClick: onClose }, zh.close)),
+      h('button', { type: 'button', className: 'automation-workbench-btn', disabled: busy || unread === 0, onClick: onMarkAllRead }, zh.markRead),
+      h('button', { type: 'button', className: 'automation-workbench-btn', 'data-variant': 'primary', onClick: onClose }, zh.close)),
   },
   notifications.length === 0
-    ? h('div', { className: 'capital-automation-empty' },
-      h('span', { className: 'capital-automation-emptyicon' }, h(IconAlarmClockOutlineRegular, { size: 19 })),
+    ? h('div', { className: 'automation-workbench-empty' },
+      h('span', { className: 'automation-workbench-emptyicon' }, h(IconAlarmClockOutlineRegular, { size: 19 })),
       h('h3', null, zh.notificationsEmpty),
       h('p', null, zh.notificationsHint))
     : h('div', null,
-      h('p', { className: 'capital-automation-hint', style: { marginBottom: 4 } }, zh.notificationsHint),
+      h('p', { className: 'automation-workbench-hint', style: { marginBottom: 4 } }, zh.notificationsHint),
       notifications.map((item) => h(NotificationItem, {
         key: item.id,
         item,
@@ -4192,25 +4192,25 @@ function boardPanelKey(id) {
 
 function BoardEmpty(props) {
   const { hasActiveTasks, storageReady, onGoTasks, onNewTask } = props
-  return h('section', { className: 'capital-automation-boardempty', 'aria-labelledby': 'capital-automation-boardempty-title' },
-    h('span', { className: 'capital-automation-boardemptyicon', 'aria-hidden': 'true' }, h(IconSparkleRegular, { size: 22 })),
-    h('h2', { id: 'capital-automation-boardempty-title' }, zh.board.emptyTitle),
+  return h('section', { className: 'automation-workbench-boardempty', 'aria-labelledby': 'automation-workbench-boardempty-title' },
+    h('span', { className: 'automation-workbench-boardemptyicon', 'aria-hidden': 'true' }, h(IconSparkleRegular, { size: 22 })),
+    h('h2', { id: 'automation-workbench-boardempty-title' }, zh.board.emptyTitle),
     storageReady === false ? h('p', null, zh.storageBanner) : null,
-    h('div', { className: 'capital-automation-boardemptyactions' },
+    h('div', { className: 'automation-workbench-boardemptyactions' },
       h('button', {
         type: 'button',
-        className: 'capital-automation-btn',
+        className: 'automation-workbench-btn',
         'data-variant': 'primary',
         disabled: storageReady === false,
         onClick: onGoTasks,
       }, hasActiveTasks ? zh.board.goTasks : zh.board.goEnable),
       h('button', {
         type: 'button',
-        className: 'capital-automation-btn',
+        className: 'automation-workbench-btn',
         disabled: storageReady === false,
         onClick: onNewTask,
       }, zh.board.newTask)),
-    h('p', { className: 'capital-automation-boardemptyhint' }, zh.board.emptyHint))
+    h('p', { className: 'automation-workbench-boardemptyhint' }, zh.board.emptyHint))
 }
 
 function BoardStats(props) {
@@ -4224,17 +4224,17 @@ function BoardStats(props) {
   const open = (id) => () => activate(id)
   const labelParts = (parts) => parts.map((part, index) => h('span', {
     key: `label-${index}`,
-    className: typeof part === 'string' && /^\s*[\/:]\s*$/.test(part) ? 'capital-automation-boardstatsep' : undefined,
+    className: typeof part === 'string' && /^\s*[\/:]\s*$/.test(part) ? 'automation-workbench-boardstatsep' : undefined,
   }, part))
   const valueParts = (parts) => parts.map((part, index) => {
-    if (typeof part === 'string') return h('span', { key: `sep-${index}`, className: 'capital-automation-boardstatsep' }, part)
+    if (typeof part === 'string') return h('span', { key: `sep-${index}`, className: 'automation-workbench-boardstatsep' }, part)
     if (typeof part.onClick !== 'function') {
-      return h('span', { key: `value-${index}`, className: 'capital-automation-boardstatnum' }, String(part.value))
+      return h('span', { key: `value-${index}`, className: 'automation-workbench-boardstatnum' }, String(part.value))
     }
     return h('button', {
       key: `value-${index}`,
       type: 'button',
-      className: 'capital-automation-boardstatnum',
+      className: 'automation-workbench-boardstatnum',
       'data-clickable': 'true',
       title: part.title,
       'aria-label': part.ariaLabel,
@@ -4264,21 +4264,21 @@ function BoardStats(props) {
           value: stats?.todos ?? 0,
           title: zh.board.statsTodoHint,
           ariaLabel: `${zh.board.statsTodos} ${stats?.todos ?? 0}，${zh.board.statsTodoHint}`,
-          onClick: open('capital-automation-todo'),
+          onClick: open('automation-workbench-todo'),
         },
         ' : ',
         {
           value: stats?.todosManual ?? 0,
           title: zh.board.statsTodoManualHint,
           ariaLabel: `${zh.board.statsTodoManual} ${stats?.todosManual ?? 0}，${zh.board.statsTodoManualHint}`,
-          onClick: open('capital-automation-todo'),
+          onClick: open('automation-workbench-todo'),
         },
         ' / ',
         {
           value: stats?.todosAuto ?? 0,
           title: zh.board.statsTodoAutoHint,
           ariaLabel: `${zh.board.statsTodoAuto} ${stats?.todosAuto ?? 0}，${zh.board.statsTodoAutoHint}`,
-          onClick: open('capital-automation-todo'),
+          onClick: open('automation-workbench-todo'),
         },
       ],
     },
@@ -4290,14 +4290,14 @@ function BoardStats(props) {
           value: stats?.stocks ?? 0,
           title: zh.board.statsStockHint,
           ariaLabel: `${zh.board.statsStocks} ${stats?.stocks ?? 0}，${zh.board.statsStockHint}`,
-          onClick: open('capital-automation-stocks'),
+          onClick: open('automation-workbench-stocks'),
         },
         ' / ',
         {
           value: stats?.stocksNewToday ?? 0,
           title: zh.board.statsStockHint,
           ariaLabel: `${zh.board.statsStocksNew} ${stats?.stocksNewToday ?? 0}，${zh.board.statsStockHint}`,
-          onClick: open('capital-automation-stocks'),
+          onClick: open('automation-workbench-stocks'),
         },
       ],
     },
@@ -4309,14 +4309,14 @@ function BoardStats(props) {
           value: stats?.gaps ?? 0,
           title: zh.board.statsGapHint,
           ariaLabel: `${zh.board.statsGaps} ${stats?.gaps ?? 0}，${zh.board.statsGapHint}`,
-          onClick: open('capital-automation-gaps'),
+          onClick: open('automation-workbench-gaps'),
         },
         ' / ',
         {
           value: stats?.gapsNewToday ?? 0,
           title: zh.board.statsGapHint,
           ariaLabel: `${zh.board.statsGapsNew} ${stats?.gapsNewToday ?? 0}，${zh.board.statsGapHint}`,
-          onClick: open('capital-automation-gaps'),
+          onClick: open('automation-workbench-gaps'),
         },
       ],
     },
@@ -4328,21 +4328,21 @@ function BoardStats(props) {
           value: stats?.issuesToday ?? 0,
           title: zh.board.statsIssuesTodayHint,
           ariaLabel: `${zh.board.statsIssuesToday} ${stats?.issuesToday ?? 0}，${zh.board.statsIssuesTodayHint}`,
-          onClick: open('capital-automation-health'),
+          onClick: open('automation-workbench-health'),
         },
       ],
     },
   ]
-  return h('div', { className: 'capital-automation-boardstats', role: 'group', 'aria-label': zh.board.title },
-    items.map((item) => h('div', { key: item.key, className: 'capital-automation-boardstat' },
-      h('span', { className: 'capital-automation-boardstatlabel' }, labelParts(item.label)),
-      h('span', { className: 'capital-automation-boardstatvalue' }, valueParts(item.values)))))
+  return h('div', { className: 'automation-workbench-boardstats', role: 'group', 'aria-label': zh.board.title },
+    items.map((item) => h('div', { key: item.key, className: 'automation-workbench-boardstat' },
+      h('span', { className: 'automation-workbench-boardstatlabel' }, labelParts(item.label)),
+      h('span', { className: 'automation-workbench-boardstatvalue' }, valueParts(item.values)))))
 }
 
 function BoardToolbar(props) {
   const { range, category, loading, onRange, onCategory, onRefresh, railOpen, onToggleRail } = props
-  return h('div', { className: 'capital-automation-boardtoolbar' },
-    h('div', { className: 'capital-automation-boardtools' },
+  return h('div', { className: 'automation-workbench-boardtoolbar' },
+    h('div', { className: 'automation-workbench-boardtools' },
       h(Select, {
         value: range,
         options: boardRangeOptions(),
@@ -4357,26 +4357,26 @@ function BoardToolbar(props) {
         label: zh.board.category,
         size: 'sm',
       })),
-    h('div', { className: 'capital-automation-boardactions' },
+    h('div', { className: 'automation-workbench-boardactions' },
       h('button', {
         type: 'button',
-        className: 'capital-automation-btn',
+        className: 'automation-workbench-btn',
         'data-size': 'sm',
         disabled: loading === true,
         onClick: onRefresh,
         title: zh.board.refresh,
         'aria-label': zh.board.refresh,
-      }, h(IconRefreshOutlineRegular, { size: 13 }), h('span', { className: 'capital-automation-btnlabel' }, zh.board.refresh)),
+      }, h(IconRefreshOutlineRegular, { size: 13 }), h('span', { className: 'automation-workbench-btnlabel' }, zh.board.refresh)),
       h('button', {
         type: 'button',
-        className: 'capital-automation-btn',
+        className: 'automation-workbench-btn',
         'data-size': 'sm',
         'aria-expanded': railOpen === true ? 'true' : 'false',
-        'aria-controls': 'capital-automation-boardrail',
+        'aria-controls': 'automation-workbench-boardrail',
         onClick: onToggleRail,
       },
       h(railOpen === true ? IconChevronRightOutlineRegular : IconChevronLeftOutlineRegular, { size: 13 }),
-      h('span', { className: 'capital-automation-btnlabel' }, railOpen === true ? zh.board.hideRail : zh.board.showRail))))
+      h('span', { className: 'automation-workbench-btnlabel' }, railOpen === true ? zh.board.hideRail : zh.board.showRail))))
 }
 
 function AskExchange(props) {
@@ -4429,20 +4429,20 @@ function AskExchange(props) {
   const ready = ask.status === 'ready'
   const canExpand = ready && typeof ask.preview === 'string' && ask.preview.endsWith('…')
   const fullText = expanded && full.length > 0
-  return h('div', { className: 'capital-automation-askthread', 'data-status': ask.status },
-    h('div', { className: 'capital-automation-askuser' },
-      h('p', { className: 'capital-automation-askquestion', title: ask.question }, ask.question)),
-    h('div', { className: 'capital-automation-askreply', 'data-status': ask.status },
+  return h('div', { className: 'automation-workbench-askthread', 'data-status': ask.status },
+    h('div', { className: 'automation-workbench-askuser' },
+      h('p', { className: 'automation-workbench-askquestion', title: ask.question }, ask.question)),
+    h('div', { className: 'automation-workbench-askreply', 'data-status': ask.status },
       ready
-        ? h('p', { className: fullText ? 'capital-automation-askfull' : 'capital-automation-askpreview' },
+        ? h('p', { className: fullText ? 'automation-workbench-askfull' : 'automation-workbench-askpreview' },
           fullText ? full : (ask.preview ?? ''))
         : ask.status === 'failed'
-          ? h('p', { className: 'capital-automation-askerror' }, ask.error ?? zh.board.askFailed)
-          : h('p', { className: 'capital-automation-askhint', role: 'status' }, zh.board.askPending),
+          ? h('p', { className: 'automation-workbench-askerror' }, ask.error ?? zh.board.askFailed)
+          : h('p', { className: 'automation-workbench-askhint', role: 'status' }, zh.board.askPending),
       canExpand
         ? h('button', {
           type: 'button',
-          className: 'capital-automation-btn capital-automation-askaction',
+          className: 'automation-workbench-btn automation-workbench-askaction',
           'data-size': 'sm',
           'data-variant': 'ghost',
           'data-expanded': fullText ? 'true' : 'false',
@@ -4451,8 +4451,8 @@ function AskExchange(props) {
         }, loading ? zh.loading : fullText ? zh.board.askCollapse : zh.board.askMore,
         loading || fullText ? null : h(IconChevronDownOutlineRegular, { size: 12 }))
         : null,
-      error.length > 0 ? h('p', { className: 'capital-automation-askerror', role: 'alert' }, error) : null,
-      truncated ? h('p', { className: 'capital-automation-askhint' }, '回答过长，已截断；完整内容请打开 session 查看。') : null))
+      error.length > 0 ? h('p', { className: 'automation-workbench-askerror', role: 'alert' }, error) : null,
+      truncated ? h('p', { className: 'automation-workbench-askhint' }, '回答过长，已截断；完整内容请打开 session 查看。') : null))
 }
 
 function AskDialog(props) {
@@ -4487,15 +4487,15 @@ function AskDialog(props) {
   if (status === 'ready') {
     context = h('div', null,
       h('h3', null, brief.headline),
-      h('p', { className: 'capital-automation-chatcontexttext' }, brief.plain))
+      h('p', { className: 'automation-workbench-chatcontexttext' }, brief.plain))
   } else if (status === 'failed') {
     context = h('div', null,
-      h('p', { className: 'capital-automation-chatcontexttext' }, zh.board.briefFailed),
-      h('p', { className: 'capital-automation-askhint' }, brief?.error ?? zh.errorGeneric))
+      h('p', { className: 'automation-workbench-chatcontexttext' }, zh.board.briefFailed),
+      h('p', { className: 'automation-workbench-askhint' }, brief?.error ?? zh.errorGeneric))
   } else if (status === 'skipped') {
-    context = h('p', { className: 'capital-automation-chatcontexttext' }, zh.board.briefSkipped)
+    context = h('p', { className: 'automation-workbench-chatcontexttext' }, zh.board.briefSkipped)
   } else {
-    context = h('p', { className: 'capital-automation-chatcontexttext' }, zh.board.briefPending)
+    context = h('p', { className: 'automation-workbench-chatcontexttext' }, zh.board.briefPending)
   }
   return h(Modal, {
     open,
@@ -4503,13 +4503,13 @@ function AskDialog(props) {
     onClose,
     title: zh.board.askDialogTitle,
     closeLabel: zh.close,
-    className: 'capital-automation-modal capital-automation-modal-chat',
+    className: 'automation-workbench-modal automation-workbench-modal-chat',
   },
-  h('div', { className: 'capital-automation-chatshell' },
-    h('header', { className: 'capital-automation-chathead' },
+  h('div', { className: 'automation-workbench-chatshell' },
+    h('header', { className: 'automation-workbench-chathead' },
       h('button', {
         type: 'button',
-        className: 'capital-automation-chaticonbtn',
+        className: 'automation-workbench-chaticonbtn',
         title: zh.close,
         'aria-label': zh.close,
         onClick: onClose,
@@ -4517,37 +4517,37 @@ function AskDialog(props) {
       openSession
         ? h('button', {
           type: 'button',
-          className: 'capital-automation-chaticonbtn',
+          className: 'automation-workbench-chaticonbtn',
           title: zh.openSession,
           'aria-label': zh.openSession,
           onClick: openSession,
         }, h(IconRightUpOutlineRegular, { size: 18 }))
         : null),
-    h('div', { ref: scrollRef, className: 'capital-automation-chatscroll' },
-      h('div', { className: 'capital-automation-chatcontext' },
+    h('div', { ref: scrollRef, className: 'automation-workbench-chatscroll' },
+      h('div', { className: 'automation-workbench-chatcontext' },
         h(Glyph, { task: identity ?? card, size: 38, radius: 999, glyphSize: 18 }),
-        h('div', { className: 'capital-automation-chatcontextbody' },
-          h('div', { className: 'capital-automation-chatcontexthead' },
+        h('div', { className: 'automation-workbench-chatcontextbody' },
+          h('div', { className: 'automation-workbench-chatcontexthead' },
             h('strong', null, card.taskTitle),
-            h('span', { className: 'capital-automation-chatcontextmeta' },
+            h('span', { className: 'automation-workbench-chatcontextmeta' },
               `${categoryLabel(card.category)} · ${trigger} · `,
               h('time', { dateTime: card.finishedAt, title: exactTime }, relativeTime))),
           context)),
       historyError.length > 0
-        ? h('p', { className: 'capital-automation-askerror', role: 'alert' }, historyError)
+        ? h('p', { className: 'automation-workbench-askerror', role: 'alert' }, historyError)
         : null,
       asks.length > 0
-        ? h('div', { className: 'capital-automation-chatthread' },
-          asks.map((item) => h('div', { key: item.id, className: 'capital-automation-chatexchange' },
+        ? h('div', { className: 'automation-workbench-chatthread' },
+          asks.map((item) => h('div', { key: item.id, className: 'automation-workbench-chatexchange' },
             h(AskExchange, { ask: item, api }))))
-        : h('div', { className: 'capital-automation-chatempty' },
+        : h('div', { className: 'automation-workbench-chatempty' },
           h('p', null, zh.board.askEmptyTitle)),
-      error.length > 0 ? h('p', { className: 'capital-automation-askerror', role: 'alert' }, error) : null),
-    h('form', { className: 'capital-automation-chatcomposer', onSubmit },
+      error.length > 0 ? h('p', { className: 'automation-workbench-askerror', role: 'alert' }, error) : null),
+    h('form', { className: 'automation-workbench-chatcomposer', onSubmit },
       h('input', {
         ref: inputRef,
         type: 'text',
-        className: 'capital-automation-askinput',
+        className: 'automation-workbench-askinput',
         value: question,
         maxLength: 500,
         enterKeyHint: 'send',
@@ -4561,7 +4561,7 @@ function AskDialog(props) {
       }),
       h('button', {
         type: 'submit',
-        className: 'capital-automation-btn capital-automation-chatsend',
+        className: 'automation-workbench-btn automation-workbench-chatsend',
         'data-variant': 'primary',
         disabled: busy || running || question.trim().length === 0,
       }, busy ? zh.processing : zh.board.askSubmit))))
@@ -4709,7 +4709,7 @@ function AskDock(props) {
     onOpenSession,
   })
   if (latest === null) return dialog
-  return h('div', { className: 'capital-automation-askdock' },
+  return h('div', { className: 'automation-workbench-askdock' },
     h(AskExchange, { key: latest.id, ask: latest, api }),
     dialog)
 }
@@ -4721,13 +4721,13 @@ function BriefCard(props) {
   const identity = typeof card.icon === 'string' ? card : (task ?? card)
   const brief = card.brief
   const status = brief?.status ?? 'pending'
-  const titleId = `capital-automation-brief-${card.runId}`
+  const titleId = `automation-workbench-brief-${card.runId}`
   const sessionId = card.sessionId
   const openSession = sessionId ? () => onOpenSession(sessionId) : null
   const openIcon = openSession
     ? h('button', {
       type: 'button',
-      className: 'capital-automation-btn',
+      className: 'automation-workbench-btn',
       'data-size': 'icon',
       title: zh.openSession,
       'aria-label': zh.openSession,
@@ -4737,7 +4737,7 @@ function BriefCard(props) {
   const askIcon = sessionId
     ? h('button', {
       type: 'button',
-      className: 'capital-automation-btn',
+      className: 'automation-workbench-btn',
       'data-size': 'icon',
       title: zh.board.askDialogTitle,
       'aria-label': `${zh.board.askDialogTitle}：${card.taskTitle ?? ''}`,
@@ -4745,58 +4745,58 @@ function BriefCard(props) {
     }, h(IconNewChatOutlineRegular, { size: 14 }))
     : null
   const openLink = openSession
-    ? h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', onClick: openSession }, zh.openSession)
+    ? h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', onClick: openSession }, zh.openSession)
     : null
   const trigger = card.trigger === 'manual' ? zh.triggerManual : zh.triggerScheduled
   const relativeTime = boardRelativeTime(card.finishedAt)
   const exactTime = formatTime(card.finishedAt)
   let body
   if (status === 'ready') {
-    body = h('div', { className: 'capital-automation-briefbody' },
+    body = h('div', { className: 'automation-workbench-briefbody' },
       h('h4', null, brief.headline),
-      h('p', { className: 'capital-automation-brieftext' }, brief.plain))
+      h('p', { className: 'automation-workbench-brieftext' }, brief.plain))
   } else if (status === 'failed') {
-    body = h('div', { className: 'capital-automation-briefstate', 'data-tone': 'error' },
+    body = h('div', { className: 'automation-workbench-briefstate', 'data-tone': 'error' },
       h('p', null, zh.board.briefFailed),
-      h('p', { className: 'capital-automation-hint' }, brief?.error ?? zh.errorGeneric),
-      h('div', { className: 'capital-automation-briefactions' },
+      h('p', { className: 'automation-workbench-hint' }, brief?.error ?? zh.errorGeneric),
+      h('div', { className: 'automation-workbench-briefactions' },
         h('button', {
           type: 'button',
-          className: 'capital-automation-btn',
+          className: 'automation-workbench-btn',
           'data-size': 'sm',
           disabled: retrying === true,
           onClick: () => onRetry(card.runId),
         }, retrying === true ? zh.processing : zh.board.retry),
         openLink))
   } else if (status === 'skipped') {
-    body = h('div', { className: 'capital-automation-briefstate' },
+    body = h('div', { className: 'automation-workbench-briefstate' },
       h('p', null, zh.board.briefSkipped),
-      h('div', { className: 'capital-automation-briefactions' }, openLink))
+      h('div', { className: 'automation-workbench-briefactions' }, openLink))
   } else {
-    body = h('div', { className: 'capital-automation-briefstate' },
+    body = h('div', { className: 'automation-workbench-briefstate' },
       h(SkeletonBlock, { width: '72%', height: 14 }),
       h(SkeletonBlock, { width: '100%', height: 10 }),
       h(SkeletonBlock, { width: '88%', height: 10 }),
-      h('p', { className: 'capital-automation-hint' }, zh.board.briefPending))
+      h('p', { className: 'automation-workbench-hint' }, zh.board.briefPending))
   }
   return h('article', {
-    className: 'capital-automation-briefcard',
+    className: 'automation-workbench-briefcard',
     'data-status': status,
     'data-highlight': highlighted === true ? 'true' : undefined,
     'aria-labelledby': titleId,
   },
-    h('div', { className: 'capital-automation-briefhead' },
-      h('div', { className: 'capital-automation-brieftitle' },
+    h('div', { className: 'automation-workbench-briefhead' },
+      h('div', { className: 'automation-workbench-brieftitle' },
         h(Glyph, { task: identity, size: 24, radius: 8, glyphSize: 14 }),
         h('h3', { id: titleId }, card.taskTitle),
-        h('span', { className: 'capital-automation-tag', 'data-tone': card.category }, categoryLabel(card.category)),
-        h('span', { className: 'capital-automation-tag' }, trigger),
+        h('span', { className: 'automation-workbench-tag', 'data-tone': card.category }, categoryLabel(card.category)),
+        h('span', { className: 'automation-workbench-tag' }, trigger),
         h('time', {
-          className: 'capital-automation-brieftime',
+          className: 'automation-workbench-brieftime',
           dateTime: card.finishedAt,
           title: exactTime,
         }, relativeTime)),
-      h('div', { className: 'capital-automation-briefheadactions' }, askIcon, openIcon)),
+      h('div', { className: 'automation-workbench-briefheadactions' }, askIcon, openIcon)),
     body,
     h(AskDock, {
       card,
@@ -4810,26 +4810,26 @@ function BriefCard(props) {
 
 function BoardSkeleton(props) {
   const { railOpen = false } = props
-  return h('div', { className: 'capital-automation-loading', 'aria-busy': 'true' },
-    h('span', { className: 'capital-automation-skeletonlabel', role: 'status', 'aria-live': 'polite' }, zh.loading),
-    h('div', { className: 'capital-automation-board' },
-    h('div', { className: 'capital-automation-boardtoolbar' },
-      h('div', { className: 'capital-automation-boardtools' }, h(SkeletonBlock, { width: 82, height: 28, radius: 999 }), h(SkeletonBlock, { width: 72, height: 28, radius: 999 })),
-      h('div', { className: 'capital-automation-boardactions' }, h(SkeletonBlock, { width: 58, height: 28, radius: 999 }), h(SkeletonBlock, { width: 84, height: 28, radius: 999 }))),
-    h('div', { className: 'capital-automation-boardstats' },
-      Array.from({ length: 5 }, (_, index) => h('div', { key: index, className: 'capital-automation-boardstat' }, h(SkeletonBlock, { width: 46, height: 9 }), h(SkeletonBlock, { width: 24, height: 16 })))),
-    h('div', { className: 'capital-automation-boardgrid', 'data-rail': railOpen === true ? 'open' : 'closed' },
-      h('section', { className: 'capital-automation-boardmain' },
-        [0, 1].map((index) => h('div', { key: index, className: 'capital-automation-briefcard' },
-          h('div', { className: 'capital-automation-brieftitle' },
+  return h('div', { className: 'automation-workbench-loading', 'aria-busy': 'true' },
+    h('span', { className: 'automation-workbench-skeletonlabel', role: 'status', 'aria-live': 'polite' }, zh.loading),
+    h('div', { className: 'automation-workbench-board' },
+    h('div', { className: 'automation-workbench-boardtoolbar' },
+      h('div', { className: 'automation-workbench-boardtools' }, h(SkeletonBlock, { width: 82, height: 28, radius: 999 }), h(SkeletonBlock, { width: 72, height: 28, radius: 999 })),
+      h('div', { className: 'automation-workbench-boardactions' }, h(SkeletonBlock, { width: 58, height: 28, radius: 999 }), h(SkeletonBlock, { width: 84, height: 28, radius: 999 }))),
+    h('div', { className: 'automation-workbench-boardstats' },
+      Array.from({ length: 5 }, (_, index) => h('div', { key: index, className: 'automation-workbench-boardstat' }, h(SkeletonBlock, { width: 46, height: 9 }), h(SkeletonBlock, { width: 24, height: 16 })))),
+    h('div', { className: 'automation-workbench-boardgrid', 'data-rail': railOpen === true ? 'open' : 'closed' },
+      h('section', { className: 'automation-workbench-boardmain' },
+        [0, 1].map((index) => h('div', { key: index, className: 'automation-workbench-briefcard' },
+          h('div', { className: 'automation-workbench-brieftitle' },
             h(SkeletonBlock, { width: 24, height: 24, radius: 8 }),
             h(SkeletonBlock, { width: '48%', height: 12 })),
           h(SkeletonBlock, { width: '80%', height: 16 }),
           h(SkeletonBlock, { width: '100%', height: 10 }),
           h(SkeletonBlock, { width: '92%', height: 10 })))),
       railOpen === true
-        ? h('aside', { className: 'capital-automation-boardrail' },
-          h('div', { className: 'capital-automation-card capital-automation-panel' },
+        ? h('aside', { className: 'automation-workbench-boardrail' },
+          h('div', { className: 'automation-workbench-card automation-workbench-panel' },
             h(SkeletonBlock, { width: 68, height: 14 }),
             h(SkeletonBlock, { width: '100%', height: 10 }),
             h(SkeletonBlock, { width: '86%', height: 10 })))
@@ -4840,22 +4840,22 @@ function BriefFeed(props) {
   const { cards, tasks, api, loading, error, onOpenSession, onRetry, retryingRunId, onViewAll, onClearFilter, onLoadMore, hasMore, loadingMore, railOpen, highlightToken = 0 } = props
   if (loading === true) return h(BoardSkeleton, { railOpen })
   if (typeof error === 'string' && error.length > 0) {
-    return h('section', { className: 'capital-automation-boardmain', id: 'capital-automation-briefs' },
-      h('div', { className: 'capital-automation-banner', 'data-tone': 'error', role: 'alert' }, error))
+    return h('section', { className: 'automation-workbench-boardmain', id: 'automation-workbench-briefs' },
+      h('div', { className: 'automation-workbench-banner', 'data-tone': 'error', role: 'alert' }, error))
   }
   if (cards.length === 0) {
-    return h('section', { className: 'capital-automation-boardmain', id: 'capital-automation-briefs' },
-      h('div', { className: 'capital-automation-empty' },
-        h('span', { className: 'capital-automation-emptyicon' }, h(IconChecklistOutlineRegular, { size: 19 })),
+    return h('section', { className: 'automation-workbench-boardmain', id: 'automation-workbench-briefs' },
+      h('div', { className: 'automation-workbench-empty' },
+        h('span', { className: 'automation-workbench-emptyicon' }, h(IconChecklistOutlineRegular, { size: 19 })),
         h('h3', null, zh.board.rangeEmpty),
         h('p', null, zh.board.emptyHint),
-        h('div', { className: 'capital-automation-boardemptyactions' },
-          onViewAll ? h('button', { type: 'button', className: 'capital-automation-btn', onClick: onViewAll }, zh.board.viewAll) : null,
-          onClearFilter ? h('button', { type: 'button', className: 'capital-automation-btn', onClick: onClearFilter }, zh.board.clearFilter) : null)))
+        h('div', { className: 'automation-workbench-boardemptyactions' },
+          onViewAll ? h('button', { type: 'button', className: 'automation-workbench-btn', onClick: onViewAll }, zh.board.viewAll) : null,
+          onClearFilter ? h('button', { type: 'button', className: 'automation-workbench-btn', onClick: onClearFilter }, zh.board.clearFilter) : null)))
   }
   const taskById = new Map((Array.isArray(tasks) ? tasks : []).map((task) => [task.id, task]))
   const today = localDateKey(new Date())
-  return h('section', { className: 'capital-automation-boardmain', id: 'capital-automation-briefs', 'aria-label': zh.board.briefTitle },
+  return h('section', { className: 'automation-workbench-boardmain', id: 'automation-workbench-briefs', 'aria-label': zh.board.briefTitle },
     cards.map((card) => h(BriefCard, {
       key: card.runId,
       card,
@@ -4869,7 +4869,7 @@ function BriefFeed(props) {
     hasMore
       ? h('button', {
         type: 'button',
-        className: 'capital-automation-btn capital-automation-boardmore',
+        className: 'automation-workbench-btn automation-workbench-boardmore',
         disabled: loadingMore === true,
         onClick: onLoadMore,
       }, loadingMore === true ? zh.loading : zh.board.loadMore)
@@ -4900,24 +4900,24 @@ function TodoRow(props) {
     : ''
   const checkable = boardTodoCheckable(status)
   const basisAction = open ? zh.board.hideBasis : zh.board.showBasis
-  const basisCaret = h('span', { className: 'capital-automation-basiscaret', 'aria-hidden': 'true' }, h(IconChevronDownOutlineRegular, { size: 12 }))
-  return h('li', { className: 'capital-automation-todoitem' },
-    h('div', { className: 'capital-automation-todoline' },
-      h('div', { className: 'capital-automation-todotop' },
-        h('div', { className: 'capital-automation-todotags' },
+  const basisCaret = h('span', { className: 'automation-workbench-basiscaret', 'aria-hidden': 'true' }, h(IconChevronDownOutlineRegular, { size: 12 }))
+  return h('li', { className: 'automation-workbench-todoitem' },
+    h('div', { className: 'automation-workbench-todoline' },
+      h('div', { className: 'automation-workbench-todotop' },
+        h('div', { className: 'automation-workbench-todotags' },
           watchLabel.length > 0
             ? h('span', {
-              className: 'capital-automation-todowatch',
+              className: 'automation-workbench-todowatch',
               'data-status': status,
               title: boardTodoWatchHint(status, checkpointHint),
             },
             watchLabel,
-            status === 'resolved' ? h('span', { className: 'capital-automation-todowatchcheck', 'aria-hidden': 'true' }, '✓') : null)
+            status === 'resolved' ? h('span', { className: 'automation-workbench-todowatchcheck', 'aria-hidden': 'true' }, '✓') : null)
             : null),
         checkable
           ? h('button', {
             type: 'button',
-            className: 'capital-automation-todocheck',
+            className: 'automation-workbench-todocheck',
             role: 'checkbox',
             'aria-checked': 'false',
             title: zh.board.todoAckTitle,
@@ -4925,31 +4925,31 @@ function TodoRow(props) {
             'data-busy': acking === true ? 'true' : undefined,
             disabled: ackDisabled === true,
             onClick: () => onAck(item),
-          }, acking === true ? h('span', { className: 'capital-automation-todocheckspin', 'aria-hidden': 'true' }) : null)
+          }, acking === true ? h('span', { className: 'automation-workbench-todocheckspin', 'aria-hidden': 'true' }) : null)
           : null),
       h('button', {
         type: 'button',
-        className: 'capital-automation-todotitle',
+        className: 'automation-workbench-todotitle',
         'aria-expanded': open ? 'true' : 'false',
         'aria-label': `${item.title}，${basisAction}`,
         title: basisAction,
         onClick: () => setOpen((value) => !value),
       }, item.title, basisCaret)),
-    item.detail ? h('p', { className: 'capital-automation-tododesc' }, item.detail) : null,
+    item.detail ? h('p', { className: 'automation-workbench-tododesc' }, item.detail) : null,
     watchMessage.length > 0
-      ? h('p', { className: 'capital-automation-todowatchmsg', 'data-status': status }, watchMessage)
+      ? h('p', { className: 'automation-workbench-todowatchmsg', 'data-status': status }, watchMessage)
       : null,
-    meta.length > 0 ? h('div', { className: 'capital-automation-todometa' }, meta) : null,
+    meta.length > 0 ? h('div', { className: 'automation-workbench-todometa' }, meta) : null,
     open
-      ? h('div', { className: 'capital-automation-tododetail' },
+      ? h('div', { className: 'automation-workbench-tododetail' },
         h('blockquote', null, quote),
         source
-          ? h('div', { className: 'capital-automation-todosource' },
+          ? h('div', { className: 'automation-workbench-todosource' },
             h('span', null, `${zh.board.sourceRun}：${source.taskTitle} · ${formatShortTime(source.finishedAt)}`),
             source.sessionId
               ? h('button', {
                 type: 'button',
-                className: 'capital-automation-btn',
+                className: 'automation-workbench-btn',
                 'data-size': 'icon',
                 title: zh.openSession,
                 'aria-label': zh.openSession,
@@ -4962,11 +4962,11 @@ function TodoRow(props) {
 
 function BoardPanelHead(props) {
   const { id, title, open, onToggle, meta, action } = props
-  return h('div', { className: 'capital-automation-panelhead' },
+  return h('div', { className: 'automation-workbench-panelhead' },
     h('h3', null,
       h('button', {
         type: 'button',
-        className: 'capital-automation-paneltoggle',
+        className: 'automation-workbench-paneltoggle',
         'aria-expanded': open === true ? 'true' : 'false',
         'aria-controls': `${id}-body`,
         'aria-label': `${title}（${open === true ? zh.board.collapse : zh.board.expand}）`,
@@ -4976,7 +4976,7 @@ function BoardPanelHead(props) {
       h('span', null, title),
       h(IconChevronDownOutlineRegular, {
         size: 14,
-        className: 'capital-automation-panelchevron',
+        className: 'automation-workbench-panelchevron',
         'data-open': open === true ? 'true' : 'false',
       }))),
     meta ?? null,
@@ -4986,14 +4986,14 @@ function BoardPanelHead(props) {
 function BoardPanel(props) {
   const { id, title, open, onToggle, meta, action, children } = props
   return h('section', {
-    className: 'capital-automation-card capital-automation-panel',
+    className: 'automation-workbench-card automation-workbench-panel',
     id,
     'data-collapsed': open === true ? 'false' : 'true',
   },
   h(BoardPanelHead, { id, title, open, onToggle, meta, action }),
   h('div', {
     id: `${id}-body`,
-    className: 'capital-automation-panelbody',
+    className: 'automation-workbench-panelbody',
     hidden: open !== true,
   }, children))
 }
@@ -5010,7 +5010,7 @@ function TodoPanel(props) {
     ? zh.board.todoEmptyToday
     : zh.board.todoEmptyGroup.replace('{label}', boardTodoGroupLabel(filter))
   return h(BoardPanel, {
-    id: 'capital-automation-todo',
+    id: 'automation-workbench-todo',
     title: zh.board.todoTitle,
     open,
     onToggle,
@@ -5024,8 +5024,8 @@ function TodoPanel(props) {
     }),
   },
   visible.length === 0
-    ? h('p', { className: 'capital-automation-hint' }, emptyText)
-    : h('ul', { className: 'capital-automation-todolist' }, visible.map((entry) => h(TodoRow, {
+    ? h('p', { className: 'automation-workbench-hint' }, emptyText)
+    : h('ul', { className: 'automation-workbench-todolist' }, visible.map((entry) => h(TodoRow, {
       key: entry.item.id,
       item: entry.item,
       period: entry.period,
@@ -5075,42 +5075,42 @@ function StockRow(props) {
     : todos.filter((item) => item.ackedAt === undefined && boardEntrySymbolKey(item) === stockKey)
   const followUpCount = Array.isArray(stock.items) ? stock.items.length : (stock.todoCount ?? 0)
   const roleSummary = stock.roles.map((role) => boardRoleTitle(role)).join('；')
-  return h('div', { className: 'capital-automation-stockrow' },
+  return h('div', { className: 'automation-workbench-stockrow' },
     h('button', {
       type: 'button',
-      className: 'capital-automation-stockmain',
+      className: 'automation-workbench-stockmain',
       'aria-expanded': open ? 'true' : 'false',
       'aria-label': `${stock.name} ${stock.symbol}${roleSummary.length > 0 ? `，${roleSummary}` : ''}`,
       onClick: () => setOpen((value) => !value),
     },
-    h('span', { className: 'capital-automation-stockname' }, stock.name),
-    h('span', { className: 'capital-automation-stockcode' }, stock.symbol),
-    h('span', { className: 'capital-automation-stockroles' },
+    h('span', { className: 'automation-workbench-stockname' }, stock.name),
+    h('span', { className: 'automation-workbench-stockcode' }, stock.symbol),
+    h('span', { className: 'automation-workbench-stockroles' },
       stock.roles.map((role) => h('span', {
         key: role,
-        className: 'capital-automation-stockrole',
+        className: 'automation-workbench-stockrole',
         'data-role': role,
         title: boardRoleTitle(role),
       }, boardRoleLabel(role)))),
-    stock.note ? h('span', { className: 'capital-automation-stocknote' }, stock.note) : null,
-    h('span', { className: 'capital-automation-stockmeta' },
+    stock.note ? h('span', { className: 'automation-workbench-stocknote' }, stock.note) : null,
+    h('span', { className: 'automation-workbench-stockmeta' },
       stock.nextAt ? h('span', null, stock.nextAt) : null,
       followUpCount > 0
         ? h('span', { title: zh.board.stockTodoCountHint }, zh.board.stockTodoCount.replace('{n}', String(followUpCount)))
         : null)),
     open && related.length > 0
-      ? h('ul', { className: 'capital-automation-stocktodos' }, related.map((item) => h('li', { key: item.id },
+      ? h('ul', { className: 'automation-workbench-stocktodos' }, related.map((item) => h('li', { key: item.id },
         item.sessionId
           ? h('button', {
             type: 'button',
-            className: 'capital-automation-stocktodo',
+            className: 'automation-workbench-stocktodo',
             title: zh.openSession,
             'aria-label': `${item.title}，${zh.openSession}`,
             onClick: () => onOpenSession(item.sessionId),
           },
-          h('span', { className: 'capital-automation-stocktodotitle' }, item.title),
+          h('span', { className: 'automation-workbench-stocktodotitle' }, item.title),
           h(IconRightUpOutlineRegular, { size: 12, 'aria-hidden': 'true' }))
-          : h('span', { className: 'capital-automation-stocktodo', 'data-static': 'true' }, item.title))))
+          : h('span', { className: 'automation-workbench-stocktodo', 'data-static': 'true' }, item.title))))
       : null)
 }
 
@@ -5129,14 +5129,14 @@ function StockRadar(props) {
     ? zh.board.stocksCount.replace('{n}', String(totalCount))
     : zh.board.stockFilteredCount.replace('{shown}', String(filtered.length)).replace('{total}', String(totalCount))
   return h(BoardPanel, {
-    id: 'capital-automation-stocks',
+    id: 'automation-workbench-stocks',
     title: zh.board.stockTitle,
     open,
     onToggle,
     action: stocks.length === 0
       ? null
-      : h('div', { className: 'capital-automation-stockfilters' },
-        h('span', { className: 'capital-automation-hint' }, countText),
+      : h('div', { className: 'automation-workbench-stockfilters' },
+        h('span', { className: 'automation-workbench-hint' }, countText),
         h(Select, {
           value: filter,
           options: boardStockFilterOptions(),
@@ -5147,16 +5147,16 @@ function StockRadar(props) {
         })),
   },
   stocks.length === 0
-    ? h('p', { className: 'capital-automation-hint' }, zh.board.stockEmpty)
+    ? h('p', { className: 'automation-workbench-hint' }, zh.board.stockEmpty)
     : filtered.length === 0
-      ? h('p', { className: 'capital-automation-hint' }, zh.board.stockFilterEmpty)
+      ? h('p', { className: 'automation-workbench-hint' }, zh.board.stockFilterEmpty)
       : [
         ...visible.map((stock) => h(StockRow, { key: boardEntrySymbolKey(stock), stock, todos, onOpenSession })),
         hidden > 0
           ? h('button', {
             key: 'stock-more',
             type: 'button',
-            className: 'capital-automation-btn capital-automation-stockmore',
+            className: 'automation-workbench-btn automation-workbench-stockmore',
             'data-size': 'sm',
             onClick: () => setShowAll(true),
           }, zh.board.stockShowAll.replace('{n}', String(hidden)))
@@ -5164,13 +5164,13 @@ function StockRadar(props) {
             ? h('button', {
               key: 'stock-less',
               type: 'button',
-              className: 'capital-automation-btn capital-automation-stockmore',
+              className: 'automation-workbench-btn automation-workbench-stockmore',
               'data-size': 'sm',
               onClick: () => setShowAll(false),
             }, zh.board.stockShowLess)
             : null,
         capped > 0
-          ? h('p', { key: 'stock-capped', className: 'capital-automation-hint' }, zh.board.stockOther.replace('{n}', String(capped)))
+          ? h('p', { key: 'stock-capped', className: 'automation-workbench-hint' }, zh.board.stockOther.replace('{n}', String(capped)))
           : null,
       ])
 }
@@ -5180,27 +5180,27 @@ function GapRow(props) {
   const [open, setOpen] = useState(false)
   const source = gap.sources?.[0]
   const basisAction = open ? zh.board.hideBasis : zh.board.showBasis
-  return h('li', { className: 'capital-automation-gaprow' },
-    h('div', { className: 'capital-automation-gaphead' },
+  return h('li', { className: 'automation-workbench-gaprow' },
+    h('div', { className: 'automation-workbench-gaphead' },
       h('button', {
         type: 'button',
-        className: 'capital-automation-gaptitle',
+        className: 'automation-workbench-gaptitle',
         'aria-expanded': open ? 'true' : 'false',
         'aria-label': `${gap.topic}，${basisAction}`,
         title: basisAction,
         onClick: () => setOpen((value) => !value),
-      }, gap.topic, h('span', { className: 'capital-automation-basiscaret', 'aria-hidden': 'true' }, h(IconChevronDownOutlineRegular, { size: 12 })))),
-    h('p', { className: 'capital-automation-gapdesc' }, gap.detail),
+      }, gap.topic, h('span', { className: 'automation-workbench-basiscaret', 'aria-hidden': 'true' }, h(IconChevronDownOutlineRegular, { size: 12 })))),
+    h('p', { className: 'automation-workbench-gapdesc' }, gap.detail),
     open
-      ? h('div', { className: 'capital-automation-tododetail' },
+      ? h('div', { className: 'automation-workbench-tododetail' },
         h('blockquote', null, source?.sourceQuote ?? gap.sourceQuote),
         source
-          ? h('div', { className: 'capital-automation-todosource' },
+          ? h('div', { className: 'automation-workbench-todosource' },
             h('span', null, `${source.taskTitle} · ${formatShortTime(source.finishedAt)}`),
             source.sessionId
               ? h('button', {
                 type: 'button',
-                className: 'capital-automation-btn',
+                className: 'automation-workbench-btn',
                 'data-size': 'icon',
                 title: zh.openSession,
                 'aria-label': zh.openSession,
@@ -5216,16 +5216,16 @@ function DataHealthPanel(props) {
   const [showAll, setShowAll] = useState(false)
   const visible = showAll ? gaps : gaps.slice(0, 5)
   return h(BoardPanel, {
-    id: 'capital-automation-gaps',
+    id: 'automation-workbench-gaps',
     title: zh.board.statsGaps,
     open,
     onToggle,
   },
   gaps.length === 0
-    ? h('p', { className: 'capital-automation-hint' }, zh.board.gapEmpty)
-    : h('ul', { className: 'capital-automation-gaplist' }, visible.map((gap) => h(GapRow, { key: gap.id, gap, onOpenSession }))),
+    ? h('p', { className: 'automation-workbench-hint' }, zh.board.gapEmpty)
+    : h('ul', { className: 'automation-workbench-gaplist' }, visible.map((gap) => h(GapRow, { key: gap.id, gap, onOpenSession }))),
   (total ?? gaps.length) > visible.length
-    ? h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', onClick: () => setShowAll(true) }, zh.board.gapAll)
+    ? h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', onClick: () => setShowAll(true) }, zh.board.gapAll)
     : null)
 }
 
@@ -5262,35 +5262,35 @@ function RunHealthPanel(props) {
   const calendar = health?.calendar?.available === false ? zh.board.healthCalendarBad : zh.board.healthCalendarOk
   const calendarTone = health?.calendar?.available === false ? 'bad' : null
   return h(BoardPanel, {
-    id: 'capital-automation-health',
+    id: 'automation-workbench-health',
     title: zh.board.healthTitle,
     open,
     onToggle,
-    meta: h('span', { className: 'capital-automation-hint' }, zh.board.healthWindow),
-    action: h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', onClick: onGoRuns }, zh.board.healthViewRuns),
+    meta: h('span', { className: 'automation-workbench-hint' }, zh.board.healthWindow),
+    action: h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', onClick: onGoRuns }, zh.board.healthViewRuns),
   },
-  h('div', { className: 'capital-automation-healthgrid' },
-    h('span', { className: 'capital-automation-healthkey' }, zh.board.healthRuns),
-    h('span', { className: 'capital-automation-healthval' }, countText(runParts)),
-    h('span', { className: 'capital-automation-healthkey' }, zh.board.healthBriefs),
-    h('span', { className: 'capital-automation-healthval' }, countText(briefParts)),
-    h('span', { className: 'capital-automation-healthkey' }, zh.board.healthScheduler),
-    h('span', { className: 'capital-automation-healthval', 'data-tone': schedulerTone ?? undefined, title: schedulerHint }, scheduler),
-    h('span', { className: 'capital-automation-healthkey' }, zh.board.healthCalendar),
-    h('span', { className: 'capital-automation-healthval', 'data-tone': calendarTone ?? undefined }, calendar)),
+  h('div', { className: 'automation-workbench-healthgrid' },
+    h('span', { className: 'automation-workbench-healthkey' }, zh.board.healthRuns),
+    h('span', { className: 'automation-workbench-healthval' }, countText(runParts)),
+    h('span', { className: 'automation-workbench-healthkey' }, zh.board.healthBriefs),
+    h('span', { className: 'automation-workbench-healthval' }, countText(briefParts)),
+    h('span', { className: 'automation-workbench-healthkey' }, zh.board.healthScheduler),
+    h('span', { className: 'automation-workbench-healthval', 'data-tone': schedulerTone ?? undefined, title: schedulerHint }, scheduler),
+    h('span', { className: 'automation-workbench-healthkey' }, zh.board.healthCalendar),
+    h('span', { className: 'automation-workbench-healthval', 'data-tone': calendarTone ?? undefined }, calendar)),
   health?.issueCount > 0
-    ? h('ul', { className: 'capital-automation-healthissues' }, (health.recentIssues ?? []).map((issue) => {
+    ? h('ul', { className: 'automation-workbench-healthissues' }, (health.recentIssues ?? []).map((issue) => {
       const tone = healthIssueTone(issue.status)
       return h('li', { key: issue.runId },
-        h('span', { className: 'capital-automation-healthissue', title: issue.message || undefined },
-          h('span', { className: 'capital-automation-statusdot', 'data-tone': tone ?? undefined }),
-          h('span', { className: 'capital-automation-healthissuetitle' }, issue.taskTitle),
-          h('span', { className: 'capital-automation-healthissuestatus', 'data-tone': tone ?? undefined }, statusLabel(issue.status)),
-          issue.recoveredByRunId ? h('span', { className: 'capital-automation-healthrecovered' }, zh.board.healthRecovered) : null),
+        h('span', { className: 'automation-workbench-healthissue', title: issue.message || undefined },
+          h('span', { className: 'automation-workbench-statusdot', 'data-tone': tone ?? undefined }),
+          h('span', { className: 'automation-workbench-healthissuetitle' }, issue.taskTitle),
+          h('span', { className: 'automation-workbench-healthissuestatus', 'data-tone': tone ?? undefined }, statusLabel(issue.status)),
+          issue.recoveredByRunId ? h('span', { className: 'automation-workbench-healthrecovered' }, zh.board.healthRecovered) : null),
         issue.sessionId
           ? h('button', {
             type: 'button',
-            className: 'capital-automation-btn',
+            className: 'automation-workbench-btn',
             'data-size': 'icon',
             title: zh.openSession,
             'aria-label': zh.openSession,
@@ -5298,7 +5298,7 @@ function RunHealthPanel(props) {
           }, h(IconRightUpOutlineRegular, { size: 14 }))
           : null)
     }))
-    : h('p', { className: 'capital-automation-healthempty' }, zh.board.healthNoIssues))
+    : h('p', { className: 'automation-workbench-healthempty' }, zh.board.healthNoIssues))
 }
 
 function BoardPage(props) {
@@ -5363,21 +5363,21 @@ function BoardPage(props) {
 
   if (loading === true && board === null) return h(BoardSkeleton, { railOpen })
   if (error.length > 0 && board === null) {
-    return h('div', { className: 'capital-automation-board' },
-      h('div', { className: 'capital-automation-banner', 'data-tone': 'error', role: 'alert' },
+    return h('div', { className: 'automation-workbench-board' },
+      h('div', { className: 'automation-workbench-banner', 'data-tone': 'error', role: 'alert' },
         `${zh.board.loadError}：${error}`,
-        h('button', { type: 'button', className: 'capital-automation-btn', 'data-size': 'sm', onClick: onRefresh }, zh.loadRetry)))
+        h('button', { type: 'button', className: 'automation-workbench-btn', 'data-size': 'sm', onClick: onRefresh }, zh.loadRetry)))
   }
   if (board?.empty === true) {
-    return h('div', { className: 'capital-automation-board' },
-      error.length > 0 ? h('div', { className: 'capital-automation-banner', 'data-tone': 'error', role: 'alert' }, error) : null,
+    return h('div', { className: 'automation-workbench-board' },
+      error.length > 0 ? h('div', { className: 'automation-workbench-banner', 'data-tone': 'error', role: 'alert' }, error) : null,
       h(BoardEmpty, { hasActiveTasks, storageReady, onGoTasks, onNewTask }))
   }
   const todoToday = boardTodoTodaySplit(board?.todos ?? [])
   const boardStats = board?.stats === undefined
     ? undefined
     : { ...board.stats, todos: todoToday.total, todosManual: todoToday.manual, todosAuto: todoToday.auto }
-  return h('div', { className: 'capital-automation-board' },
+  return h('div', { className: 'automation-workbench-board' },
     h(BoardToolbar, {
       range,
       category,
@@ -5388,14 +5388,14 @@ function BoardPage(props) {
       railOpen,
       onToggleRail: toggleRail,
     }),
-    error.length > 0 ? h('div', { className: 'capital-automation-banner', 'data-tone': 'error', role: 'alert' }, error) : null,
+    error.length > 0 ? h('div', { className: 'automation-workbench-banner', 'data-tone': 'error', role: 'alert' }, error) : null,
     h(BoardStats, {
       stats: boardStats,
       onJump: jumpTo,
       onHighlightTodayBriefs: () => setBriefHighlight((value) => value + 1),
     }),
     h('div', {
-      className: 'capital-automation-boardgrid',
+      className: 'automation-workbench-boardgrid',
       'data-rail': railOpen === true ? 'open' : 'closed',
     },
       h(BriefFeed, {
@@ -5416,8 +5416,8 @@ function BoardPage(props) {
         highlightToken: briefHighlight,
       }),
       h('aside', {
-        id: 'capital-automation-boardrail',
-        className: 'capital-automation-boardrail',
+        id: 'automation-workbench-boardrail',
+        className: 'automation-workbench-boardrail',
         hidden: railOpen !== true,
       },
         h(TodoPanel, {
@@ -5901,7 +5901,7 @@ function AutomationPage(props) {
     switchTab('board')
     void loadBoard(boardRange, boardCategory)
     requestAnimationFrame(() => {
-      document.getElementById('capital-automation-todo')?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
+      document.getElementById('automation-workbench-todo')?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
     })
   }
 
@@ -6012,7 +6012,7 @@ function AutomationPage(props) {
   const tasksPending = initialLoading || !tasksReady
   const runsPending = initialLoading || !runsReady
 
-  return h('div', { className: 'capital-automation-page' },
+  return h('div', { className: 'automation-workbench-page' },
     detailOpen ? null : h(Header, {
       tab,
       onTab: switchTab,
@@ -6021,8 +6021,8 @@ function AutomationPage(props) {
       onOpenInbox: () => setInbox(true),
     }),
     h(PageBanners, { meta, loadError, onRetry: () => { void refresh() } }),
-    h('div', { className: 'capital-automation-scroll', ref: scrollRef },
-      h('div', { className: 'capital-automation-container' },
+    h('div', { className: 'automation-workbench-scroll', ref: scrollRef },
+      h('div', { className: 'automation-workbench-container' },
         tab === 'board'
           ? h(BoardPage, {
             board,
@@ -6053,7 +6053,7 @@ function AutomationPage(props) {
             ? h('div', null,
               h(DetailBar, { onBack: backToTasks }),
               detail === null
-                ? h('div', { className: 'capital-automation-empty' }, zh.loading)
+                ? h('div', { className: 'automation-workbench-empty' }, zh.loading)
                 : h(TaskDetailPage, {
                   detail,
                   meta,
@@ -6129,7 +6129,7 @@ function AutomationPage(props) {
       onCancel: () => { if (!confirmBusy) { setConfirm(null); setConfirmError('') } },
       onConfirm: () => { void confirmAction() },
     }),
-    notice.length > 0 ? h('div', { className: 'capital-automation-toast', role: 'status' }, notice) : null)
+    notice.length > 0 ? h('div', { className: 'automation-workbench-toast', role: 'status' }, notice) : null)
 }
 
 function AutomationIcon() {

@@ -11,7 +11,7 @@
  */
 import type { Context } from '@deepseek-ai/cordis';
 import type { SessionLike } from './data-collector/store.js';
-export declare const name = "capital-present-tools";
+export declare const name = "automation-present-tools";
 export declare const inject: string[];
 /**
  * Fallback only: when the stream listener never fires, immediate delivery still has to avoid a

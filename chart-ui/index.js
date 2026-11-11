@@ -1,11 +1,11 @@
 /**
- * Host half of `@v587d/capital-charts`: opaque chart registrations plus their
+ * Host half of `dsh-workbench-automation-charts`: opaque chart registrations plus their
  * series route. render_chart supplies the resolved file path; this half never
  * reads Dataset files itself.
  */
 
-export const name = 'capital-charts'
-export const ROUTE_PATH = '/capital-charts'
+export const name = 'automation-charts'
+export const ROUTE_PATH = '/automation-charts'
 
 const CHART_ID_PATTERN = /^ch_[A-Za-z0-9._-]{1,80}$/
 const MAX_ENTRIES = 500
@@ -13,7 +13,7 @@ const MAX_ENTRIES = 500
 function defaultReadFile(path) {
   const processLike = globalThis.process
   const fs = processLike?.getBuiltinModule?.('node:fs')
-  if (!fs || typeof fs.readFileSync !== 'function') throw new Error('capital-charts: Node fs is unavailable')
+  if (!fs || typeof fs.readFileSync !== 'function') throw new Error('automation-charts: Node fs is unavailable')
   return fs.readFileSync(path, 'utf8')
 }
 
@@ -27,10 +27,10 @@ export function createChartStore(options = {}) {
       const chartId = input?.chartId
       const filePath = input?.filePath
       if (typeof chartId !== 'string' || !CHART_ID_PATTERN.test(chartId)) {
-        throw new Error(`capital-charts: chart_id is invalid: ${String(chartId)}`)
+        throw new Error(`automation-charts: chart_id is invalid: ${String(chartId)}`)
       }
       if (typeof filePath !== 'string' || filePath.length === 0) {
-        throw new Error('capital-charts: filePath is required')
+        throw new Error('automation-charts: filePath is required')
       }
       files.delete(chartId)
       files.set(chartId, filePath)
@@ -144,7 +144,7 @@ export function createRouteHandler(store, options = {}) {
 
 export function apply(ctx) {
   const store = createChartStore({ routeReady: false })
-  ctx.provide('capitalCharts', {
+  ctx.provide('automationCharts', {
     publish: (input) => store.publish(input),
   })
 
@@ -174,7 +174,7 @@ export function apply(ctx) {
           if (typeof chartDispose === 'function') chartDispose()
         }
       },
-      'capital-charts: series route',
+      'automation-charts: series route',
     )
   }
   // Only through inject: `ctx.get('webServer')` resolving does not make

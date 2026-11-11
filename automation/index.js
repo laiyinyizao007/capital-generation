@@ -1,5 +1,5 @@
 /**
- * Host row `capital-automation`: fixed domain, profile-filtered API, one cross-process
+ * Host row `automation-workbench`: fixed domain, profile-filtered API, one cross-process
  * scheduler lease, and the browser page mounted on the host plane. The official
  * `ui-schedule` row and its `schedules` identities are untouched.
  */
@@ -22,7 +22,7 @@ import { createCalendarSource } from './calendar-source.js'
 import { createWorkspaceCatalog, defaultWorkspacePath } from './workspaces.js'
 import { sanitizeMessage } from './redact.js'
 
-export const name = 'capital-automation'
+export const name = 'automation-workbench'
 export { ROUTE_PATH, domainSpec, buildRunPrompt, sessionTitleOf }
 
 function versionOf() {
@@ -44,9 +44,9 @@ export function createAutomationRuntime(options) {
   const displayName = rawProfileName.slice(0, 200)
   const home = profile.home ?? profile.dir ?? process.cwd()
   const runDir = profile.runDir ?? defaultWorkspacePath(profile)
-  const ownerDir = profile.ownerDir ?? join(home, 'storages', 'capital-automation-locks')
+  const ownerDir = profile.ownerDir ?? join(home, 'storages', 'automation-workbench-locks')
   const calendar = options.calendar ?? createCalendarSource({
-    cacheDir: join(home, 'storages', 'capital-automation-calendar'),
+    cacheDir: join(home, 'storages', 'automation-workbench-calendar'),
     logger,
     now,
   })
@@ -199,9 +199,9 @@ export function apply(ctx) {
         .then(() => {
           created.briefs?.start()
           created.watches?.start()
-          logger?.info?.(`capital-automation: scheduler ${created.scheduler.status().state}`)
+          logger?.info?.(`automation-workbench: scheduler ${created.scheduler.status().state}`)
         })
-        .catch((error) => logger?.error?.(`capital-automation: scheduler 启动失败：${String(error)}`))
+        .catch((error) => logger?.error?.(`automation-workbench: scheduler 启动失败：${String(error)}`))
       appCtx.effect(() => async () => {
         if (activeService === created.service) {
           activeService = undefined
@@ -212,9 +212,9 @@ export function apply(ctx) {
         created.calendar.dispose?.()
         await created.runner.dispose?.()
         await created.store.close().catch(() => {})
-      }, 'capital-automation: runtime')
+      }, 'automation-workbench: runtime')
     } catch (error) {
-      logger?.error?.(`capital-automation: 运行时组装失败：${sanitizeMessage(String(error))}`)
+      logger?.error?.(`automation-workbench: 运行时组装失败：${sanitizeMessage(String(error))}`)
     }
   })
 
@@ -227,11 +227,11 @@ export function apply(ctx) {
   ctx.inject(['webServer'], (webCtx) => {
     webCtx.effect(
       () => webCtx.webServer.register({ kind: 'prefix', path: ROUTE_PATH, handler }),
-      'capital-automation: route',
+      'automation-workbench: route',
     )
   })
 
-  ctx.logger?.info?.('capital-automation: host row active (page + /capital-automation)')
+  ctx.logger?.info?.('automation-workbench: host row active (page + /automation-workbench)')
 }
 
 export { resolveAutomationSettings }

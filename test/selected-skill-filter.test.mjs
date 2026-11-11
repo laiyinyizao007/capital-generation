@@ -18,11 +18,11 @@ import {
 import { allPresets } from './preset-rows.mjs'
 
 const PRESET_IDS = {
-  main: 'capital-generation',
-  data_collector: 'capital-data-collector',
-  web_retriever: 'capital-web-retriever',
-  data_junior: 'capital-data-junior',
-  visualization_specialist: 'capital-visualization-specialist',
+  main: 'dsh-workbench-automation',
+  data_collector: 'automation-data-collector',
+  web_retriever: 'automation-web-retriever',
+  data_junior: 'automation-data-junior',
+  visualization_specialist: 'automation-visualization-specialist',
 }
 
 test('预设筛选沿用选择器里的五个名字，两个不加载方法的预设计数为 0', () => {

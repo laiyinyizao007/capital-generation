@@ -6,11 +6,11 @@
 import type { Context } from '@deepseek-ai/cordis'
 
 import { registerTimeTool } from './time/tools.js'
-import { capitalDatasetStore, type RuntimeContext } from './runtime.js'
+import { automationDatasetStore, type RuntimeContext } from './runtime.js'
 
-export const name = 'capital-time-tools'
+export const name = 'automation-time-tools'
 export const inject = ['tools']
 
 export function apply(ctx: Context): void {
-  registerTimeTool(ctx, capitalDatasetStore(ctx as unknown as RuntimeContext))
+  registerTimeTool(ctx, automationDatasetStore(ctx as unknown as RuntimeContext))
 }

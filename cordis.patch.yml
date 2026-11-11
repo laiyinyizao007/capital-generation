@@ -1,11 +1,11 @@
 # Capital Generation is a distributable DSH profile bundle.
 # This file mounts host-plane rows only (the inserts below). Presets are ordinary entry rows and
-# live in preset/capital-generation/agent.patch.yml, applied in order by package.json's
+# live in preset/dsh-workbench-automation/agent.patch.yml, applied in order by package.json's
 # `dsh.bundle.patch`; we insert our own preset declaration and never touch the registry's config.
 # ⛔ Do not register presets by patching an `agent-presets` row's `config.roots`: 0.1.7 renamed the
 # entry to `agent-preset-registry` and deleted the roots mechanism. The failure is a single boot warn
 # (`patch: entry "agent-presets" not found`), so presets never register and every saved session
-# reopening with `"agentPreset":"capital-generation"` reports `Unknown agent preset`.
+# reopening with `"agentPreset":"dsh-workbench-automation"` reports `Unknown agent preset`.
 
 # ── Chart frontend (host plane) ────────────────────────────────────────────────
 # Host plane because client bundles are injected at index.html render time; a bundle mounted on a
@@ -13,19 +13,19 @@
 # `name` must be a literal, path-like relative path — three pitfalls, each hit for real:
 #  1. only `config` is interpolated, so `!!js` in `name` reaches the ESM import verbatim
 #     (`name.startsWith is not a function`, whole profile fails to boot).
-#  2. a subpath specifier (`@v587d/capital-generation/chart-ui`) is neither path-like nor a
+#  2. a subpath specifier (`dsh-workbench-automation/chart-ui`) is neither path-like nor a
 #     resolvable package name, so locatePkgJson silently classifies the row as "not a client
 #     bundle": the bundle never enters __DSH_BOOT__, the UI is missing, nothing is logged.
 #  3. the resolution base is this file's directory, not the profile root, so `./chart-ui/index.js`
 #     works under any node_modules layout; package identity comes from chart-ui/package.json
-#     (@v587d/capital-charts), which is why it cannot collide with the main package.
+#     (dsh-workbench-automation-charts), which is why it cannot collide with the main package.
 # Regression: test/chart-composition.test.mjs (name stays a literal path-like string and resolves).
 #
 # ⚠ Directory name and row id are two independent chains (AGENTS.md §5.1): the rows below live in
-# `config/` and `watchlist/`, yet keep ids `capital-config` / `capital-watchlist` — those ids are
+# `config/` and `watchlist/`, yet keep ids `automation-config` / `automation-watchlist` — those ids are
 # the settings namespace and the identity of the user's saved config; "aligning" them discards it.
 - insert:
-    - id: capital-config
+    - id: automation-config
       name: './config/index.js'
       config:
         customPersona: ''
@@ -39,11 +39,11 @@
             timeoutMs: 60000
 
 - insert:
-    - id: capital-charts
+    - id: automation-charts
       name: './chart-ui/index.js'
 
 # ── User watchlist (host plane) ───────────────────────────────────────────────
-# Cross-workspace user asset (~/.dsh/storages/capital_watchlist.json), so host plane for the same
+# Cross-workspace user asset (~/.dsh/storages/automation_watchlist.json), so host plane for the same
 # injection reason as chart-ui; the `name` rules above apply here too.
 # Direction is the opposite of chart-ui's: this row reaches the network itself, so it imports
 # ../lib/sources/fuyao-core.js (a zero-import leaf) rather than a second copy of key resolution,
@@ -51,7 +51,7 @@
 # import here, so test/watchlist-quote.test.mjs pins module identity: both import sites must get
 # the same instance, and if the probe fails the design is wrong — don't ship it and hope.
 - insert:
-    - id: capital-watchlist
+    - id: automation-watchlist
       name: './watchlist/index.js'
 
 # ── CapGen 投研自动化 (host plane) ─────────────────────────────────────────────
@@ -59,21 +59,21 @@
 # turnTail, no right-sidebar kind. The page is host-plane for the same injection reason
 # as chart-ui; `name` stays a literal path-like relative path (see the three pitfalls above).
 - insert:
-    - id: capital-automation
+    - id: automation-workbench
       name: './automation/index.js'
 
 # ── Cross-preset runtime / policy (0.2.1) ─────────────────────────────────────
 # Root and role presets mount separately, so apply() runs several times per process. Shared state
 # (chart source tokens, chart artifacts) and the agent/created listeners (root convergence, shell
 # and fs guards) must exist exactly once, which only a host-plane provide gives.
-# These two rows use package subpath entries (@v587d/capital-generation/runtime and /policy): they
+# These two rows use package subpath entries (dsh-workbench-automation/runtime and /policy): they
 # are server-side, so the literal-path rule above doesn't apply — DSH composes its own
 # @deepseek-ai/dsh-tool-subagent-control rows the same way.
 - insert:
-    - id: capital-runtime
-      name: '@v587d/capital-generation/runtime'
+    - id: automation-runtime
+      name: 'dsh-workbench-automation/runtime'
 
 - insert:
-    - id: capital-policy
-      name: '@v587d/capital-generation/policy'
+    - id: automation-policy
+      name: 'dsh-workbench-automation/policy'
 

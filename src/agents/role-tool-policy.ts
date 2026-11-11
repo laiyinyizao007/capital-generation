@@ -137,7 +137,7 @@ export function registerRoleSiblingGuard(ctx: PolicyContext): void {
       return undefined
     }
     if (tools === undefined || typeof tools.guard !== 'function') {
-      ctx.logger?.warn('capital-generation: 角色兄弟名字的调用级闸门没装上（guard 面不可用）：手开角色会话仍可 interrupt 兄弟')
+      ctx.logger?.warn('automation-workbench: 角色兄弟名字的调用级闸门没装上（guard 面不可用）：手开角色会话仍可 interrupt 兄弟')
       return undefined
     }
     try {
@@ -158,7 +158,7 @@ export function registerRoleSiblingGuard(ctx: PolicyContext): void {
       return () => {
         try { dispose() } finally { installedGuardRoots.delete(ref) }
       }
-    }, 'capital-generation.role-sibling-guard()')
+    }, 'automation-workbench.role-sibling-guard()')
     return
   }
   install()
@@ -189,10 +189,10 @@ export function registerRoleToolPolicy(ctx: PolicyContext): void {
         probes.push({ agentId: id, root: isRootAgent(agent), presetId, ...result })
         if (probes.length > MAX_PROBES) probes.shift()
         if (result.outcome === 'unavailable') {
-          ctx.logger?.warn(`capital-generation: 角色 ${presetId} 的兄弟名字收敛没装上（restrict 面不可用）：该 child 仍看得见 ${SIBLING_DENIED_TOOLS.join(' / ')}`)
+          ctx.logger?.warn(`automation-workbench: 角色 ${presetId} 的兄弟名字收敛没装上（restrict 面不可用）：该 child 仍看得见 ${SIBLING_DENIED_TOOLS.join(' / ')}`)
         }
       } catch (error) {
-        ctx.logger?.warn(`capital-generation: 角色工具面收敛异常：${error instanceof Error ? error.message : String(error)}`)
+        ctx.logger?.warn(`automation-workbench: 角色工具面收敛异常：${error instanceof Error ? error.message : String(error)}`)
       }
     })
     const stopDisposed = listenCtx.on?.('agent/disposed', (payload: { agent?: AgentLike }) => {
@@ -210,7 +210,7 @@ export function registerRoleToolPolicy(ctx: PolicyContext): void {
       return () => {
         try { if (typeof dispose === 'function') dispose() } finally { installedRoots.delete(listenCtx) }
       }
-    }, 'capital-generation.role-tool-policy()')
+    }, 'automation-workbench.role-tool-policy()')
     return
   }
   install()

@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  CAPITAL_PRESET_ID,
+  AUTOMATION_PRESET_ID,
   FS_WRITE_READ_ONLY,
   FS_WRITE_TOOL_NAMES,
   OCR_ROOT_URL_DENIED,
@@ -62,7 +62,7 @@ test('RETRIEVAL_DENIED_TOOLS：十五个出网工具全部从根 Agent 拿掉（
 test('ocrFormGuardReasonFor：只有**确证是主模式人设**的调用被关掉 url 形态，其余一律放行', () => {
   const ctx = { get: () => ({ composedPreset: (agentCtx) => agentCtx?.preset }) }
   const guard = ocrFormGuardReasonFor(ctx)
-  const capital = { ctx: { preset: CAPITAL_PRESET_ID } }
+  const capital = { ctx: { preset: AUTOMATION_PRESET_ID } }
   assert.equal(guard({ name: 'ocr', agent: capital, arguments: { url: 'https://pdf.dfcfw.com/pdf/H3_x_1.pdf' } }), OCR_ROOT_URL_DENIED)
   // Empty URL is not a request; let tool validation report it.
   assert.equal(guard({ name: 'ocr', agent: capital, arguments: { url: '' } }), undefined)
@@ -76,7 +76,7 @@ test('ocrFormGuardReasonFor：只有**确证是主模式人设**的调用被关�
     assert.equal(guard({ name: 'ocr', agent: capital, arguments: callArgs }), undefined, `本地形态不该被拦：${JSON.stringify(callArgs)}`)
   }
   // The web_retriever role may submit the same URL; identity is preset-based, not topology-based.
-  assert.equal(guard({ name: 'ocr', agent: { ctx: { preset: 'capital-web-retriever' } }, arguments: { url: 'https://x/a.pdf' } }), undefined)
+  assert.equal(guard({ name: 'ocr', agent: { ctx: { preset: 'automation-web-retriever' } }, arguments: { url: 'https://x/a.pdf' } }), undefined)
   // ⛔ A global guard must fail open on unknown identity; it cannot consume another preset's valid calls.
   assert.equal(guard({ name: 'ocr', agent: { ctx: { preset: 'standard' } }, arguments: { url: 'https://x/a.pdf' } }), undefined, '别的 preset 的 ocr 不归我们管')
   assert.equal(ocrFormGuardReasonFor({ get: () => undefined })({ name: 'ocr', agent: capital, arguments: { url: 'https://x/a.pdf' } }), undefined, 'registry 读不到就放行')
@@ -103,22 +103,22 @@ test('registerRootOcrGuard：全局装一次，且拒绝要留下现场记录', 
   registerRootOcrGuard(ctx)
   registerRootOcrGuard(ctx)
   assert.equal(guards.length, 1, '全局 guard 只装一次：按调用身份判定，不需要按 agent 装')
-  const call = { name: 'ocr', agent: { session: { id: 's-capital' }, ctx: { preset: CAPITAL_PRESET_ID } }, arguments: { url: 'https://x/a.pdf' } }
+  const call = { name: 'ocr', agent: { session: { id: 's-capital' }, ctx: { preset: AUTOMATION_PRESET_ID } }, arguments: { url: 'https://x/a.pdf' } }
   assert.equal(guards[0](call), OCR_ROOT_URL_DENIED)
   const probes = rootPolicyProbes()
   assert.equal(probes.length, 1, '拦下一次必须记一条（文案之外还得能查"当时判定成谁"）')
   assert.deepEqual(
     { outcome: probes[0].outcome, preset_id: probes[0].presetId, agent_id: probes[0].agentId, root: probes[0].root, denied: probes[0].denied },
-    { outcome: 'guard-denied', preset_id: CAPITAL_PRESET_ID, agent_id: 's-capital', root: true, denied: ['ocr'] })
+    { outcome: 'guard-denied', preset_id: AUTOMATION_PRESET_ID, agent_id: 's-capital', root: true, denied: ['ocr'] })
   // Successful calls are not recorded; normal traffic would flush the bounded diagnostic ring.
-  guards[0]({ name: 'ocr', agent: { ctx: { preset: 'capital-web-retriever' } }, arguments: { url: 'https://x/b.pdf' } })
+  guards[0]({ name: 'ocr', agent: { ctx: { preset: 'automation-web-retriever' } }, arguments: { url: 'https://x/b.pdf' } })
   assert.equal(rootPolicyProbes().length, 1)
   // Installation failures must not throw, but must be visible; silent no-op hides real bypasses.
   const warns = []
   assert.doesNotThrow(() => registerRootOcrGuard({
     get: () => undefined, tools: {}, effect: (cb) => cb(), logger: { warn: (message) => warns.push(message) },
   }))
-  assert.match(warns.join('\n'), /没装上/, '⛔ `ocr` 形态闸门装不上时必须 warn（capital-policy 漏 inject 就是这个形状）')
+  assert.match(warns.join('\n'), /没装上/, '⛔ `ocr` 形态闸门装不上时必须 warn（automation-policy 漏 inject 就是这个形状）')
 })
 
 test('isRootAgent：只有没有 parentSession 的才是根 Agent', () => {
@@ -240,7 +240,7 @@ test('registerRootToolPolicy：三条静默出口都要在现场记录里留下�
 
   // Exit 2: a per-name restrict throws and is caught; the failed list proves convergence was partial.
   const failed = fire({
-    composedPreset: () => CAPITAL_PRESET_ID,
+    composedPreset: () => AUTOMATION_PRESET_ID,
     restrict: () => { throw new Error('unknown tool name') },
   })
   assert.equal(failed.outcome, 'restricted')
@@ -256,7 +256,7 @@ test('registerRootToolPolicy：三条静默出口都要在现场记录里留下�
   resetRootPolicyProbes()
   const listeners = []
   registerRootToolPolicy({
-    get: () => ({ composedPreset: () => CAPITAL_PRESET_ID }),
+    get: () => ({ composedPreset: () => AUTOMATION_PRESET_ID }),
     on: (event, listener) => { listeners.push({ event, listener }); return () => {} },
     logger: { warn() {} },
   })
@@ -288,7 +288,7 @@ test('registerRootToolPolicy：Root 监听器必须由本 fiber 持有 disposer�
 
 test('isCapitalAgent：按 composedPreset 筛本 preset', () => {
   const ctx = { get: () => ({ composedPreset: (agentCtx) => agentCtx?.preset }) }
-  assert.equal(isCapitalAgent(ctx, { ctx: { preset: CAPITAL_PRESET_ID } }), true)
+  assert.equal(isCapitalAgent(ctx, { ctx: { preset: AUTOMATION_PRESET_ID } }), true)
   assert.equal(isCapitalAgent(ctx, { ctx: { preset: 'standard' } }), false)
   assert.equal(isCapitalAgent(ctx, {}), false, 'composedPreset 返回 undefined 时不认领')
   assert.equal(isCapitalAgent({ get: () => ({ composedPreset: () => { throw new Error('boom') } }) }, { ctx: {} }), false)
@@ -301,7 +301,7 @@ test('registerRootToolPolicy：ctx 没有 on 时安静跳过（不改装配结�
 test('fsWriteGuardReasonFor：write / edit 对本插件的根与角色都拒；读口与别的 preset 一律放行', () => {
   const ctx = { get: () => ({ composedPreset: (agentCtx) => agentCtx?.preset }) }
   const guard = fsWriteGuardReasonFor(ctx)
-  const capital = { ctx: { preset: CAPITAL_PRESET_ID } }
+  const capital = { ctx: { preset: AUTOMATION_PRESET_ID } }
   assert.deepEqual([...FS_WRITE_TOOL_NAMES], ['write', 'edit'], '写口名单就是这两个名字；改动它要有明确设计决策')
   for (const name of FS_WRITE_TOOL_NAMES) {
     assert.equal(guard({ name, agent: capital, arguments: { file_path: '/w/a.md' } }), FS_WRITE_READ_ONLY)
@@ -339,14 +339,14 @@ test('registerFsWriteGuard：全局装一次（不按 agent 装），拒绝要�
   }
   registerFsWriteGuard(ctx)
   assert.equal(guards.length, 1, '全局 guard 只装一次：它按调用身份判定，不需要按 agent 装')
-  assert.equal(guards[0]({ name: 'write', agent: { session: { id: 's-fs' }, ctx: { preset: CAPITAL_PRESET_ID } } }), FS_WRITE_READ_ONLY,
+  assert.equal(guards[0]({ name: 'write', agent: { session: { id: 's-fs' }, ctx: { preset: AUTOMATION_PRESET_ID } } }), FS_WRITE_READ_ONLY,
     '装的必须是 fs 写口闸门（同一份判定实现）')
   // Guard denials share the probe channel: "denied" and "no write tool" look identical to the model.
   const last = rootPolicyProbes().at(-1)
   assert.deepEqual(
     { outcome: last.outcome, preset_id: last.presetId, agent_id: last.agentId, root: last.root, denied: last.denied },
-    { outcome: 'guard-denied', preset_id: CAPITAL_PRESET_ID, agent_id: 's-fs', root: true, denied: ['write'] })
-  guards[0]({ name: 'read', agent: { ctx: { preset: CAPITAL_PRESET_ID } } })
+    { outcome: 'guard-denied', preset_id: AUTOMATION_PRESET_ID, agent_id: 's-fs', root: true, denied: ['write'] })
+  guards[0]({ name: 'read', agent: { ctx: { preset: AUTOMATION_PRESET_ID } } })
   assert.equal(rootPolicyProbes().length, 1, '放行不记')
   assert.deepEqual(disposed, ['guard'], 'disposer 由 ctx.effect 持有并随 fiber 释放')
   // Guard unavailable or installation exceptions must not escape the assembly path.

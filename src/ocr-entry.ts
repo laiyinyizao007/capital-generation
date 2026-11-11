@@ -7,13 +7,13 @@ import type { Context } from '@deepseek-ai/cordis'
 
 import { registerOcrTool } from './web-retriever/tools.js'
 import { createRetrieverRuntime } from './retriever-runtime.js'
-import { capitalDatasetStore, type RuntimeContext } from './runtime.js'
-import { readRetrieverConfig } from './capital-settings.js'
+import { automationDatasetStore, type RuntimeContext } from './runtime.js'
+import { readRetrieverConfig } from './automation-settings.js'
 
 export const name = 'capital-ocr-tools'
 export const inject = ['tools']
 
 export function apply(ctx: Context): void {
   const runtime = createRetrieverRuntime(ctx, readRetrieverConfig(ctx))
-  registerOcrTool(ctx, { store: capitalDatasetStore(ctx as unknown as RuntimeContext), client: runtime.ocrClient })
+  registerOcrTool(ctx, { store: automationDatasetStore(ctx as unknown as RuntimeContext), client: runtime.ocrClient })
 }

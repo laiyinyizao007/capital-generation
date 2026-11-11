@@ -270,7 +270,7 @@ export function registerChartSourceTool(
       }
     },
   }
-  ctx.effect(() => tools.register(definition), 'capital-generation.tool(prepare_chart_source)')
+  ctx.effect(() => tools.register(definition), 'automation-workbench.tool(prepare_chart_source)')
 }
 
 export function chartSourceTokenForRender(

@@ -46,7 +46,7 @@
   调用期拦**本插件任一 preset**（根 + 五颗角色）的 `write` / `edit`，文案 `FS_WRITE_READ_ONLY` 指回正路（读用 `read`，数据与
   产物走工具回传，落盘由工具实现完成）。判据 **fail-open**：`composedPreset` 读不到 / 抛错 /
   拿不到 agent 一律放行——全局 guard 判错一次，会把同一进程里开发会话的正当写口一起吃掉。
-  `read` 不在名单里，只读口全开（含 `read_image`）。⛔ 这颗 guard 依赖 `capital-policy` 行的
+  `read` 不在名单里，只读口全开（含 `read_image`）。⛔ 这颗 guard 依赖 `automation-policy` 行的
   `export const inject = ['tools']`（账本 L33）：没声明时 `ctx.get('tools')` 在 boot 期是
   `undefined`、属性访问抛错被 try/catch 吞掉，**闸门整批静默不装**——2026-10-15 到 2026-10-19
   的真实状态就是这样，掩护它的是视图层那条 `tool-fs` 行级 `write: false`（而那条本身也拦不住
@@ -79,7 +79,7 @@
   「拦写」与「不拦网」两条仍无记录，别把 bash 的结论当 pwsh 的承诺。
 - **⛔ 根侧收敛在桌面端整条没走，而 Linux / Web 上是生效的（两端对账，2026-09-30）**：同一段
   `request/header.tools` 与同一份探针记录，两端结果相反——
-  探针都报 `preset_id = capital-generation`、`outcome = restricted`、17 颗名字 `restrict()` 没抛错
+  探针都报 `preset_id = dsh-workbench-automation`、`outcome = restricted`、17 颗名字 `restrict()` 没抛错
   （`web_search` / `web_fetch` 当时都抛错＝那个 scope 里没有这两个名字；2026-10-20 起 AnySearch 会在
   web profile 补注册 `web_fetch`，见 `preset-persona.md` §8.4）；
   而**真发给模型的工具表**：Linux 那 17 颗 **0 颗可见**，桌面端那 17 颗 **一颗不少全在**（并且真的执行了

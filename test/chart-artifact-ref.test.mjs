@@ -17,7 +17,7 @@ function artifactInput(session = JUNIOR) {
     kind: 'line',
     axis: 'time',
     title: '贵州茅台 日线',
-    chart_url: '/capital-charts/ch_01.json',
+    chart_url: '/automation-charts/ch_01.json',
     spec_path: 'capital-analysis/charts/ch_01/spec.json',
     series_path: 'capital-analysis/charts/ch_01/series.json',
     html_path: 'capital-analysis/charts/ch_01/chart.html',
@@ -34,7 +34,7 @@ test('ChartArtifactRegistry：chart_ref 绑定 task 与 root session scope', () 
 
   assert.equal(ref.chart_ref, 'chart_ref_01')
   assert.equal(ref.task_id, 'task-1')
-  assert.equal(ref.chart_url, '/capital-charts/ch_01.json')
+  assert.equal(ref.chart_url, '/automation-charts/ch_01.json')
   assert.equal(registry.resolve({ session: MAIN, chart_ref: ref.chart_ref, task_id: 'task-1' }).chart_id, 'ch_01')
   assert.throws(
     () => registry.resolve({ session: { id: MAIN.id, header: { cwd: '/workspace/other' } }, chart_ref: ref.chart_ref, task_id: 'task-1' }),

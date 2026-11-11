@@ -371,7 +371,7 @@ test('写进域里的每条记录都必须过 schema（真域在持久边界逐�
 test('域名必须过 storage 的 unit name 规则（连字符会被上游拒成 malformed-medium）', async () => {
   // The storage unit-name rule rejects hyphens; the route and domain names differ.
   assert.match(domainSpec.name, /^[a-z][a-z0-9_]*$/u, '域名只许小写字母、数字与下划线')
-  assert.equal(domainSpec.name, 'capital_watchlist')
+  assert.equal(domainSpec.name, 'automation_watchlist')
   for (const table of Object.keys(domainSpec.tables)) {
     assert.match(table, /^[a-z][a-z0-9_]*$/u, `表名 ${table} 不合 unit name 规则`)
   }

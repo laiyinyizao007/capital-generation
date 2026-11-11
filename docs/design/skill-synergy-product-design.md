@@ -32,7 +32,7 @@ Skill 的核心能力：
 
 | 现有能力 | 当前实现 | 对 Skill Synergy 的价值 |
 |---|---|---|
-| 预设装配 | `preset/capital-generation/agent.patch.yml` 的官方 `dsh-agent-preset` 声明 | 提供稳定的主 / 子 Agent 组合入口 |
+| 预设装配 | `preset/dsh-workbench-automation/agent.patch.yml` 的官方 `dsh-agent-preset` 声明 | 提供稳定的主 / 子 Agent 组合入口 |
 | Skill 加载 | `dsh-skill-filesystem` + `dsh-tool-skill` | 提供 `SKILL.md` 按需加载机制 |
 | 角色编排 | `dsh-subagent` 专用委派行 | 将不同 skill 绑定到明确角色 |
 | 工具权限 | `toolFilter.allow/deny` 与根 Agent 收敛策略 | 防止 skill 把协议能力误变成工具权限 |
@@ -259,13 +259,13 @@ Skill 只声明和编排能力，不自动提升宿主 `toolFilter`。脚本的�
 ### 6.3 Manifest 示例
 
 ```yaml
-apiVersion: skill.capital-generation/v1
+apiVersion: skill.dsh-workbench-automation/v1
 kind: Skill
 metadata:
   id: finance.equity-research.risk
   version: 1.2.0
   name: Equity Risk Review
-  owners: [owner:capital-generation]
+  owners: [owner:dsh-workbench-automation]
   tags: [finance, risk, review]
 spec:
   frameworkSlots: [perspective, evidence, verification, learning]
@@ -564,7 +564,7 @@ Contributor 的 PR merge 不等于进入官方默认 Composition。Owner 可以�
 
 本阶段 PR 仅允许涉及：
 
-- `preset/capital-generation/skills/` 中的 skill 内容。
+- `preset/dsh-workbench-automation/skills/` 中的 skill 内容。
 - Skill manifest、`scripts/**/*.ts|py`、fixtures、contract / safety tests。
 - gotcha 脱敏样例、provenance、许可证和产品设计文档。
 - 为 Skill Synergy 所必需的贡献指南和校验脚本。

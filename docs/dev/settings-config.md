@@ -1,4 +1,4 @@
-# settings 配置纪律（`capital-config`，host 平面）
+# settings 配置纪律（`automation-config`，host 平面）
 
 > 索引见仓库根 `AGENTS.md` §5。改 `config/`、`cordis.patch.yml` 的 insert 行或设置卡片
 > 字段之前读这里。§编号沿用 `AGENTS.md` 的全局命名空间。
@@ -14,8 +14,8 @@
 - **⛔ 座位只有包级一处**：卡片注册进 `plugins.bundle.config`（`kind: 'keyed'`，key = **组合包的
   包名**）。这是本项目对**所有**可编辑配置的固定落点——新增字段只改条目 Config 的 `.volatile()`
   投影，**不开第二个座位**。不用行级 `plugins.row.config`（key `<包名>#<行 id>`）：那把座位埋在
-  「包含的组件」里再往下一层，填一次密钥点三下，且同包的 `capital-charts` /
-  `preset-capital-generation` 没有表单、点进去是死路。配置是「这个插件」的属性，不是某一行的属性。
+  「包含的组件」里再往下一层，填一次密钥点三下，且同包的 `automation-charts` /
+  `preset-dsh-workbench-automation` 没有表单、点进去是死路。配置是「这个插件」的属性，不是某一行的属性。
 - **可编辑性是 schema 事实，不是注册出来的命名空间**：`dsh-settings` 只把活动 profile 条目
   Config 里标了 `.volatile()` 的字段投影成表单（`volatileForm`），且 `ns` **恒等于条目 id**。
   ⛔ 一个 volatile 字段都没有 ⇒ `volatileForm` 返回 `undefined`，该条目**不进** describe 镜像；
@@ -27,7 +27,7 @@
   `BUNDLE_NAME` ≡ 根 `package.json` 的 `name`，页面按 `entryKey: pkg.name` 渲染该段，且
   `configured: ledger.bundles.has(pkg.name)`——**没注册就整块不出现**。两条链任一处漂移的表现都不
   是报错，而是**卡片静默消失**（用户以为"设置里没这个插件"）。回归
-  `test/capital-config.test.mjs` 的对齐用例（含"代码里不许再出现 `plugins.row.config`"）。
+  `test/automation-config.test.mjs` 的对齐用例（含"代码里不许再出现 `plugins.row.config`"）。
 - **包级座位不给 form**：页面只为行级配置注入 `form`（`formFor(openRow.rowId)`），包级只传
   `view: 'page'`。本卡片本来就只消费自己 `inject()` 出来的 hooks 与动作，不碰页面注入，所以
   搬迁不需要补任何服务面。
@@ -46,21 +46,21 @@
   → `configEditor.entries()` 的条目保存层（describe() 在条目 fiber 未挂好的窗口会**整个跳过条目**，
   已保存的值仍在保存层）→ preset 兜底且**可辨认**（`source === 'preset'`，"读不到"不许伪装成"用户
   全关"）。服务引用一律**调用期现取**（装配期捕获会押注 boot 注册顺序，2026-10-13 精选 Skills 事故）。
-  取到值再用自己的 `Config(...)` 过一遍——**两处 schema 默认值必须逐字一致**。回归：`test/capital-config.test.mjs`（deepEqual + 按上游 `plainConfig` 摊平取值单元）与 `test/apply-integration.test.mjs`（三级读取、服务晚到、条目值真的驱动装配）。
+  取到值再用自己的 `Config(...)` 过一遍——**两处 schema 默认值必须逐字一致**。回归：`test/automation-config.test.mjs`（deepEqual + 按上游 `plainConfig` 摊平取值单元）与 `test/apply-integration.test.mjs`（三级读取、服务晚到、条目值真的驱动装配）。
 - **文案与排布口径**（改动要有对应用户诉求，别顺手加回）：五个 Key **一律不写"必填 / 选填"**——本项目
   不依赖任何单一数据源；每条 Key 提示都点名"新自动模式会话生效"；本机直连与 PaddleOCR 的说明
   各不超过两句；文档链接只写"官方文档"＋右上角斜上箭头，落在标签右边同一行。**排布是四格 tab**
   （`数据源` / `投研自动化` / `精选 Skills` / `包含的组件`，默认落 `数据源`）：tab 条**取代**当年
   `h4 数据源` + `h5 精选 Skills` 那两级标题（h5 挂在 h4 底下会把平级的两块说成父子），格内顺序仍照旧——
   五个密钥 → 保存 → 回退开关；第二格顶部是「默认工作区」下拉（宿主 `Menu` 触发器，空 = 专属默认工作区，选项来自
-  `/capital-automation/workspaces`；路径按家目录缩写成 `~`），其后是调度器与无人值守运行的六个默认值（自动检查间隔、最长运行时间、空闲、步骤、工具调用、通知），整组排成「调度 / 单次运行上限 / 通知」三组，数字框只收整数，清空或
+  `/automation-workbench/workspaces`；路径按家目录缩写成 `~`），其后是调度器与无人值守运行的六个默认值（自动检查间隔、最长运行时间、空闲、步骤、工具调用、通知），整组排成「调度 / 单次运行上限 / 通知」三组，数字框只收整数，清空或
   越界在标题右侧红字点名允许范围、失焦回填已保存值且不写回（重新聚焦收起），格内不再重复 tab 承担的标题。标题体系之外只有**一个计数**：第四格是行数（唯一来源 `remote.pluginManager.listBundles()`，
   **读不到就只写标题、绝不画 0**，失败不缓存、切格即重试——AGENTS.md §9.7 ⑤ 那条）。第三格 tab **只写「精选 Skills」**，不再拼已开启数或「自动」；数量改由上方筛选条逐格给出（按另一维度的当前选择现算）。密钥草稿活在 DOM
   里而保存按钮可能在看不见的格子里，所以草稿在场时第一格改口「数据源 未保存」。
-  ⛔ **四格的「tab 条 → 首行文字」必须等距**（2026-10-10 实测那一档是 24px；第二格靠 `.capital-config-automation`
+  ⛔ **四格的「tab 条 → 首行文字」必须等距**（2026-10-10 实测那一档是 24px；第二格靠 `.automation-config-automation`
   的 12px padding-top 补足面板 gap，第四格靠一条负 margin 顶到同一档）：不等距就是每切一格跳一次；**面板只有一个子元素时 flex `gap` 不发生作用**，那 24px 得自己补。
-  第四格画面上不写「组件清单在下方」那句（点这一格看到的就是清单），句子改挂 `.capital-config-sr-only`——
-  `aria-controls` 指的这块面板不许是空的。回归 `test/capital-config.test.mjs` 的文案、两维筛选与计数、渲染顺序、tab/计数、上方筛选布局与样式表形状断言；等距那个数只能在浏览器里量（见账本当日行）。
+  第四格画面上不写「组件清单在下方」那句（点这一格看到的就是清单），句子改挂 `.automation-config-sr-only`——
+  `aria-controls` 指的这块面板不许是空的。回归 `test/automation-config.test.mjs` 的文案、两维筛选与计数、渲染顺序、tab/计数、上方筛选布局与样式表形状断言；等距那个数只能在浏览器里量（见账本当日行）。
 
 ## 5.3 改完之后
 
@@ -77,7 +77,7 @@
   `tabIndex`、←→↑↓/Home/End 走位与焦点跟随，卡片一律不补 `onKeyDown`（补了就是双重选择）。它按
   `` `${id}-${option.value}-panel` `` 发 `aria-controls`（写在它的 `.d.ts` 注释里，是文档化契约），
   所以四块面板的 `id` 必须逐字跟着这两个模板长——**包括第四块**：第四块的内容是宿主那段清单（在下方
-  显形），面板本身只留一句读屏侧的话（`.capital-config-sr-only`，`position: absolute` ⇒ 零布局贡献），
+  显形），面板本身只留一句读屏侧的话（`.automation-config-sr-only`，`position: absolute` ⇒ 零布局贡献），
   `aria-controls` 指的正是这块。悬空 id 与空面板都不报错，只有读屏用户付账。入账本 **L28**。
 - **点技能名打开的是官方 `Modal`（非 headless），原文走一条自注册的本机路由**：header、标题、关闭按钮、Esc、
   点遮罩关闭与焦点归还都归它，我们只给 `open`/`onClose`/`title`/`closeLabel`/`description`（slug 挂在
@@ -86,28 +86,28 @@
   且**点锚点会把它关掉**——"点名字没反应、也不报错"是那个控件的语义（2026-10-10 实机），不是 handler 写错。
   ① 取数挂在 `onPointerEnter` / `onFocus`（悬停预热 ⇒ 点开那一瞬就有内容）与 `onClick` 上，**没悬停也没点击
   就一份都不取**（68 份合计约 325 KB，打进 bundle 就是每次开插件页都付一遍）；② 它 portal 到 body 且默认只有
-  `min(380px, 100%)` ⇒ 宽度由一条**带元素名**的选择器 `div.capital-config-skill-modal` 覆掉（光类名与官方
+  `min(380px, 100%)` ⇒ 宽度由一条**带元素名**的选择器 `div.automation-config-skill-modal` 覆掉（光类名与官方
   散列类同权重，押"我们的样式后注入"是巧合不是契约）；③ 正文自己 `max-height` + `overflow: auto`，标题与
   关闭按钮留在原位，34 KB 的原文也读得到底。地址由 `SKILL_DOC_ROUTE` 拼出，与 host 那半边**同字**（客户端
-  import 不到那一层 ⇒ `test/capital-config-skill-docs.test.mjs` 对着两侧产物比；漂移 = 点名字永远读不到且
+  import 不到那一层 ⇒ `test/automation-config-skill-docs.test.mjs` 对着两侧产物比；漂移 = 点名字永远读不到且
   零报错）。失败文案分**两句**：回包里有我们那份 `{ error }` ⇒ 路由活着、这条快照读不到；回包不是我们的形状
   ⇒ **宿主进程里就没有这条路由**（点名"重启 DSH，刷新页面没有用"——客户端 bundle 每次开页换新，host 半边要重启才重新 import）。
-- **⛔ `/capital-skills/<名>.md` 是文件读旁路，三条底线**：① 认证围栏接 `connection.requestRejection`
-  （与 `/capital-charts`、`/capital-watchlist` 同一写法，§6.1 那条），被拒时**连一次读盘都不许发生**；
+- **⛔ `/automation-skills/<名>.md` 是文件读旁路，三条底线**：① 认证围栏接 `connection.requestRejection`
+  （与 `/automation-charts`、`/automation-watchlist` 同一写法，§6.1 那条），被拒时**连一次读盘都不许发生**；
   ② **闭集**——请求里的名字只当 `SKILL_DOCS` 这张表的键用，路径按 catalog × `SELECTED_SKILL_SKILL_DIRS`
   在模块加载时现算成 `Map<名, file: URL>`，不参与任何拼接，所以 `%2F..%2F` 只会落到"表里没这个名字"，且这张表**只到 `SKILL.md` 一份**（分层条目的 `references/` 分册不接进来，卡片看原文只看入口册）；
   ③ 超限（`MAX_SKILL_DOC_BYTES`）**整份 413 拒绝、绝不截断**，且 `cache-control: no-store`——快照会随
   上游更新，缓存住就是拿旧原文说"这是原文"。路由经 `ctx.inject(['webServer'], …)` 挂（探测式写法会把
   正确性押在装配顺序上，2026-09-30 桌面端就是这么炸的两颗行）。**不新增 bundle 行**：它挂在已有的
-  `capital-config` host 行上，所以「包含的组件」那个数字不变。
-- **⛔ 第三格的筛选条与清单不许冒出第二个滚动容器**：筛选条属于页面流，`.capital-config-filters` /
-  `.capital-config-selected-list` 只要有一条 `overflow` 非 visible，就会多出一个滚动面，长清单里
+  `automation-config` host 行上，所以「包含的组件」那个数字不变。
+- **⛔ 第三格的筛选条与清单不许冒出第二个滚动容器**：筛选条属于页面流，`.automation-config-filters` /
+  `.automation-config-selected-list` 只要有一条 `overflow` 非 visible，就会多出一个滚动面，长清单里
   筛选条再也回不到视线；样式表形状闸钉着这一条（连同两行群组名、22px chip、第四格那条负 margin
   的写法）。
 - **⛔ 收起宿主「包含的组件」的三条规则只许写正面式**：`installStyles` 里
-  `[data-plugin-detail="<包名>"]:has(.capital-config-card[data-capital-config-tab="sources"]) section[data-plugin-rows] { display: none }`
+  `[data-plugin-detail="<包名>"]:has(.automation-config-card[data-automation-config-tab="sources"]) section[data-plugin-rows] { display: none }`
   与 `…"automation"…`、`…"skills"…` 那两条，**各自成规则**（CSS 整条作废，逗号并条会被无关失败连坐），并且不许出现
-  `:not([data-capital-config-tab="components"])` 这种否定式判据——那等于"一个拼错的属性值就把用户的
+  `:not([data-automation-config-tab="components"])` 这种否定式判据——那等于"一个拼错的属性值就把用户的
   行清单藏了起来"。于是所有失配方向（无 `:has()` 的引擎、宿主改名、老宿主没这段、卡片没被 `whileServed`
   放行、条目还在 `loading`、属性值意外）都落在**宿主段落照常可见**那一侧：宁可短暂重复，不能丢数据。
   回到可见一侧的结构保证是 tab 条不在任何面板里、永远收不到 `hidden`。锚点用 `data-plugin-detail`
@@ -115,7 +115,7 @@
   插值 ⇒ 包名同字链（§5.1）现在管着槽 key、页面选择器、npm 地址三处。
 - **文档链接落在官方 head 行里**：`SettingsSecretField` 的 `label` 只收字符串，节点塞不进去，所以
   挂载后取 `label` 的父节点（head 行）把 `<a>` **`createPortal`** 进去（`react-dom` 在客户端模块表里，
-  `dsh-context` 同法），摆位靠两条元素选择器（`.capital-config-secret-row label { flex: 0 1 auto }`
+  `dsh-context` 同法），摆位靠两条元素选择器（`.automation-config-secret-row label { flex: 0 1 auto }`
   与 `label ~ span { order: 1; margin-left: auto }`）——官方 head 是 flex 且 `label` 吃掉整行。
   找不到 head 就退回本行末尾（位置退化、链接不丢）。这四条前提都进了账本 L15 探针。
   整条链路已入账本 **L15**：`npm run check:dsh` 逐条探测，上游漂移是具名失败，不是"卡片某天不见了"。
@@ -127,24 +127,24 @@
 0.1.7 把第三方插件的可编辑面从「设置」页**整体搬到了「插件」页**（`settings.plugin.item` 已被上游
 删除，设置页那一栏现在只剩官方的 `settings.plugins.tab`）。点击路径只有两跳：
 
-**侧栏「插件」→「已安装」里点开 `@v587d/capital-generation`（卡片显示 `locale/zh.json` 的 `meta.title`，
+**侧栏「插件」→「已安装」里点开 `dsh-workbench-automation`（卡片显示 `locale/zh.json` 的 `meta.title`，
 不是 npm 包名，见账本 L25）→ 描述与「包含的组件」之间的「配置」段**，进去就停在第一格 **数据源**（五把
 Key + 本机直连回退）；第二格 **投研自动化**——先是「默认工作区」下拉（可把任一已注册工作区设为
-统一默认，空 = 专属默认工作区；列表来自 `/capital-automation/workspaces`），其下是调度器与无人值守运行的默认上限，分「调度 / 单次运行上限 / 通知」三组，单个任务里的设置优先；第三格 **精选 Skills**——顶部一颗「智能装载 Skills」开关（默认关），
+统一默认，空 = 专属默认工作区；列表来自 `/automation-workbench/workspaces`），其下是调度器与无人值守运行的默认上限，分「调度 / 单次运行上限 / 通知」三组，单个任务里的设置优先；第三格 **精选 Skills**——顶部一颗「智能装载 Skills」开关（默认关），
 关着时下面才是两行筛选条（Skill 特点 / 适用预设，各带「全部」与"点它会显示几行"）加清单；打开后筛选条与
 清单一起收起。点**技能名**打开 `SKILL.md` 原文，名字右边是特点标签与适用预设标签，已开启的行排在清单最前；
 第四格 **包含的组件**（带行数）——那一格的内容就是页面下方宿主自己画的行清单，切过去它才显形（§5.1 / §5.3）。
 
-「包含的组件」里的五行（`capital-config` / `capital-charts` / `capital-watchlist` /
-`capital-automation` / `preset-capital-generation`）本身**没有**行级配置控件——可编辑面只有卡片这一份，
-不在行详情页里，这是设计而非故障。`capital-config` 那一行仍在：它是 settings 命名空间的来源（§5.1），
+「包含的组件」里的五行（`automation-config` / `automation-charts` / `automation-watchlist` /
+`automation-workbench` / `preset-dsh-workbench-automation`）本身**没有**行级配置控件——可编辑面只有卡片这一份，
+不在行详情页里，这是设计而非故障。`automation-config` 那一行仍在：它是 settings 命名空间的来源（§5.1），
 只是不再充当座位；它同时是第四格那个数字的来路（`pluginManager.listBundles()` 里我们这个包的
-`rows.length`），也是 `/capital-skills` 那条原文旁路的宿主（§5.3）。
+`rows.length`），也是 `/automation-skills` 那条原文旁路的宿主（§5.3）。
 
 排查顺序也据此改：① 条目在不在 `settings.describe()`（§5.1 的 volatile 投影，不在就整张卡片读不到）；
-② 冒烟里行清单有没有 `capital-config`（`pluginManager.listBundles()`，取数通道）且**行数与第四格那个
+② 冒烟里行清单有没有 `automation-config`（`pluginManager.listBundles()`，取数通道）且**行数与第四格那个
 数字对不对得上**（数字缺席 = 那次读没成，不是"没有组件"）；③ 浏览器有没有
 **刷新**（bundle 在页面加载时确定，宿主重启不换已打开页面的那份）；④ 技能名点开说"原文读不到"就先看
-`/capital-skills/<名>.md` 的回包：404 `skill_not_catalogued` = catalog 与快照目录对不上（§8.6 的
+`/automation-skills/<名>.md` 的回包：404 `skill_not_catalogued` = catalog 与快照目录对不上（§8.6 的
 `docs:capabilities` 那类漂移），401 = 认证围栏（正常，说明不是匿名可访问），200 但卡片空 = 前端取数
 没接上。座位是注册出来的：包名那一路（§5.1 的 `BUNDLE_NAME`）漂了，`configured` 为假 ⇒ 配置段整块不出现，零报错。

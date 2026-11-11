@@ -1,5 +1,5 @@
 import type { Context } from '@deepseek-ai/cordis';
-/** Slice of the host-plane `capitalWatchlist` service this tool reads; writes happen only in the panel. */
+/** Slice of the host-plane `automationWatchlist` service this tool reads; writes happen only in the panel. */
 interface WatchlistRow {
     readonly thscode?: string;
     readonly name?: string;

@@ -20,7 +20,7 @@ const CATALOG = new Set(SELECTED_SKILL_CATALOG.map(({ name }) => name))
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
 
 const rootEvents = [
-  { type: 'session', id: 'session-root', agentPreset: 'capital-generation', createdAt: 1000 },
+  { type: 'session', id: 'session-root', agentPreset: 'dsh-workbench-automation', createdAt: 1000 },
   { type: 'tool/call', data: { callId: 'c1', name: 'skill', arguments: '{"name":"china-dcf"}' } },
   {
     type: 'tool/result',
@@ -47,7 +47,7 @@ const rootEvents = [
 ]
 
 const childEvents = [
-  { type: 'session', id: 'child', parentSession: 'session-root', agentPreset: 'capital-data-junior', origin: 'subagent', createdAt: 1100 },
+  { type: 'session', id: 'child', parentSession: 'session-root', agentPreset: 'automation-data-junior', origin: 'subagent', createdAt: 1100 },
   {
     type: 'tool/ptc-dispatch',
     data: { name: 'skill', arguments: { name: 'financial-health' }, isError: false },
@@ -115,7 +115,7 @@ test('buildUsageTrees：父会话不在扫描窗口时，子会话自己成为�
 
 test('buildUsageTrees：新用户轮次之前的加载不再要求本轮引用（与运行期清空一致）', () => {
   const events = [
-    { type: 'session', id: 'session-turn', agentPreset: 'capital-generation', createdAt: 100 },
+    { type: 'session', id: 'session-turn', agentPreset: 'dsh-workbench-automation', createdAt: 100 },
     { type: 'tool/call', time: 110, data: { callId: 'old', name: 'skill', arguments: '{"name":"china-dcf"}' } },
     { type: 'tool/result', time: 111, data: { message: { toolCallId: 'old', isError: false, content: [{ type: 'text', text: 'x' }] } } },
     { type: 'user/message', time: 200, data: { source: { kind: 'user' } } },
@@ -137,7 +137,7 @@ test('skill-usage-report CLI：--dir + --cwd 读真实会话文件并输出可�
     const sessionDir = join(workspace, 'session-cli')
     mkdirSync(sessionDir, { recursive: true })
     const events = [
-      { type: 'session', id: 'session-cli', agentPreset: 'capital-generation', createdAt: 1000 },
+      { type: 'session', id: 'session-cli', agentPreset: 'dsh-workbench-automation', createdAt: 1000 },
       { type: 'user/message', data: { source: { kind: 'skill-catalog', form: 'catalog', entries: [
         { name: 'china-dcf' }, { name: 'capital-data-protocol' },
       ] } } },

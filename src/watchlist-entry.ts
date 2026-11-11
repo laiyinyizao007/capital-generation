@@ -7,7 +7,7 @@ import type { Context } from '@deepseek-ai/cordis'
 
 import { registerWatchlistTool } from './watchlist/tools.js'
 
-export const name = 'capital-watchlist-tools'
+export const name = 'automation-watchlist-tools'
 export const inject = ['tools']
 
 export function apply(ctx: Context): void {

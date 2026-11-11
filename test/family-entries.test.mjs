@@ -63,19 +63,19 @@ const namesOf = (apply, options) => {
 }
 
 const ENTRIES = {
-  '@v587d/capital-generation/tools/collect': collectEntry,
-  '@v587d/capital-generation/tools/dataset-read': datasetReadEntry,
-  '@v587d/capital-generation/tools/chart-source': chartSourceEntry,
-  '@v587d/capital-generation/tools/chart-render': chartRenderEntry,
-  '@v587d/capital-generation/tools/retrieve-search': searchEntry,
-  '@v587d/capital-generation/tools/retrieve-sources': sourcesEntry,
-  '@v587d/capital-generation/tools/ocr': ocrEntry,
-  '@v587d/capital-generation/tools/orchestration': orchestrationEntry,
-  '@v587d/capital-generation/tools/present': presentEntry,
-  '@v587d/capital-generation/tools/time': timeEntry,
-  '@v587d/capital-generation/tools/watchlist': watchlistEntry,
-  '@v587d/capital-generation/tools/root-extras': rootExtrasEntry,
-  '@v587d/capital-generation/tools/selected-skills': selectedSkillsEntry,
+  'dsh-workbench-automation/tools/collect': collectEntry,
+  'dsh-workbench-automation/tools/dataset-read': datasetReadEntry,
+  'dsh-workbench-automation/tools/chart-source': chartSourceEntry,
+  'dsh-workbench-automation/tools/chart-render': chartRenderEntry,
+  'dsh-workbench-automation/tools/retrieve-search': searchEntry,
+  'dsh-workbench-automation/tools/retrieve-sources': sourcesEntry,
+  'dsh-workbench-automation/tools/ocr': ocrEntry,
+  'dsh-workbench-automation/tools/orchestration': orchestrationEntry,
+  'dsh-workbench-automation/tools/present': presentEntry,
+  'dsh-workbench-automation/tools/time': timeEntry,
+  'dsh-workbench-automation/tools/watchlist': watchlistEntry,
+  'dsh-workbench-automation/tools/root-extras': rootExtrasEntry,
+  'dsh-workbench-automation/tools/selected-skills': selectedSkillsEntry,
 }
 
 // Row name -> that row's entry apply(), i.e. the package export the YAML mounts.
@@ -134,8 +134,8 @@ test('行契约没有漏网：package.json 的 tools/* 导出与表一一对应'
 test('tools/time：两颗一组，没有行成员开关', () => {
   assert.deepEqual(namesOf(applyTime), ['get_local_datetime', 'resolve_data_time_range'])
   // Generic capabilities are not trimmed per role: telling the time and resolving a window are two needs.
-  assert.deepEqual(rowTools('@v587d/capital-generation/tools/time'), ['get_local_datetime', 'resolve_data_time_range'])
-  assert.throws(() => rowTools('@v587d/capital-generation/tools/time', { localDatetime: false }), /没人读的 config/,
+  assert.deepEqual(rowTools('dsh-workbench-automation/tools/time'), ['get_local_datetime', 'resolve_data_time_range'])
+  assert.throws(() => rowTools('dsh-workbench-automation/tools/time', { localDatetime: false }), /没人读的 config/,
     'YAML 里再写一格开关，组合断言先红——那正是"以为裁了、其实没裁"的形状')
 })
 
@@ -157,11 +157,11 @@ test('出图行不再自动登记交付：chartEvents 只留在单体载体，�
 test('tools/retrieve-sources：本地直连开关关掉也照样注册（失败留到调用期点名）', () => {
   // §9.7 shape: registering fewer tools from assembly-time config pins one read for the whole process.
   const { ctx, tools } = fakeCtx({
-    settings: { describe: () => [{ ns: 'capital-config', value: { retriever: { localFetch: { enabled: false } } } }] },
+    settings: { describe: () => [{ ns: 'automation-config', value: { retriever: { localFetch: { enabled: false } } } }] },
   })
   applySources(ctx)
   assert.deepEqual(tools.map((definition) => definition.name).sort(),
-    [...CAPITAL_ROW_TOOLS['@v587d/capital-generation/tools/retrieve-sources']].sort(),
+    [...CAPITAL_ROW_TOOLS['dsh-workbench-automation/tools/retrieve-sources']].sort(),
     '开关关掉时九颗仍在目录里（调用期响亮失败），工具面不许随配置变形')
 })
 

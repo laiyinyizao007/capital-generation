@@ -63,7 +63,7 @@ test('tools/present：present_charts 记录清单，收尾 finish 帧才写官�
               : key === 'turnBoundary' ? { openTurnStartSeq: 1, lastTurn: 5 } : undefined,
           }
         }
-        if (name === 'capitalChartRuntime') return { artifacts: registry, sourceTokens: {} }
+        if (name === 'automationChartRuntime') return { artifacts: registry, sourceTokens: {} }
         return undefined
       },
       on(event, listener) { listeners.set(event, listener); return () => {} },

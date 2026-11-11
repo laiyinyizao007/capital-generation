@@ -3,7 +3,7 @@
  * the root entry and the monolith so the safety footer is written once.
  * Style and presentation only.
  */
-const USER_CUSTOMIZATION_SECTION = 'capital:user-customization'
+const USER_CUSTOMIZATION_SECTION = 'automation:user-customization'
 const USER_SECTION_ORDER = 100
 const CUSTOM_PERSONA_MAX_LENGTH = 8_000
 const SAFETY_FOOTER = `

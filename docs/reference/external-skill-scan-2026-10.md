@@ -103,7 +103,7 @@
 
 **catalog 收录 1 颗，无排除**：`SKILL.md` 内部的 Quick / Deep 二选一是**这颗自己**在两条工作流之间做选择，不接管会话路由、不跨 Agent，因此不算 `china-stock-research-orchestrator` / `full-report` 那一类；输出是最终答复里的 markdown，不落报告文件、不出图，与 §7（报告链路已删除）和 §6.1（出图只走 `render_chart`）都不冲突。这条判断记在 `UPSTREAM.md`，免得下一个人误判成编排 skill。
 
-**它填的缺口**：catalog 此前没有"带固定证据预算的两级工作流"——`buffett-investment-framework` 给的是 65 张方法卡，InvestSkill 给的是 28 个单点视角，china 那六颗是 A 股专题；这一颗给的是**从"要不要深挖"到"完整尽调"的一条路径**，并强制每条主张配可点开的链接（`verification` 标签）。使用者在"第一次看一只美股票""手上只有一个代码，需要判断值不值得花时间"这类任务里会去勾它。**重叠**：与 `buffett-investment-framework` 同在美股语境、都关心生意质量与负债，但那条按卡驱动分析、这一颗按"取数预算—简报—报告"三段与分诊驱动，不可互相替代。**新标签**：`peter-lynch`（zh/en 两套显示名同时补，`test/capital-config.test.mjs` 的显示名闸门守着）——前三颗没有以人物命名视角的先例（`perspective` 是泛化标签），用它是因为使用者真的会按"这是哪一种流派"来筛。
+**它填的缺口**：catalog 此前没有"带固定证据预算的两级工作流"——`buffett-investment-framework` 给的是 65 张方法卡，InvestSkill 给的是 28 个单点视角，china 那六颗是 A 股专题；这一颗给的是**从"要不要深挖"到"完整尽调"的一条路径**，并强制每条主张配可点开的链接（`verification` 标签）。使用者在"第一次看一只美股票""手上只有一个代码，需要判断值不值得花时间"这类任务里会去勾它。**重叠**：与 `buffett-investment-framework` 同在美股语境、都关心生意质量与负债，但那条按卡驱动分析、这一颗按"取数预算—简报—报告"三段与分诊驱动，不可互相替代。**新标签**：`peter-lynch`（zh/en 两套显示名同时补，`test/automation-config.test.mjs` 的显示名闸门守着）——前三颗没有以人物命名视角的先例（`perspective` 是泛化标签），用它是因为使用者真的会按"这是哪一种流派"来筛。
 
 **A 股专项检查**：本条**不声称**适用于 A 股。SEC EDGAR / 10-K / 20-F / Form 4 / 13F、美元本位与 wash-sale 税务都不成立；正文点名的 aggregator（Yahoo Finance、MarketWatch、Macrotrends、StockAnalysis、GuruFocus、CompaniesMarketCap、Nasdaq）在本插件里只能由通用检索通道取，九个具名来源全是 A 股口径。因此 `us-stock` 标签与 `riskNote` 就是给使用者的口径提示，改写时另在 `SKILL.md` 加了"A 股会话要换成 A 股披露口径，由宿主取数通道决定"一句。
 
@@ -143,7 +143,7 @@
 
 派生式钉法跟着上：`test/selected-skills-provider.test.mjs` 按「skills 根 − 排除清单」核对本颗的 9 条，`test/persona.test.mjs` 另把 `etoro`／`position-sizing`／`position-management`／`pre-trade-check` 明确断为不进 catalog——有人顺手加回去就会红并点名。
 
-**它填的缺口**：此前 36 颗全是"投研"（生意质量、估值、披露文件、风险专题），没有一颗管**下单前的过程检查与下单后的复盘**。`capital-portfolio-review` 复盘的是组合层持仓、`capital-event-impact` 看的是单个事件影响，而"这笔想法还缺哪些证据""这个盈亏比结构自洽吗""这份计划在流动性能不能落地""这笔已经平掉的交易怎么复盘而不做事后诸葛亮"四件事此前没有对应模块。新标签 `trade-discipline`（中文显示名"交易纪律"、英文 "Trade discipline"）就是这条线，两套显示名同时补（`test/capital-config.test.mjs` 守着），市场口径继续用 `us-stock`。
+**它填的缺口**：此前 36 颗全是"投研"（生意质量、估值、披露文件、风险专题），没有一颗管**下单前的过程检查与下单后的复盘**。`capital-portfolio-review` 复盘的是组合层持仓、`capital-event-impact` 看的是单个事件影响，而"这笔想法还缺哪些证据""这个盈亏比结构自洽吗""这份计划在流动性能不能落地""这笔已经平掉的交易怎么复盘而不做事后诸葛亮"四件事此前没有对应模块。新标签 `trade-discipline`（中文显示名"交易纪律"、英文 "Trade discipline"）就是这条线，两套显示名同时补（`test/automation-config.test.mjs` 守着），市场口径继续用 `us-stock`。
 
 **重叠**：`portfolio-concentration` 与 `capital-portfolio-review` 都看集中度——本插件那颗只读使用者在自选股面板里亲手标过的持仓与自报权重并要求逐项可复核，上游这颗吃用户贴进来的账户快照并给经验阈值，`riskNote` 写明以自报口径为准；`watchlist-review` 作用于自选清单条目（移出的是清单条目，不是持仓）；`catalyst-map` 与 `capital-event-impact` 相邻，但它排的是"一排事件的注意力"，后者查的是"单个事件的影响"。
 
@@ -239,7 +239,7 @@ Owner 给的三条判据是：是否符合本项目合规性、是否填补 skil
 
 **"允许 skill 自带脚本"这条政策本轮不落，但把落它需要的东西全部备好了。** 政策是 Owner 2026-10-12 给的（允许自带 scripts，需要仔细 review 代码风险；未来会有能执行 shell 的子 Agent）。**代码风险已经审完并写进 `selected-skills/financeskills/UPSTREAM.md` 的"脚本审计"一节**：43 份 / 2002 行，顶层 import 只有 `__future__` `copy` `dataclasses` `itertools` `math` `random` `statistics` `typing`（全标准库，宿主不需要 pip 装任何东西），零网络、零文件读写、零 subprocess / eval、零 `os.environ` 与凭据读取，`__main__` 是 `assert` 自检；38 份与上游 `MANIFEST.sha256` 哈希一致、0 份不符，5 份不在清单（上游自述"judgment-only by design"，而那 5 份正是个人理财那批，本轮不收）。**不落的理由是一轮一个关注点**：政策落地要同时动三处——§8.6 第 4 条（把"没有一句话指挥 Agent 去跑它"换成"执行一律委派给有 shell 的角色"）、闸门 `NEEDS_FALLBACK`（现认的退路句是 `skip the router`，要认新的委派形状）、这颗的 `.npmignore`（现在挡 `scripts`，翻案要放开）。三处一起动会把"收录 8 颗"和"改运行时纪律"混进同一轮，而后者需要真机验证：`python3` 在本机是 3.14，Windows 桌面端不保证存在（§1.6 记录了 pwsh 侧只量到一半），宿主那三条 python 通道也都不在这条路上。本轮因此按现行口径执行（脚本不进包、指令删净），并把"翻案需要改哪三处 + 实测依据"整段留在 UPSTREAM.md，将来那一轮是一次改动而不是重审一遍代码。顺带存到一个有用事实：DSH 的 `skill` 工具会在结果里给一行 `<skill_resources>` 与 **Base directory for this skill: <绝对路径>**（本仓真实会话里取到两例），所以脚本路径其实可解析——真正的约束从来是"谁来执行"，不是"能不能定位"。
 
-**收录数字**：catalog **59 → 67**；快照内共 48 颗；六颗快照的上游 skill 总数 125 → **173**。不进可选清单的 40 颗照 InvestSkill 先例随包保留为可审查材料（provider 的 `list()` / `get()` 与 `/capital-skills` 旁路都按 catalog 闭集过滤），`evals`（896 KB 评测夹具）与 `scripts`（344 KB）连发布包都不进。**许可的差别记清楚**：本颗 MIT，被改写的 10 份正文**不带**改动声明行——那是第六颗（Apache-2.0 §4(b)）的许可义务，不是本仓惯例，`test/selected-skills-content.test.mjs:132-143` 那条正向断言按 `repository` 钉死只问那一族；下一份若又是 MIT 而有人"照格式"给正文加声明行，反而是把特殊义务伪装成通用规则。
+**收录数字**：catalog **59 → 67**；快照内共 48 颗；六颗快照的上游 skill 总数 125 → **173**。不进可选清单的 40 颗照 InvestSkill 先例随包保留为可审查材料（provider 的 `list()` / `get()` 与 `/automation-skills` 旁路都按 catalog 闭集过滤），`evals`（896 KB 评测夹具）与 `scripts`（344 KB）连发布包都不进。**许可的差别记清楚**：本颗 MIT，被改写的 10 份正文**不带**改动声明行——那是第六颗（Apache-2.0 §4(b)）的许可义务，不是本仓惯例，`test/selected-skills-content.test.mjs:132-143` 那条正向断言按 `repository` 钉死只问那一族；下一份若又是 MIT 而有人"照格式"给正文加声明行，反而是把特殊义务伪装成通用规则。
 
 验证：四组定向闸门 + 三条反证 + `npm pack --dry-run` 抽查 + `npm test` 全绿（2.7.8）。
 

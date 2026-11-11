@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { createOwnerLease, writeForeignLease } from '../automation/owner.js'
 
 test('owner lease：原子创建、第二持有者被拒、续租、释放', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'capital-automation-owner-'))
+  const dir = await mkdtemp(join(tmpdir(), 'automation-workbench-owner-'))
   try {
     const first = createOwnerLease({ directory: dir, profileKey: 'p_a', ownerId: 'owner-a', leaseMs: 60_000 })
     const second = createOwnerLease({ directory: dir, profileKey: 'p_a', ownerId: 'owner-b', leaseMs: 60_000 })
@@ -24,7 +24,7 @@ test('owner lease：原子创建、第二持有者被拒、续租、释放', asy
 })
 
 test('owner lease：过期租约被接管，fencing token 改变；不同 profile 互不影响', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'capital-automation-owner-'))
+  const dir = await mkdtemp(join(tmpdir(), 'automation-workbench-owner-'))
   let clock = 1_000_000
   try {
     const first = createOwnerLease({ directory: dir, profileKey: 'p_a', ownerId: 'owner-a', leaseMs: 1000, now: () => clock })
@@ -46,7 +46,7 @@ test('owner lease：过期租约被接管，fencing token 改变；不同 profil
 })
 
 test('owner lease：外部写入的未过期租约不会被抢', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'capital-automation-owner-'))
+  const dir = await mkdtemp(join(tmpdir(), 'automation-workbench-owner-'))
   try {
     await writeForeignLease(dir, 'p_a', {
       ownerId: 'foreign',

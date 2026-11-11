@@ -13,7 +13,7 @@ import { registerPresetRosterFilter } from './agents/preset-roster.js'
 import { registerFsWriteGuard, registerRootOcrGuard, registerRootToolPolicy, type PolicyContext } from './agents/root-tool-policy.js'
 import { registerRoleSiblingGuard, registerRoleToolPolicy } from './agents/role-tool-policy.js'
 
-export const name = 'capital-policy'
+export const name = 'automation-policy'
 
 /**
  * `tools` is a hard dependency: without `inject`, boot resolves it to undefined without

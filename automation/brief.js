@@ -26,7 +26,7 @@ const BRIEF_RECOVERY_INTERVAL_MS = 60_000
 
 let globalActive = 0
 
-export const BRIEF_SYSTEM_PROMPT = `你是 CapGen 投研自动化的任务简报编辑。读者是聪明但没有金融背景的普通人。
+export const BRIEF_SYSTEM_PROMPT = `你是自动化工作台的任务简报编辑。读者是聪明但没有金融背景的普通人。
 
 把一次自动化运行的最终答复，改写成一条像 X / 微博 / 头条上懂行朋友发的短帖：
 - 第一句说发生了什么，要具体，不要“本报告/综上所述”；
@@ -481,7 +481,7 @@ export function createBriefService(options) {
       status: 'failed',
       error: errorText(error),
       ...extra,
-    }).catch((failure) => logger?.warn?.(`capital-automation: brief failure write failed: ${String(failure)}`))
+    }).catch((failure) => logger?.warn?.(`automation-workbench: brief failure write failed: ${String(failure)}`))
   }
 
   async function callModel({ runId, sessionId, route, payload }) {
@@ -566,7 +566,7 @@ export function createBriefService(options) {
       try {
         await onBriefReady({ run, task, text: normalized.text, route })
       } catch (error) {
-        logger?.warn?.(`capital-automation: TODO 核验入队失败：${String(error)}`)
+        logger?.warn?.(`automation-workbench: TODO 核验入队失败：${String(error)}`)
       }
     }
 
@@ -662,7 +662,7 @@ export function createBriefService(options) {
       globalActive += 1
       void generate(runId)
         .catch(async (error) => {
-          logger?.warn?.(`capital-automation: brief generate failed: ${String(error)}`)
+          logger?.warn?.(`automation-workbench: brief generate failed: ${String(error)}`)
           await markFailed(runId, error)
         })
         .finally(() => {
@@ -692,7 +692,7 @@ export function createBriefService(options) {
         sessionId: run.sessionId,
         promptVersion,
       }).catch((error) => {
-        logger?.warn?.(`capital-automation: brief create failed: ${String(error)}`)
+        logger?.warn?.(`automation-workbench: brief create failed: ${String(error)}`)
         return undefined
       })
     }
@@ -741,9 +741,9 @@ export function createBriefService(options) {
 
   function start() {
     if (timer !== undefined || stopped) return
-    void recoverPending().catch((error) => logger?.warn?.(`capital-automation: brief recovery failed: ${String(error)}`))
+    void recoverPending().catch((error) => logger?.warn?.(`automation-workbench: brief recovery failed: ${String(error)}`))
     timer = setInterval(() => {
-      void recoverPending().catch((error) => logger?.warn?.(`capital-automation: brief recovery failed: ${String(error)}`))
+      void recoverPending().catch((error) => logger?.warn?.(`automation-workbench: brief recovery failed: ${String(error)}`))
     }, recoveryIntervalMs)
     timer.unref?.()
   }

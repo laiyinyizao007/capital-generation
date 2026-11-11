@@ -198,8 +198,8 @@ test('「章节名」式引用不因改名而失效', () => {
 
 test('研发文档不外泄进使用者 Agent 的运行时文本', () => {
   // Audience split: persona / skill is runtime text, so maintainer docs never get moved into it.
-  const skillFiles = readdirSync(join(ROOT, 'preset/capital-generation/skills'))
-    .flatMap((dir) => [join('preset/capital-generation/skills', dir, 'SKILL.md')])
+  const skillFiles = readdirSync(join(ROOT, 'preset/dsh-workbench-automation/skills'))
+    .flatMap((dir) => [join('preset/dsh-workbench-automation/skills', dir, 'SKILL.md')])
     .filter((rel) => existsSync(join(ROOT, rel)))
   for (const rel of skillFiles) {
     assertNotDevRef(read(rel), rel)

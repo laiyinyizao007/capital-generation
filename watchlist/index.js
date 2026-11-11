@@ -1,7 +1,7 @@
 /**
- * Host half of `@v587d/watchlist`. The list is a host-level user asset in the
- * official `storage-domain` domain `capital_watchlist`, reached by the browser
- * half through `/capital-watchlist/*`. Network is user-triggered only (no polling,
+ * Host half of `dsh-workbench-automation-watchlist`. The list is a host-level user asset in the
+ * official `storage-domain` domain `automation_watchlist`, reached by the browser
+ * half through `/automation-watchlist/*`. Network is user-triggered only (no polling,
  * timers or retries); auth uses `connection.requestRejection`; quote fetching
  * reuses the shared source cores rather than a second parser.
  */
@@ -17,11 +17,11 @@ import {
 } from '../lib/sources/tencent-public-core.js'
 import { ASSET_TYPES, isHoldable, weightCeiling, otherHeldWeightPct, MAX_ROW_WEIGHT_PCT, MAX_TOTAL_WEIGHT_PCT } from './holding-rules.js'
 
-export const name = 'capital-watchlist'
+export const name = 'automation-watchlist'
 
-export const ROUTE_PATH = '/capital-watchlist'
+export const ROUTE_PATH = '/automation-watchlist'
 /** Storage unit names allow only lowercase/underscore, so the hyphen belongs to the route. */
-export const DOMAIN_NAME = 'capital_watchlist'
+export const DOMAIN_NAME = 'automation_watchlist'
 /** List cap = per-refresh request cap; the ETF endpoint takes one code per call. */
 export const MAX_ITEMS = 30
 export const REFRESH_CONCURRENCY = 4
@@ -54,8 +54,8 @@ export function refreshBudgetFor(count) {
 }
 const MAX_BODY_BYTES = 65_536
 const MAX_QUERY_LENGTH = 64
-/** Same entry id as the `capital-config` card (settings namespace = entry id). */
-const CAPITAL_CONFIG_ENTRY_ID = 'capital-config'
+/** Same entry id as the `automation-config` card (settings namespace = entry id). */
+const CAPITAL_CONFIG_ENTRY_ID = 'automation-config'
 const DEFAULT_CREDENTIAL_REF = 'FUYAO_API_KEY'
 
 const ENDPOINTS = {
@@ -884,7 +884,7 @@ function messageFor(code, scope) {
   return '行情服务暂时不可用，请稍后再试'
 }
 
-/** Read the configured Fuyao ref from `capital-config`; falls back to the default name. */
+/** Read the configured Fuyao ref from `automation-config`; falls back to the default name. */
 export function readCredentialRef(ctx) {
   try {
     const settings = ctx.get('settings')
@@ -1033,11 +1033,11 @@ export function apply(ctx) {
     },
   })
 
-  ctx.provide('capitalWatchlist', service)
+  ctx.provide('automationWatchlist', service)
 
   // Warm-up logs domain failures only; no latch — each route retries and reports loudly.
   service.list().catch((error) => {
-    ctx.logger?.error?.(`capital-watchlist: 域预热失败，下一次动作会重试（${storeCause(error)}）`)
+    ctx.logger?.error?.(`automation-watchlist: 域预热失败，下一次动作会重试（${storeCause(error)}）`)
   })
 
   /**
@@ -1067,7 +1067,7 @@ export function apply(ctx) {
           if (typeof dispose === 'function') dispose()
         }
       },
-      'capital-watchlist: route',
+      'automation-watchlist: route',
     )
   }
   // Only via inject: a resolved `ctx.get('webServer')` does not make `ctx.webServer` legal.
@@ -1076,7 +1076,7 @@ export function apply(ctx) {
   // The domain is ours to close; a duplicate open of the same name reports already-open.
   ctx.effect(() => () => {
     service.close().catch(() => {})
-  }, 'capital-watchlist: domain')
+  }, 'automation-watchlist: domain')
 
-  ctx.logger?.info?.('capital-watchlist: 自选股服务与 /capital-watchlist 路由已挂载')
+  ctx.logger?.info?.('automation-watchlist: 自选股服务与 /automation-watchlist 路由已挂载')
 }

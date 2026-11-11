@@ -278,7 +278,7 @@ const probes = [
   {
     id: 'L9',
     title: 'Loader 行名三条规则：name 不插值 / 只认精确包名或 path-like / 相对基址是 patch 所在目录',
-    why: 'capital-charts 行依赖这三条同时成立：用 !!js 会让 profile 起不来，用 subpath 会让客户端半边静默消失，相对基址变了会让行解析不到。',
+    why: 'automation-charts 行依赖这三条同时成立：用 !!js 会让 profile 起不来，用 subpath 会让客户端半边静默消失，相对基址变了会让行解析不到。',
     run() {
       const modulesFile = join(PKG('dsh-client-modules'), 'lib/index.js')
       const modules = readIfPresent(modulesFile)
@@ -296,7 +296,7 @@ const probes = [
       const missing = checks.filter((check) => !check.pattern.test(check.text)).map((check) => `${check.label}（${check.file}）`)
       return missing.length === 0
         ? { status: PASS, detail: '行名解析的三条规则都还在（name 字面量 + path-like + patch 目录基址）' }
-        : { status: FAIL, detail: `行名解析规则变了：${missing.join(' / ')}（cordis.patch.yml 的 capital-charts 行依赖它；见账本 L9 的三条规则）` }
+        : { status: FAIL, detail: `行名解析规则变了：${missing.join(' / ')}（cordis.patch.yml 的 automation-charts 行依赖它；见账本 L9 的三条规则）` }
     },
   },
   {
@@ -330,7 +330,7 @@ const probes = [
   {
     id: 'L13',
     title: 'host 侧认证围栏 connection.requestRejection(req) → 401 | 403 | undefined',
-    why: '/capital-charts 是自注册的 webServer prefix 路由，Web 载体本身不做认证（认证由 route owner 自负）；'
+    why: '/automation-charts 是自注册的 webServer prefix 路由，Web 载体本身不做认证（认证由 route owner 自负）；'
       + '不接这道围栏，任何本机进程/页面凭 chart_id 就能读会话图表序列（2026-09 review 复现为 200）。',
     run() {
       const file = join(PKG('dsh-client-connection'), 'lib/types/rpc.d.ts')
@@ -349,7 +349,7 @@ const probes = [
   {
     id: 'L15',
     title: 'settings / credentials 扩展面：条目 Config 的 .volatile() 投影（ns = 条目 id）+ configForms.get/whileServed + plugins.bundle.config(keyed, key = 包名) + credentials remote',
-    why: 'capital-config 是 host 平面 settings 卡片。0.1.7 起命名空间**不再注册**：可编辑面是 profile 条目 Config schema 里 '
+    why: 'automation-config 是 host 平面 settings 卡片。0.1.7 起命名空间**不再注册**：可编辑面是 profile 条目 Config schema 里 '
       + '.volatile() 字段的投影（`volatileForm` 在一个 volatile 字段都没有时返回 undefined，该条目就**不进** describe 镜像），'
       + '且 `ns` 恒等于 `entry.options.id`；浏览器半边靠 `ctx.configForms.get(条目 id)` 读写、靠 Plugins 页的 keyed 槽 '
       + '`plugins.bundle.config`（key = **组合包包名**，页面按 `pkg.name` 渲染且只给 `view: page`）坐落、靠 '
@@ -468,7 +468,7 @@ const probes = [
     title: '预设声明面：@deepseek-ai/dsh-agent-preset 声明行（Config = PresetDefinition{id, plugins}）+ registry 不吃 roots + agentPresets.composedPreset + remoteExportList',
     why: 'issue #3 的第二条根因：0.1.7 把预设挂载从"registry 行 config.roots 指目录"换成"一颗声明行"，'
       + 'registry 既不扫目录也不接受路径。这一面漂移最阴——启动期什么都正常，直到用户点开历史会话才 '
-      + 'RemoteError: Unknown agent preset: capital-generation（config.id 是写进会话日志的身份）。'
+      + 'RemoteError: Unknown agent preset: dsh-workbench-automationeration（config.id 是写进会话日志的身份）。'
       + '同时 src/agents/root-tool-policy.ts 靠 agentPresets.composedPreset(agent.ctx) 筛本 preset，'
       + '那个方法改名就是根收敛静默失效（主 Agent 又看见 render_chart）。'
       + 'src/agents/preset-roster.ts 还包着 remoteExportList 隐藏两颗内部角色；方法改名或 gateway 改成'
@@ -537,7 +537,7 @@ const probes = [
       const missing = checks.filter(([, pattern, text]) => !pattern.test(text)).map(([label, , , file]) => `${label}（${file}）`)
       return missing.length === 0
         ? { status: PASS, detail: 'commandUi 贡献面、过滤字段与 bare-token 直查都仍在（所以菜单行可以只留中文，`/watchlist`↵ 照开）' }
-        : { status: FAIL, detail: `命令贡献面变了：${missing.join(' / ')}（见账本 L18；改 capital-watchlist 客户端半边，不要改探针）` }
+        : { status: FAIL, detail: `命令贡献面变了：${missing.join(' / ')}（见账本 L18；改 automation-watchlist 客户端半边，不要改探针）` }
     },
   },
   {
@@ -624,7 +624,7 @@ const probes = [
       const missing = checks.filter(([, pattern, text]) => (typeof pattern === 'string' ? !text.includes(pattern) : !pattern.test(text))).map(([label, , , file]) => `${label}（${file}）`)
       return missing.length === 0
         ? { status: PASS, detail: 'storage-domain 的 open/close/backend/layout 四项都仍在' }
-        : { status: FAIL, detail: `storage-domain 面变了：${missing.join(' / ')}（见账本 L20；capital-watchlist 的持久化依赖它）` }
+        : { status: FAIL, detail: `storage-domain 面变了：${missing.join(' / ')}（见账本 L20；automation-watchlist 的持久化依赖它）` }
     },
   },
   {
@@ -651,7 +651,7 @@ const probes = [
       const missing = checks.filter(([, pattern, text]) => !pattern.test(text)).map(([label, , , file]) => `${label}（${file}）`)
       return missing.length === 0
         ? { status: PASS, detail: 'sessions 快照投影与 agentPreset 键都仍在' }
-        : { status: FAIL, detail: `会话投影读取面变了：${missing.join(' / ')}（见账本 L21；capital-watchlist 的 available 判据依赖它）` }
+        : { status: FAIL, detail: `会话投影读取面变了：${missing.join(' / ')}（见账本 L21；automation-watchlist 的 available 判据依赖它）` }
     },
   },
   {
@@ -674,7 +674,7 @@ const probes = [
       const missing = checks.filter(([, pattern, text]) => !pattern.test(text)).map(([label]) => label)
       return missing.length === 0
         ? { status: PASS, detail: '菜单材质的填充、模糊与深色描边钩子都在（改名会静默让下拉透视出底下的清单行）' }
-        : { status: FAIL, detail: `菜单材质契约变了：${missing.join(' / ')}（见账本 L22；capital-watchlist 的下拉可读性依赖它）` }
+        : { status: FAIL, detail: `菜单材质契约变了：${missing.join(' / ')}（见账本 L22；automation-watchlist 的下拉可读性依赖它）` }
     },
   },
   {
@@ -711,7 +711,7 @@ const probes = [
       else if (menuZ <= modalZ) missing.push(`portal 列表的 z-index（${menuZ}）不再高于模态（${modalZ}）`)
       return missing.length === 0
         ? { status: PASS, detail: `Menu primitive 的 props / 条目字段 / portal 层级（${menuZ} > ${modalZ}）/ Escape 归属都仍在` }
-        : { status: FAIL, detail: `行内菜单依赖的 Menu primitive 契约变了：${missing.join(' / ')}（见账本 L23；capital-watchlist 的行内菜单依赖它）` }
+        : { status: FAIL, detail: `行内菜单依赖的 Menu primitive 契约变了：${missing.join(' / ')}（见账本 L23；automation-watchlist 的行内菜单依赖它）` }
     },
   },
   {
@@ -739,14 +739,14 @@ const probes = [
       const missing = checks.filter(([, pattern, text]) => !pattern.test(text)).map(([label, , , file]) => `${label}（${file}）`)
       return missing.length === 0
         ? { status: PASS, detail: '标准件送达条件、overlay 座位的 scope 与 insertText / captureInsertion 签名都仍在' }
-        : { status: FAIL, detail: `写输入框的那条面变了：${missing.join(' / ')}（见账本 L24；capital-watchlist 的「预测 / 复盘」依赖它）` }
+        : { status: FAIL, detail: `写输入框的那条面变了：${missing.join(' / ')}（见账本 L24；automation-watchlist 的「预测 / 复盘」依赖它）` }
     },
   },
   {
     id: 'L25',
     title: '插件显示名：宿主按 <裸包名>/locale/<语言>.json 读 meta.title / meta.description，icon 读 manifest.icon',
     why: '「插件」页卡片与详情页主标题的**唯一**来源（`packageText()` 的回落链是 `meta.title ?? 包名`）。'
-      + '三个断点全都静默、没有一条会报错：① 上游改 locale 目录约定或 `meta` 键名 ⇒ 标题回落成 `@v587d/capital-generation`；'
+      + '三个断点全都静默、没有一条会报错：① 上游改 locale 目录约定或 `meta` 键名 ⇒ 标题回落成 `dsh-workbench-automation`；'
       + '② 上游不再按**裸包名**解析（改成别的锚点）⇒ 同上；③ 本仓 `exports["./locale/*.json"]` 或 `files` 漏一项'
       + '⇒ 本地看着对、用户装出去是包名。所以这里除了正则，还**直接调宿主的 readPluginMeta 读我们自己的包**——'
       + '三种漂移都会在这里点名，而不是等用户发现"插件改名字了"。',
@@ -803,7 +803,7 @@ const probes = [
   {
     id: 'L26',
     title: '详情页标题右侧的 badges 座位：plugins.detail.badge（list, root, owner = { subject }）+ 包页在版本标签之后渲染它',
-    why: 'capital-config 往这一格注册 GitHub / npm 两枚外链。两条漂移方向都不报错：① 槽改名或页面不再渲染它'
+    why: 'automation-config 往这一格注册 GitHub / npm 两枚外链。两条漂移方向都不报错：① 槽改名或页面不再渲染它'
       + ' ⇒ 链接整组静默消失；② `subject` 的形状变（`kind` 取值改名、`pkg.name` 改名）⇒ 我们的"只认本包"闸门判不出来，'
       + '于是把本插件的链接挂到**别人的**包页 / 行页 / 官方插件页上——同一格座位由这三类详情页共用，越界比消失严重。'
       + '另：list 座位缺 `options.id` 上游直接抛，注册形状也在这里钉住。',
@@ -829,13 +829,13 @@ const probes = [
       const missing = checks.filter(([, pattern, text]) => !pattern.test(text)).map(([label, , , file]) => `${label}（${file}）`)
       return missing.length === 0
         ? { status: PASS, detail: 'badges 座位的契约、包页渲染点与 list 注册的 id 要求都仍在' }
-        : { status: FAIL, detail: `标题右侧那格变了：${missing.join(' / ')}（见账本 L26；capital-config 的两枚外链依赖它）` }
+        : { status: FAIL, detail: `标题右侧那格变了：${missing.join(' / ')}（见账本 L26；automation-config 的两枚外链依赖它）` }
     },
   },
   {
     id: 'L27',
     title: '官方 Switch primitive：props 面（checked / onChange / label / disabled / title / className）、它是 button[role="switch"] 且**视觉状态读 aria-checked**、onChange 收到的是下一个状态',
-    why: '自选股每行那颗「持仓」开关就是它（住在 capital-watchlist 的 Menu children 里，见 L23）。四种漂移都不报错：'
+    why: '自选股每行那颗「持仓」开关就是它（住在 automation-watchlist 的 Menu children 里，见 L23）。四种漂移都不报错：'
       + '① 改成非受控、或 onChange 改收事件对象 ⇒ 我们那句 `next ? markHolding : clearHolding` 点错方向，'
       + '开关自己动了而域里什么都没写；② 视觉不再跟着 aria-checked 走（改用平行 class 或内部 state）⇒ 读屏与屏上'
       + '各说一套，而这一行我们**不画任何勾选态图标**，状态只有它一处能说；③ 换成非 button 元素或 role 改名 ⇒ '
@@ -860,7 +860,7 @@ const probes = [
       const missing = checks.filter(([, pattern, source]) => !pattern.test(readIfPresent(source) ?? '')).map(([label]) => label)
       return missing.length === 0
         ? { status: PASS, detail: 'Switch 的 props 面 / role+aria-checked 驱动视觉 / onChange(next) / 自带焦点环都仍在（36×20 那颗胶囊）' }
-        : { status: FAIL, detail: `官方 Switch 契约变了：${missing.join(' / ')}（见账本 L27；capital-watchlist 的「持仓」开关依赖它）` }
+        : { status: FAIL, detail: `官方 Switch 契约变了：${missing.join(' / ')}（见账本 L27；automation-watchlist 的「持仓」开关依赖它）` }
     },
   },
   {
@@ -872,7 +872,7 @@ const probes = [
       + '② roving tabIndex 没了 ⇒ 每格都进 Tab 序，一条 tablist 七个停靠点；③ 键盘走位改语义或不再跳过 '
       + 'disabled 项 ⇒ 方向键与卡片行为分叉（我们自己不补 onKeyDown，补了就是双重选择）；④ 视觉选中态或'
       + '焦点环换载体（不再读 `aria-selected`）⇒ 屏上与读屏各说一套。另外它是**完全受控**件（value 由我们'
-      + '持有），改成自持状态就会与卡片根的 `data-capital-config-tab` 两套真相——那属性正驱动着收起宿主'
+      + '持有），改成自持状态就会与卡片根的 `data-automation-config-tab` 两套真相——那属性正驱动着收起宿主'
       + '「包含的组件」那三条 `:has()` 规则（见 L15）。',
     run() {
       const file = join(PKG('dsh-client-ui-primitives'), 'lib/index.js')
@@ -1040,7 +1040,7 @@ const probes = [
   {
     id: 'L33',
     title: 'Cordis 服务解析的不对称：`ctx.<name>` 抛错，`ctx.get(name)` 静默返回 undefined（host 平面行必须声明 inject）',
-    why: 'capital-policy 是 host 平面行，它要 `tools.guard()` 面来装三颗身份闸门。这条不对称意味着'
+    why: 'automation-policy 是 host 平面行，它要 `tools.guard()` 面来装三颗身份闸门。这条不对称意味着'
       + '**不声明 inject 时装配不会失败**：属性访问抛错被我们的 try/catch 吞掉、`get` 直接给 undefined，'
       + '于是闸门"装了但不在场"，零报错。2026-10-15 的 fs 写口 guard 就是这么静默空转了 4 天'
       + '（被 tool-fs 的行级 write:false 掩护住），2026-10-19 才由三条真机测试暴露。'
@@ -1058,7 +1058,7 @@ const probes = [
         .map(([label, , , source]) => `${label}（${source}）`)
       return missing.length === 0
         ? { status: PASS, detail: '两种失败方向都在（属性抛错 / get 静默 undefined）⇒ host 平面行必须声明 inject，读不到服务要 warn' }
-        : { status: FAIL, detail: `Cordis 服务解析的失败方向变了：${missing.join(' / ')}（见账本 L33；先检查 capital-policy 的 inject 与三颗 guard 的 warn，再动探针）` }
+        : { status: FAIL, detail: `Cordis 服务解析的失败方向变了：${missing.join(' / ')}（见账本 L33；先检查 automation-policy 的 inject 与三颗 guard 的 warn，再动探针）` }
     },
   },
   {

@@ -70,7 +70,7 @@ test('包装 remoteExportList：list / resolve / 委派面保持全量，清理�
   const cleanups = []
   const installed = installPresetRosterFilter(service, {
     effect(execute, label) {
-      assert.equal(label, 'capital-preset-roster')
+      assert.equal(label, 'automation-preset-roster')
       cleanups.push(execute())
     },
   })

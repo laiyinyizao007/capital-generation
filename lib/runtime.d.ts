@@ -6,7 +6,7 @@ export interface RuntimeContext {
     get(name: string): unknown;
     root?: unknown;
 }
-export interface CapitalShared {
+export interface AutomationShared {
     sourceTokens: ChartSourceTokenStore;
     artifacts: ChartArtifactRegistry;
 }
@@ -15,7 +15,7 @@ export interface CapitalShared {
  * capabilities once per isolate realm, so a shared hub throws `data source capability
  * already registered`. Stores only touch workspace via host fs, no state to synchronize.
  */
-export declare function capitalDatasetStore(ctx: RuntimeContext): WorkspaceDatasetStore;
-export declare function capitalSharedRuntime(ctx: RuntimeContext): CapitalShared;
+export declare function automationDatasetStore(ctx: RuntimeContext): WorkspaceDatasetStore;
+export declare function automationSharedRuntime(ctx: RuntimeContext): AutomationShared;
 /** Test-only: drop the per-root cache. */
 export declare function resetCapitalRuntime(): void;

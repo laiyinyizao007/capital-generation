@@ -6,7 +6,7 @@
 import type { Context } from '@deepseek-ai/cordis';
 import { provideDataCollectorHub } from './data-collector/hub.js';
 import { type DataCollectorDiagnostics } from './data-collector/tools.js';
-import { capitalDatasetStore } from './runtime.js';
+import { automationDatasetStore } from './runtime.js';
 export interface CollectorConfig {
     fuyaoCredentialRef?: string;
     ftshareCredentialRef?: string;
@@ -14,7 +14,7 @@ export interface CollectorConfig {
     windCredentialRef?: string;
 }
 export interface CollectorRuntime {
-    store: ReturnType<typeof capitalDatasetStore>;
+    store: ReturnType<typeof automationDatasetStore>;
     hub: ReturnType<typeof provideDataCollectorHub>;
     /** Injected into `dc_status` by the caller that owns the `tools/collect` row. */
     diagnostics: DataCollectorDiagnostics;

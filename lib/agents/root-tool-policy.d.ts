@@ -13,7 +13,7 @@ export declare function ocrFormGuardReasonFor(ctx: PolicyContext): (exec: Guarde
 /** Mounted as a platform pair; recognize both everywhere or the other platform's gate is dead. */
 export declare const SHELL_TOOL_NAMES: readonly ["bash", "pwsh"];
 export declare const ROOT_AGENT_DENIED_TOOLS: readonly ["render_chart", "prepare_chart_source", "anysearch_search", "web_retriever_fetch", "wind_docs_announcements", "wind_docs_news", "cls_telegraph", "wscn_lives", "cninfo_irm", "sseinfo_qa", "eastmoney_724", "eastmoney_stock_news", "eastmoney_reports", "eastmoney_announcements", "eastmoney_announcement_body", "sina_reports", "ths_eps_forecast", "write", "edit"];
-export declare const CAPITAL_PRESET_ID = "capital-generation";
+export declare const AUTOMATION_PRESET_ID = "dsh-workbench-automation";
 interface ToolRestriction {
     allow?: readonly string[];
     deny?: readonly string[];

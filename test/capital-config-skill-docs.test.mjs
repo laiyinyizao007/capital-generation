@@ -1,7 +1,7 @@
 /**
- * `/capital-skills/<name>.md` side channel: serves the exact SKILL.md snapshot shown in settings.
+ * `/automation-skills/<name>.md` side channel: serves the exact SKILL.md snapshot shown in settings.
  *  - Auth fence: `webServer.register` does no auth; without `connection.requestRejection` any local
- *    process could read plugin files by path (same rule as `/capital-charts`). A rejected request
+ *    process could read plugin files by path (same rule as `/automation-charts`). A rejected request
  *    must not touch the filesystem at all.
  *  - Closed set: request names are only table keys, never path fragments.
  *  - Oversize is refused whole, never truncated (a half "original" misleads more than an error).
@@ -177,7 +177,7 @@ test('apply：原文旁路只经 inject 挂到 webServer 上（探测式写法�
   assert.match(clientSource, /fetch\(skillDocUrl\(name\)/, '客户端只经这一处出口取原文')
   assert.match(clientSource, /`\$\{SKILL_DOC_ROUTE\}\/\$\{encodeURIComponent\(name\)\}\.md`/,
     '地址模板也要同字：slug 里有以 . 结尾的名字（10k-digest 这类），少 encode 就 404')
-  assert.equal(skillDocUrl('10k-digest'), '/capital-skills/10k-digest.md')
+  assert.equal(skillDocUrl('10k-digest'), '/automation-skills/10k-digest.md')
 })
 
 test('没有 webServer 的载体：本行仍激活，只是不挂路由', () => {

@@ -7,7 +7,7 @@ import type { Context } from '@deepseek-ai/cordis'
 
 import { createCollectorRuntime } from './collector-runtime.js'
 import { registerDataCollectorTools } from './data-collector/tools.js'
-import { readCollectorConfig } from './capital-settings.js'
+import { readCollectorConfig } from './automation-settings.js'
 
 export const name = 'capital-collect-tools'
 export const inject = ['tools']

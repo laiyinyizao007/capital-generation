@@ -6,6 +6,6 @@
  * cannot turn into a child-side polling loop.
  */
 import type { Context } from '@deepseek-ai/cordis';
-export declare const name = "capital-orchestration-tools";
+export declare const name = "automation-orchestration-tools";
 export declare const inject: string[];
 export declare function apply(ctx: Context): void;

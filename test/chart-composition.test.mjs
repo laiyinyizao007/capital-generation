@@ -92,12 +92,12 @@ function findRow(patch, id) {
 }
 
 test('patch：行名必须是 path-like 的字面量（subpath 会被静默丢掉）', () => {
-  const row = findRow(loadPatch(), 'capital-charts')
+  const row = findRow(loadPatch(), 'automation-charts')
   assert.equal(typeof row.name, 'string')
 
   // Upstream fact: a subpath is neither path-like nor an exact package specifier, so the row is
   // silently not a client package. If upstream relaxes this, fail here and simplify the patch.
-  assert.equal(clientModulesAcceptsRowName('@v587d/capital-generation/chart-ui'), false,
+  assert.equal(clientModulesAcceptsRowName('dsh-workbench-automation/chart-ui'), false,
     '上游已不再丢弃 subpath 行名：可以简化 cordis.patch.yml 的写法和本文件的这条注释')
 
   assert.equal(clientModulesAcceptsRowName(row.name), true,
@@ -114,21 +114,21 @@ test('patch：任何行的 name 都必须是字面量字符串（name 不接受 
   }
 })
 
-test('patch：存在 capital-charts 行，且它在 insert 里（新增行而不是改已有行）', () => {
+test('patch：存在 automation-charts 行，且它在 insert 里（新增行而不是改已有行）', () => {
   const patch = loadPatch()
-  const row = findRow(patch, 'capital-charts')
-  assert.ok(row, 'cordis.patch.yml 必须有 id=capital-charts 的行')
-  const inserter = patch.find((node) => Array.isArray(node?.insert) && node.insert.some((item) => item?.id === 'capital-charts'))
-  assert.ok(inserter, 'capital-charts 必须在 insert 列表里：它是新增的 host 平面行')
+  const row = findRow(patch, 'automation-charts')
+  assert.ok(row, 'cordis.patch.yml 必须有 id=automation-charts 的行')
+  const inserter = patch.find((node) => Array.isArray(node?.insert) && node.insert.some((item) => item?.id === 'automation-charts'))
+  assert.ok(inserter, 'automation-charts 必须在 insert 列表里：它是新增的 host 平面行')
 })
 
 test('patch：行名能从 profile 根解析并导入，且归属到 chart-ui 这个独立包身份', () => {
-  const row = findRow(loadPatch(), 'capital-charts')
+  const row = findRow(loadPatch(), 'automation-charts')
   assert.equal(typeof row.name, 'string')
   assert.ok(!row.name.includes('!!js'), '去掉标签后残留说明写法有问题')
 
   const probe = resolveFromPatchDirectory(row.name)
-  assert.equal(probe.name, 'capital-charts', '导入的应当是宿主半边插件')
+  assert.equal(probe.name, 'automation-charts', '导入的应当是宿主半边插件')
   assert.equal(probe.hasApply, true)
   assert.ok(existsSync(fileURLToPath(probe.url)), `解析结果必须是真实存在的文件：${probe.url}`)
   assert.equal(basename(probe.url), 'index.js')
@@ -136,7 +136,7 @@ test('patch：行名能从 profile 根解析并导入，且归属到 chart-ui �
   // Package identity must be the nested package; falling back to the root package duplicates a Loader source.
   const nearest = nearestPackageName(probe.url)
   const rootName = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).name
-  assert.equal(nearest, '@v587d/capital-charts')
+  assert.equal(nearest, 'dsh-workbench-automation-charts')
   assert.notEqual(nearest, rootName)
   assert.ok(fileURLToPath(probe.url).startsWith(CHART_UI), '必须落在 chart-ui/ 目录内')
 })
@@ -145,7 +145,7 @@ test('嵌套包：chart-ui 的包身份、dsh.client 声明与 exports 自洽', 
   const manifest = JSON.parse(readFileSync(join(CHART_UI, 'package.json'), 'utf8'))
   const root = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
 
-  assert.equal(manifest.name, '@v587d/capital-charts')
+  assert.equal(manifest.name, 'dsh-workbench-automation-charts')
   assert.notEqual(manifest.name, root.name, '必须是独立包名：同名会被 dsh-client-modules 判为重复 Loader source')
   assert.equal(manifest.version, root.version, '嵌套包随主包发布，版本必须同步（本测试就是防它悄悄漂移）')
   assert.equal(manifest.dsh?.client?.platform, 'web')

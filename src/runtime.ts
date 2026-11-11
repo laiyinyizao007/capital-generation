@@ -8,7 +8,7 @@ export interface RuntimeContext {
   root?: unknown
 }
 
-export interface CapitalShared {
+export interface AutomationShared {
   sourceTokens: ChartSourceTokenStore
   artifacts: ChartArtifactRegistry
 }
@@ -18,7 +18,7 @@ export interface CapitalShared {
  * capabilities once per isolate realm, so a shared hub throws `data source capability
  * already registered`. Stores only touch workspace via host fs, no state to synchronize.
  */
-export function capitalDatasetStore(ctx: RuntimeContext): WorkspaceDatasetStore {
+export function automationDatasetStore(ctx: RuntimeContext): WorkspaceDatasetStore {
   return new WorkspaceDatasetStore({
     fs: ctx.get('fs') as FsLike | undefined,
     sandboxPolicy: ctx.get('sandboxPolicy') as SandboxPolicyLike | undefined,
@@ -30,9 +30,9 @@ export function capitalDatasetStore(ctx: RuntimeContext): WorkspaceDatasetStore 
  * Per-role token stores would make `render_chart` silently report `chart_source_expired`.
  * Key by `ctx.root` (stable) because mount points differ per application.
  */
-const cached = new Map<unknown, CapitalShared>()
+const cached = new Map<unknown, AutomationShared>()
 
-export function capitalSharedRuntime(ctx: RuntimeContext): CapitalShared {
+export function automationSharedRuntime(ctx: RuntimeContext): AutomationShared {
   const ref = ctx.root ?? ctx
   const existing = cached.get(ref)
   if (existing !== undefined) return existing

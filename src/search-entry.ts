@@ -7,9 +7,9 @@ import type { Context } from '@deepseek-ai/cordis'
 
 import { createRetrieverRuntime } from './retriever-runtime.js'
 import { registerSearchTools } from './web-retriever/tools.js'
-import { readRetrieverConfig } from './capital-settings.js'
+import { readRetrieverConfig } from './automation-settings.js'
 
-export const name = 'capital-retrieve-search-tools'
+export const name = 'automation-retrieve-search-tools'
 export const inject = ['tools']
 
 export function apply(ctx: Context): void {

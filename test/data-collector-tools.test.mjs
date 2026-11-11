@@ -416,16 +416,16 @@ test('dc_status：agent_tool_policy 原样带出收敛现场，undefined 归一�
       probeApiKey: async () => ({ present: false, source: null }),
       rootPolicy: () => [
         { agentId: undefined, root: true, presetId: 'standard', outcome: 'not-capital', denied: [], failed: [] },
-        { agentId: 'root-2', root: true, presetId: 'capital-generation', outcome: 'restricted', denied: ['pwsh'], failed: ['bash'] },
-        { agentId: 'child-1', root: false, presetId: 'capital-data-junior', outcome: 'restricted', allowed: ['send_message', 'skill'], denied: [], failed: [] },
+        { agentId: 'root-2', root: true, presetId: 'dsh-workbench-automation', outcome: 'restricted', denied: ['pwsh'], failed: ['bash'] },
+        { agentId: 'child-1', root: false, presetId: 'automation-data-junior', outcome: 'restricted', allowed: ['send_message', 'skill'], denied: [], failed: [] },
       ],
     },
   })
   const status = await runTool(toolRuntime, 'dc_status', {}, exec(delegatedSession()))
   assert.deepEqual(status.agent_tool_policy, [
     { agent_id: null, root: true, preset_id: 'standard', outcome: 'not-capital', allowed: [], denied: [], failed: [] },
-    { agent_id: 'root-2', root: true, preset_id: 'capital-generation', outcome: 'restricted', allowed: [], denied: ['pwsh'], failed: ['bash'] },
-    { agent_id: 'child-1', root: false, preset_id: 'capital-data-junior', outcome: 'restricted', allowed: ['send_message', 'skill'], denied: [], failed: [] },
+    { agent_id: 'root-2', root: true, preset_id: 'dsh-workbench-automation', outcome: 'restricted', allowed: [], denied: ['pwsh'], failed: ['bash'] },
+    { agent_id: 'child-1', root: false, preset_id: 'automation-data-junior', outcome: 'restricted', allowed: ['send_message', 'skill'], denied: [], failed: [] },
   ])
   assert.equal(JSON.parse(JSON.stringify(status.agent_tool_policy)).length, 3, '回执必须能无损序列化（undefined 不许带出工具边界）')
 })

@@ -1,6 +1,6 @@
 /**
- * `@v587d/capital-charts` browser half: one `render_chart` toolview fed by the
- * `/capital-charts/<id>.json` route. No turn-tail card or custom session event:
+ * `dsh-workbench-automation-charts` browser half: one `render_chart` toolview fed by the
+ * `/automation-charts/<id>.json` route. No turn-tail card or custom session event:
  * the vocabulary is closed and non-first-party events make cold load fail closed.
  * Delivery goes through `deliverables/presented`.
  */
@@ -108,10 +108,10 @@ function ChartView(props) {
 
 function apply(ctx) {
   ctx.slots.inject(TOOLVIEW_SLOT, () => ctx.slots.register({ name: TOOLVIEW_SLOT, key: 'render_chart' }, ChartView))
-  ctx.logger?.info?.('capital-charts: 客户端半边已挂载（render_chart toolview；呈现走官方交付通道）')
+  ctx.logger?.info?.('automation-charts: 客户端半边已挂载（render_chart toolview；呈现走官方交付通道）')
 }
 
-exports.name = 'capital-charts'
+exports.name = 'automation-charts'
 exports.inject = ['slots']
 exports.apply = apply
 exports.ChartView = ChartView

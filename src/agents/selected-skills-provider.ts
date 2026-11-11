@@ -304,14 +304,14 @@ export function registerSelectedSkills(
       }) | undefined
       if (!agentCtx || typeof agentCtx.inject !== 'function') {
         registered.delete(agent)
-        ctx.logger?.warn?.('capital-generation: selected skills are unavailable (agent cannot inject skills)')
+        ctx.logger?.warn?.('automation-workbench: selected skills are unavailable (agent cannot inject skills)')
         return
       }
       // agent/created is serial: DSH awaits listeners, so this inject lands before the first prompt.
       await agentCtx.inject(['skills'], (injectedCtx) => {
         const skills = injectedCtx.skills
         if (typeof skills?.registerProvider !== 'function') {
-          ctx.logger?.warn?.('capital-generation: selected skills are unavailable (agent has no skills registry)')
+          ctx.logger?.warn?.('automation-workbench: selected skills are unavailable (agent has no skills registry)')
           return
         }
 
@@ -361,7 +361,7 @@ export function registerSelectedSkills(
                 control?.invalidate()
               }
             } catch (error) {
-              ctx.logger?.warn?.(`capital-generation: selected skill settings unreadable (${String(error)})`)
+              ctx.logger?.warn?.(`automation-workbench: selected skill settings unreadable (${String(error)})`)
             }
             return next()
           })
@@ -371,7 +371,7 @@ export function registerSelectedSkills(
             on?: (event: string, listener: (...args: unknown[]) => unknown) => unknown
           }
           if (typeof usageCtx.on !== 'function') {
-            ctx.logger?.warn?.('capital-generation: selected skill usage cannot be recorded (agent context has no event API)')
+            ctx.logger?.warn?.('automation-workbench: selected skill usage cannot be recorded (agent context has no event API)')
           }
           const stopToolResult = usageCtx.on?.('tools/result', (exec, result) => {
             if ((exec as { name?: unknown } | undefined)?.name !== 'skill') return
@@ -418,12 +418,12 @@ export function registerSelectedSkills(
             void filesystemProvider?.dispose()
             filesystemProvider = undefined
           }
-        }, `capital-generation: selected skills for ${role} / ${agentSessionId(agent) ?? 'agent'}`)
+        }, `automation-workbench: selected skills for ${role} / ${agentSessionId(agent) ?? 'agent'}`)
       })
     } catch (error) {
       // Optional capability: degrade with a warning, never block Agent creation; clear so a later event can retry.
       registered.delete(agent)
-      ctx.logger?.warn?.(`capital-generation: selected skills are unavailable (${String(error)})`)
+      ctx.logger?.warn?.(`automation-workbench: selected skills are unavailable (${String(error)})`)
     }
   }
 
@@ -446,5 +446,5 @@ export function registerSelectedSkills(
   ctx.effect?.(() => () => {
     if (typeof stop === 'function') (stop as () => void)()
     if (typeof stopPreset === 'function') (stopPreset as () => void)()
-  }, 'capital-generation: selected skill role listeners')
+  }, 'automation-workbench: selected skill role listeners')
 }

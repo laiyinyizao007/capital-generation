@@ -5,7 +5,7 @@ import { registerBashGuard } from '../lib/agents/bash-guard.js'
 import { registerFsWriteGuard, registerRootOcrGuard, registerRootToolPolicy } from '../lib/agents/root-tool-policy.js'
 import { registerRoleSiblingGuard, registerRoleToolPolicy } from '../lib/agents/role-tool-policy.js'
 
-// During the 0.2.1 transition the host `capital-policy` row and the monolith's old call sites
+// During the 0.2.1 transition the host `automation-policy` row and the monolith's old call sites
 // register the same listeners; they must dedupe per root, else one root session gets 6 root probes
 // and 6 bash-guard attempts. Two ctx objects sharing one root reproduce both call sites here.
 function policyCtx(sharedRoot, guards) {
@@ -18,7 +18,7 @@ function policyCtx(sharedRoot, guards) {
   return {
     root: sharedRoot,
     get(name) {
-      if (name === 'agentPresets') return { composedPreset: () => 'capital-generation' }
+      if (name === 'agentPresets') return { composedPreset: () => 'dsh-workbench-automation' }
       if (name === 'tools') return tools
       return undefined
     },

@@ -322,5 +322,5 @@ export function registerWaitForAgentsTool(ctx: Context, options: WaitForAgentsOp
       }
     },
   })
-  ctx.effect(() => tools.register(definition), 'capital-generation.tool(wait_for_agents)')
+  ctx.effect(() => tools.register(definition), 'automation-workbench.tool(wait_for_agents)')
 }

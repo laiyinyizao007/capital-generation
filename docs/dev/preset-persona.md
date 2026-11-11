@@ -1,13 +1,13 @@
 # Preset 维护：现状、人设写作与「不许改」
 
-> 索引见仓库根 `AGENTS.md` §8。改 `preset/capital-generation/` 的任何一行之前读这里；验证步骤
+> 索引见仓库根 `AGENTS.md` §8。改 `preset/dsh-workbench-automation/` 的任何一行之前读这里；验证步骤
 > （§8.3）与新增角色流程（§8.5）留在 `AGENTS.md`，因为它们是每次动手都要过的闸门。
 > §编号沿用 `AGENTS.md` 的全局命名空间。
 
 ## 8.1 现状（实测于 dsh 0.2.2-rc.1）
 
-- 装配整体住 **`preset/capital-generation/agent.patch.yml`**：**六颗**
-  `@deepseek-ai/dsh-agent-preset` insert 行——根 `capital-generation` 加五颗角色 preset，每颗
+- 装配整体住 **`preset/dsh-workbench-automation/agent.patch.yml`**：**六颗**
+  `@deepseek-ai/dsh-agent-preset` insert 行——根 `dsh-workbench-automation` 加五颗角色 preset，每颗
   `config = { id, name?, description?, plugins: [...] }`，`plugins` 就是旧的 `agent.cordis.yml`
   行数组。由 `package.json` 的 `dsh.bundle.patch`（**数组**：主 patch + 这一份 yml）随包挂载，
   `trust=system`。**不要**手抄进 `~/.dsh/.agent-presets`，也不要编辑 DSH 自带安装目录
@@ -17,14 +17,14 @@
   预设管理里滤掉（`list()` / `resolve()` / 委派全量；过滤器 fail-open；设置卡片另有 `data-agent-preset-id`
   CSS 兜底）。内部角色按 id 仍可解析/启动，所以角色工具面收敛判据**只有 preset id、不分根会话还是 child**：
   手开 web_retriever 也必须收敛；D0 后主要由**行组合**保证。卡片顺序：三个用户模式用负 `order` 排在官方四颗（1–4）之前，内部角色 5/6 在后；选择器是宿主按 `order` 排的扁平列表，没有分组字段。
-- ⛔ **`config.id`（`capital-generation`）是写进会话日志的身份**：0.1.7 的
+- ⛔ **`config.id`（`dsh-workbench-automation`）是写进会话日志的身份**：0.1.7 的
   `dsh-agent-preset-registry` **既不扫目录也不接受 preset 路径**，只认声明行。旧写法
   （registry 行 `config.roots` 指目录）整体失效，漂移的表现是**历史会话恢复时
-  `RemoteError: Unknown agent preset: capital-generation`**——不是启动报错。
+  `RemoteError: Unknown agent preset: dsh-workbench-automation`**——不是启动报错。
 - ⛔ 嵌套行里的 `!!js` 插值中 `baseUrl` 是 **profile 目录**（settings 住那儿），不是这颗 yml
   所在目录：所以 `skill-filesystem` 的 `customSkillDirs` 只能
   `createRequire(baseUrl).resolve('<包名>/package.json')` 解析回随包发布的
-  `preset/capital-generation/skills`（回归 `test/persona.test.mjs`，路径与本仓目录实况同源比对）。
+  `preset/dsh-workbench-automation/skills`（回归 `test/persona.test.mjs`，路径与本仓目录实况同源比对）。
 - 主 persona 与每颗角色 persona 都由**各自 preset 里**的 `@deepseek-ai/dsh-persona` 行
   `config.prefix` 承载（**没有** `config.text`）；不设 `suffix` 时部署级后缀被遮蔽为空（有意）。
   0.2.1 起委派行**不再带 persona**（报错原文：`persona and tool plugins … configure them in an
@@ -33,7 +33,7 @@
 - **工具面落点（D0，2026-10-19）**：六颗 preset 只挂 `.../tools/<family>` 的**族行**——组合表住
   `test/persona.test.mjs`、行契约住 `test/family-rows.mjs`（抄两份就是 §9.7 的开端）；运行期 allow 已删，
   只剩 `interrupt_agent` / `list_agents` 逐名减掉。2026-10-23 起 junior 另挂 `tool-presentation` 行（0.2.2 起直接挂 `@deepseek-ai/dsh-tool-executor-ptc`）、删 shell 两行：唯一直调是 `run_code`（`test/ptc-preset.test.mjs`）。
-- **host 平面**：`capital-runtime` 只 provide 一份 chart token/artifact；`capital-policy` 在 host
+- **host 平面**：`automation-runtime` 只 provide 一份 chart token/artifact；`automation-policy` 在 host
   装一次 root/role/shell/fs 监听；root 可见性已由组合期负责（deny:false），旧单体调用点已删。
 - 长协议由 `skill-filesystem` + `tool-skill` 两行发现；组合设计理由住同目录 `README.md`（不注入
   会话）；**本文与 `docs/dev/` 是给研发 Agent 的，使用者 Agent 只读 persona + skill + 工具
@@ -51,7 +51,7 @@
 |---|---|
 | 每轮硬规则（常驻） | persona（主 / 子）：预检、label 复用、路由、权限 / 叶子边界、安全底线、"第一步先加载协议" |
 | 按需参考材料 | `skills/<name>/SKILL.md`：样例 JSON、字段规则、`error/code` 处置表、核验清单 |
-| 维护者理由 / 踩坑 | `docs/dev/`（研发 Agent 按需读）与 `preset/capital-generation/README.md`：isolate realm、`!!js` 解析、provider 故障史 |
+| 维护者理由 / 踩坑 | `docs/dev/`（研发 Agent 按需读）与 `preset/dsh-workbench-automation/README.md`：isolate realm、`!!js` 解析、provider 故障史 |
 
 - 与工具 description / schema 重复的事实**不要再抄进 persona**（判据："该 Agent 可见的工具文本里
   是否已有"）。任何进 `skills/` 的文件都会拿一条常驻目录项并可被模型加载——维护者文档不放这里。
@@ -61,7 +61,7 @@
 
 `skills/` 那一行有**两个来源**，判据不同，混放会同时坏掉两边：
 
-| | 内置（`preset/capital-generation/skills/`） | 外部精选（`selected-skills/…`，catalog 条目） |
+| | 内置（`preset/dsh-workbench-automation/skills/`） | 外部精选（`selected-skills/…`，catalog 条目） |
 |---|---|---|
 | 挂载 | 随 preset 默认在，`skill` 加载即用 | **默认关闭**，使用者在「精选 Skills」勾选后只对之后的 Capital 会话可见（子 Agent 不继承） |
 | 放什么 | **换个流派也成立**的东西：与已有数据源和主子 Agent 编排相适配的口径、勾稽、覆盖边界、结构性偏差、呈现与交付契约，以及符合经济 / 金融规律的方法 | **一家之言**：分档、阈值、阶段划分、触发词、流派化检查表（例：某行业集中度到多少算拥挤、持仓超过 35% 触发分散） |
@@ -73,7 +73,7 @@
 - **一条内容两边都想要就拆开**：规律那半进内置，数字那半进精选。"周期股在盈利峰值会让 TTM PE
   创历史新低、看起来最便宜其实最贵"是规律；"位置 >0.8 且量比 >2 判定加速期"是一家之言。
 - ⛔ **单次加载的字节预算**：任务型内置 skill 的正文仍受 `thresholdChars: 8192`（保留 `head 4096` +
-  `tail 1024`，配在 `preset/capital-generation/agent.patch.yml` 的 `tool-result-pruner` 行）约束，
+  `tail 1024`，配在 `preset/dsh-workbench-automation/agent.patch.yml` 的 `tool-result-pruner` 行）约束，
   超过就**中间静默消失**。精选方法不再拼进任务型正文，改为各自独立的角色目录项；精选条目自身也逐颗
   受同一上限约束（`test/selected-skills-content.test.mjs` 的体积棘轮）。**动内置正文前先 `node -e`
   数一遍该文件的字符数**，别用行数当预算（中文一行抵得上英文三行的字符量）。
@@ -105,7 +105,7 @@
 - **子 Agent 读 skill 的开关**：由该角色 preset 自己挂的 `tool-skill` 行提供（D0 之后每颗角色
   都挂那一行，没有"仍挂单体"的例外了）。restriction 过滤继承层、只豁免本 scope 自注册工具；
   这条链上任一环改动（角色挂的行 / skill 名 / 文件名）都要同步测试。
-- `dataCollectorHub` / `datasetStore` 只留在 `capital-data-collector` 那颗 `capital-generation-scope`
+- `dataCollectorHub` / `datasetStore` 只留在 `capital-data-collector` 那颗 `automation-workbench-scope`
   isolate realm 里（realm 里只有 `tools/collect` 一行）；其余角色只建本地 store（retriever 另有检索
   客户端），不建 hub；`compaction` / `toolResultPruner` 同 realm（pruner 是组内子行）。
 - **名字清单只写真注册的工具名**：`tools.restrict()` 对"本作用域看不见的名字"抛错。根侧逐名

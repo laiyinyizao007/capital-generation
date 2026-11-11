@@ -1,17 +1,17 @@
 {
-  "name": "@v587d/capital-generation",
-  "version": "2.20.0",
-  "description": "Capital Generation：面向中国散户的 AI 投资助手插件（自动模式 Agent Preset）",
+  "name": "dsh-workbench-automation",
+  "version": "1.0.0",
+  "description": "DSH 插件：自动化工作台 —— 定时任务、看板、运行热力图与工作区会话（fork 自 Capital Generation 的自动化引擎）",
   "icon": "assets/cg-icon.png",
   "author": "v587d",
   "license": "MIT",
-  "homepage": "https://github.com/v587d/capital-generation#readme",
+  "homepage": "https://github.com/laiyinyizao007/capital-generation#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/v587d/capital-generation.git"
+    "url": "git+https://github.com/laiyinyizao007/capital-generation.git"
   },
   "bugs": {
-    "url": "https://github.com/v587d/capital-generation/issues"
+    "url": "https://github.com/laiyinyizao007/capital-generation/issues"
   },
   "type": "module",
   "main": "./lib/index.js",
@@ -132,7 +132,7 @@
     "bundle": {
       "patch": [
         "./cordis.patch.yml",
-        "./preset/capital-generation/agent.patch.yml"
+        "./preset/dsh-workbench-automation/agent.patch.yml"
       ]
     }
   },
@@ -182,5 +182,12 @@
     "@joplin/turndown-plugin-gfm": "^1.0.68",
     "turndown": "^7.2.4",
     "zod": "^4.5.4"
-  }
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "automation",
+    "workbench",
+    "scheduler"
+  ]
 }

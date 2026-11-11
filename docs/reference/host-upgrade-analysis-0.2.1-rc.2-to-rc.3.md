@@ -37,7 +37,7 @@ L19 `conversation.input.overlay`（含 `inputActions`）、L23 `Menu` / `MenuIte
 L22 菜单材质 token。**没有**消费导航入口、More 菜单、views 或任何新增槽。
 
 宿主版本声明散落在 8 个文件（升级时同字改动）：`package.json`、`package-lock.json`、`README.md`、
-`CONTRIBUTING.md`、`.github/workflows/test.yml`、`preset/capital-generation/README.md`、
+`CONTRIBUTING.md`、`.github/workflows/test.yml`、`preset/dsh-workbench-automation/README.md`、
 `docs/dev/preset-persona.md`、`CHANGELOG.md`。`docs/design/*.md` 里的 rc.2 是历史记录，不改。
 
 ## 2. rc.3 变化总表
@@ -48,7 +48,7 @@ rc.3 只有 6 个 commit，release note 列了 3 条，实际还夹带了一条�
 |---|---|---|---|
 | **导航入口自定义 + More 菜单**（#6247） | 新包 `@deepseek-ai/dsh-client-ui-entry-customization` 默认加载；`sidebar.panellist.actions`、`conversation.session.header.views.actions`、`sidebar.right.tab.guide.actions` 三个新 actions 槽 | 全仓无 `navigation` / `panellist` / `views.` 注册 | 无代码动作；用户会看到新入口，答疑时说明不是本插件加的 |
 | **New Session 复用空白会话 + 按 preset 跳过**（#6247 夹带，guide 目录名写成 `v0.2.1-rc.2`，实际 rc.2 tag 里没有该文件） | `ui-workspace/src/client/navigation.ts`、`ui-agent-preset` | 用户选 Capital 组合时命中：复用到的 blank 若 Agent 仍加载，会保留**创建时**的 preset 组合 | 文档 + 验证动作，见 R2 |
-| **analytics**（#6600） | `product-analytics`、`ui-agent-preset`、`ui-sidebar`、`ui-settings-general` | 仅 Desktop 上报且默认开、无用户开关；`analyticsMode()` 对自定义 preset 返回 `'other'`，事件又被 `to !== 'other'` 挡掉 | **零影响**，也不会把 `capital-generation` 这个 id 上报出去 |
+| **analytics**（#6600） | `product-analytics`、`ui-agent-preset`、`ui-sidebar`、`ui-settings-general` | 仅 Desktop 上报且默认开、无用户开关；`analyticsMode()` 对自定义 preset 返回 `'other'`，事件又被 `to !== 'other'` 挡掉 | **零影响**，也不会把 `dsh-workbench-automation` 这个 id 上报出去 |
 | **More 菜单修正**（#6883） | `ui-primitives`、`ui-conversation`、`ui-sidebar*` | `Menu` 新增可选 `current` / `minWidthFromAnchor`，`MenuItemButton` 新增可选 `current` | 全部可选，现有调用不改 |
 | **DeepSeek 模型列表**（#6944） | `llm-deepseek` / `-api-key` / `-account` | 本仓不配置模型、代码里不写死模型名 | 只影响宿主模型选择器；README 推荐语可复核 |
 | **兼容预检 × 版本钉**（**非 rc.3 新增**，rc.2 已有同一实现） | `dsh-app-boot` + `dsh-plugin-manager` | 直接命中本包 manifest | **必须动作**，见 §3 |
@@ -127,7 +127,7 @@ provider 类来自插件自己的依赖树。声明 rc.2 支持意味着 rc.3 �
 | `README.md` | Baseline 徽章、版本徽章、第 40 行基线句、FAQ 里的版本示例 |
 | `CONTRIBUTING.md` | 第 108 行基线句 |
 | `.github/workflows/test.yml` | 第 59 行 `npm install -g @deepseek-ai/dsh@0.2.1-rc.3` |
-| `preset/capital-generation/README.md` | 第 26 行"实测 dsh 0.2.1-rc.3" |
+| `preset/dsh-workbench-automation/README.md` | 第 26 行"实测 dsh 0.2.1-rc.3" |
 | `docs/dev/preset-persona.md` | §8.1 标题里的实测版本 |
 | `CHANGELOG.md` | 新增 2.12.0 段，含迁移说明 |
 | `src/web-retriever/local-fetch.ts` / `wind-client.ts` | 两个客户端版本常量 → `2.12.0`（测试钉住与 package.json 一致） |
@@ -138,8 +138,8 @@ provider 类来自插件自己的依赖树。声明 rc.2 支持意味着 rc.3 �
 ### 4.3 用户侧的升级顺序
 
 先升宿主，再更新插件（2.12.0 要求 rc.3）。反过来做，插件先被禁用，需要再执行一次
-`dsh plugin --profile <profile> update @v587d/capital-generation` 才能恢复；缺少 stderr 的桌面端尤其容易卡住。
-应急通道是 `dsh plugin allow-version` 对 `@v587d/capital-generation@2.11.1` + rc.3 精确豁免，但那只豁免
+`dsh plugin --profile <profile> update dsh-workbench-automation` 才能恢复；缺少 stderr 的桌面端尤其容易卡住。
+应急通道是 `dsh plugin allow-version` 对 `dsh-workbench-automation@2.11.1` + rc.3 精确豁免，但那只豁免
 manifest 检查，运行时导入仍与宿主跨版本。
 
 ## 5. 验证结果（2026-10-26，本机）
@@ -150,7 +150,7 @@ manifest 检查，运行时导入仍与宿主跨版本。
 |---|---|
 | `npm run check:dsh` | **36 / 36 条**账本通过（rc.3 实装；L19/L22/L23/L24/L26/L27/L28 因宿主把 primitives 编进 `dsh-web-frontend/dist` 而按设计为 n/a） |
 | `npm test` | **1215 / 1215** 通过（含 build；TypeScript 对 rc.3 类型编译通过） |
-| `npm run smoke:boot` | 通过：预设 `broken=null`、选择器三模式、20/20 族行 ACTIVE、11 行 bundle 组件、`/capital-watchlist` 与 `/capital-skills` 的 401/200 围栏、PTC 与 3 颗身份闸门全部在场 |
+| `npm run smoke:boot` | 通过：预设 `broken=null`、选择器三模式、20/20 族行 ACTIVE、11 行 bundle 组件、`/automation-watchlist` 与 `/automation-skills` 的 401/200 围栏、PTC 与 3 颗身份闸门全部在场 |
 | 兼容预检 | `evaluatePluginCompatibility(package.json)` 返回 `undefined` |
 | `git diff --check` | 干净 |
 

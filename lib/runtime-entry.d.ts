@@ -4,12 +4,12 @@
  * instead of per preset. The module-level cache still keys by root for older call sites.
  */
 import type { Context } from '@deepseek-ai/cordis';
-import { type CapitalShared } from './runtime.js';
+import { type AutomationShared } from './runtime.js';
 declare module '@deepseek-ai/cordis' {
     interface Context {
         /** Shared by the Capital root, junior and specialist presets. */
-        capitalChartRuntime: CapitalShared;
+        automationChartRuntime: AutomationShared;
     }
 }
-export declare const name = "capital-runtime";
+export declare const name = "automation-runtime";
 export declare function apply(ctx: Context): void;

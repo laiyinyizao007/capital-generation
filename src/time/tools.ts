@@ -242,8 +242,8 @@ export function registerTimeTool(ctx: Context, store?: TimeAxisReader): void {
       return readClock(Date.now(), resolveTimeZone(args.timezone))
     },
   }
-  ctx.effect(() => tools.register(definition), 'capital-generation.tool(get_local_datetime)')
-  ctx.effect(() => tools.register(dataTimeRangeDefinition(ctx, store)), 'capital-generation.tool(resolve_data_time_range)')
+  ctx.effect(() => tools.register(definition), 'automation-workbench.tool(get_local_datetime)')
+  ctx.effect(() => tools.register(dataTimeRangeDefinition(ctx, store)), 'automation-workbench.tool(resolve_data_time_range)')
 }
 
 type DateParts = { year: number; month: number; day: number }

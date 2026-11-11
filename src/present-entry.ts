@@ -16,10 +16,10 @@ import { createChartEventPublisher } from './chart/events.js'
 import { chartEventContextOf } from './chart/event-context.js'
 import { registerPresentChartsTool } from './chart/present-tool.js'
 import { createSettledWakeGuard, type WakeMessageLike } from './agents/settled-wake.js'
-import { capitalSharedRuntimeOf } from './chart-source-entry.js'
+import { automationSharedRuntimeOf } from './chart-source-entry.js'
 import type { SessionLike } from './data-collector/store.js'
 
-export const name = 'capital-present-tools'
+export const name = 'automation-present-tools'
 export const inject = ['tools']
 
 interface InboxState {
@@ -95,7 +95,7 @@ interface MaybeListenerContext {
 }
 
 export function apply(ctx: Context): void {
-  const shared = capitalSharedRuntimeOf(ctx)
+  const shared = automationSharedRuntimeOf(ctx)
   const publisherOf = () => createChartEventPublisher(chartEventContextOf(ctx))
   const eventCtx = ctx as unknown as MaybeListenerContext
   const wakeGuard = createSettledWakeGuard()
@@ -161,7 +161,7 @@ export function apply(ctx: Context): void {
     for (const dispose of disposers) {
       if (typeof dispose === 'function') dispose()
     }
-  }, 'capital-generation.chart-delivery()')
+  }, 'automation-workbench.chart-delivery()')
 
   registerPresentChartsTool(ctx, {
     artifacts: shared.artifacts,

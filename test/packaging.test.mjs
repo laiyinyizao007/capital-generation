@@ -50,7 +50,7 @@ test('打包闸门：vendored 图表库与构建产物都在发布清单里', (t
     'config/client.js',
     'watchlist/package.json',
     'watchlist/index.js',
-    // Shared type table: imported by the host half, inlined by the browser half — missing kills /capital-watchlist.
+    // Shared type table: imported by the host half, inlined by the browser half — missing kills /automation-watchlist.
     'watchlist/holding-rules.js',
     'watchlist/client.js',
     // A listed LICENSE that is not shipped loses the attribution duty.
@@ -64,14 +64,14 @@ test('打包闸门：vendored 图表库与构建产物都在发布清单里', (t
     'automation/task-icons.js',
     'automation/TABLER-ICONS-LICENSE',
     'automation/workspaces.js',
-    'preset/capital-generation/agent.patch.yml',
-    'preset/capital-generation/skills/capital-chart-protocol/SKILL.md',
+    'preset/dsh-workbench-automation/agent.patch.yml',
+    'preset/dsh-workbench-automation/skills/capital-chart-protocol/SKILL.md',
     // Persona duty lines load skills by name, so every protocol book is named individually here.
-    'preset/capital-generation/skills/capital-data-protocol/SKILL.md',
-    'preset/capital-generation/skills/capital-data-profile/SKILL.md',
-    'preset/capital-generation/skills/capital-data-query/SKILL.md',
-    'preset/capital-generation/skills/capital-web-protocol/SKILL.md',
-    'preset/capital-generation/skills/capital-web-evidence/SKILL.md',
+    'preset/dsh-workbench-automation/skills/capital-data-protocol/SKILL.md',
+    'preset/dsh-workbench-automation/skills/capital-data-profile/SKILL.md',
+    'preset/dsh-workbench-automation/skills/capital-data-query/SKILL.md',
+    'preset/dsh-workbench-automation/skills/capital-web-protocol/SKILL.md',
+    'preset/dsh-workbench-automation/skills/capital-web-evidence/SKILL.md',
     'cordis.patch.yml',
   ]) {
     assert.ok(paths.has(required), `发布清单里缺少 ${required}（npm run build 是否跑过？files 列表是否漏了？）`)
@@ -228,7 +228,7 @@ test('插件显示名：根包 locale meta 必须能被宿主读到，且 README
 
   // Cards draw only meta.title, so the README must not send users looking for the npm package name.
   const readme = readFileSync(join(ROOT, 'README.md'), 'utf8')
-  assert.ok(!/已安装的\s*`@v587d\/capital-generation`/u.test(readme),
+  assert.ok(!/已安装的\s*`@v587d\/dsh-workbench-automation`/u.test(readme),
     'README 还在让用户到「已安装」列表里找 npm 包名，但卡片显示的是 locale meta.title')
   assert.match(readme, /已安装的 \*\*Capital Generation\*\*/u,
     'README 的指路措辞要与卡片显示名同源（zh 界面是 meta.title「Capital Generation（证券研究）」的前半）')

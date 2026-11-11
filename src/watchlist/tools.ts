@@ -4,7 +4,7 @@ import { stripInvisibleText } from '../web-retriever/html-markdown.js'
 
 type ToolRuntimeLike = { register(definition: unknown): () => void }
 
-/** Slice of the host-plane `capitalWatchlist` service this tool reads; writes happen only in the panel. */
+/** Slice of the host-plane `automationWatchlist` service this tool reads; writes happen only in the panel. */
 interface WatchlistRow {
   readonly thscode?: string
   readonly name?: string
@@ -120,7 +120,7 @@ export function watchlistToolDefinition(source: () => WatchlistServiceLike | und
       const service = source()
       if (service === undefined || typeof service.list !== 'function') {
         // Never return an empty list: a missing host row must look different from "user has no watchlist".
-        return unavailable('watchlist_unavailable', `自选股服务没有挂载（capital-watchlist 那行没起来）。${WATCHLIST_DENIED}`)
+        return unavailable('watchlist_unavailable', `自选股服务没有挂载（automation-watchlist 那行没起来）。${WATCHLIST_DENIED}`)
       }
       let result: WatchlistListResult | undefined
       try {
@@ -148,9 +148,9 @@ export function registerWatchlistTool(ctx: Context): void {
     // Resolve the service at call time: host-plane row order is not ours, and caching a startup miss
     // would hide the user's watchlist for the whole process.
     try {
-      return ctx.get('capitalWatchlist') as WatchlistServiceLike | undefined
+      return ctx.get('automationWatchlist') as WatchlistServiceLike | undefined
     } catch {
       return undefined
     }
-  })), 'capital-generation.tool(get_watchlist)')
+  })), 'automation-workbench.tool(get_watchlist)')
 }

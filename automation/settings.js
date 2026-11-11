@@ -3,7 +3,7 @@
  * code defaults -> deployment row values -> current profile user settings -> task override.
  * The task override is applied by the task record, not here.
  */
-import { readCapitalEntry } from '../lib/capital-settings.js'
+import { readAutomationEntry } from '../lib/automation-settings.js'
 import {
   DEFAULT_AUTOMATION_SETTINGS,
   MAX_IDLE_TIMEOUT_MINUTES,
@@ -45,7 +45,7 @@ export function normalizeAutomationSettings(value = {}, fallback = DEFAULT_AUTOM
 export function resolveAutomationSettings(ctx, deployment = {}) {
   let user
   try {
-    user = readCapitalEntry(ctx).value?.automation
+    user = readAutomationEntry(ctx).value?.automation
   } catch {
     user = undefined
   }

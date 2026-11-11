@@ -176,7 +176,7 @@ function buildChartEventPublisher(ctx: ChartEventContext): ChartEventPublisher |
   /** `ctx.logger` only buffers in memory (no console exporter), so also write stderr; otherwise
    * delivery failures are invisible. */
   const emit = (message: string): void => {
-    const line = `capital-generation: ${message}`
+    const line = `automation-workbench: ${message}`
     try {
       ctx.logger?.warn(line)
     } catch {
@@ -299,7 +299,7 @@ function buildChartEventPublisher(ctx: ChartEventContext): ChartEventPublisher |
     if (typeof ctx.effect === 'function') {
       ctx.effect(() => () => {
         if (typeof sessionEventDispose === 'function') sessionEventDispose()
-      }, 'capital-generation.chart-turn-events()')
+      }, 'automation-workbench.chart-turn-events()')
     }
   }
 
@@ -325,7 +325,7 @@ function buildChartEventPublisher(ctx: ChartEventContext): ChartEventPublisher |
         // Teardown re-enables the fallback so queued charts are not lost.
         turnStoppingActive = false
         if (typeof disposeTurnStopping === 'function') disposeTurnStopping()
-      }, 'capital-generation.chart-turn-stopping()')
+      }, 'automation-workbench.chart-turn-stopping()')
     }
   }
 

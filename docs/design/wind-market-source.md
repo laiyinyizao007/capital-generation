@@ -154,7 +154,7 @@ description 写明「不要反复重试，积分计费」（同 fuyao 5003 纪�
 
 ### 3.5 Phase 3：编排与协议整合
 
-- `preset/capital-generation/skills/capital-data-protocol/SKILL.md` 增补：
+- `preset/dsh-workbench-automation/skills/capital-data-protocol/SKILL.md` 增补：
   - 路由规则：**宏观 EDB / 分钟行情 / 港美股 / 债券 / 股东事件 → wind；A 股基础行情/财务/基金/特色数据 → fuyao 优先**；
     同一数据双源都有时不得混用口径出同一结论。
   - 来源标注沿用现有措辞：「来源：万得 Wind 金融数据服务」。

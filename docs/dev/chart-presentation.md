@@ -5,7 +5,7 @@
 
 ## 6.1 准入与 gate
 
-- **根 Agent 的工具面在组合期封闭**（2026-10-19 D0）：`capital-generation` 只挂 time / ocr /
+- **根 Agent 的工具面在组合期封闭**（2026-10-19 D0）：`dsh-workbench-automation` 只挂 time / ocr /
   watchlist / present / root-extras 五行，`render_chart` / `prepare_chart_source` / 出网那十三颗**根本不在根的
   composition 里**，所以 `src/agents/root-tool-policy.ts` 在生产装配下以 `deny: false` 注册——created
   监听只记现场、不再逐名 deny（`ROOT_AGENT_DENIED_TOOLS` 那份名单留给单体载体）。**不要在 preset /
@@ -18,7 +18,7 @@
   还没落定（§1.1 → `data-roles.md`，账本 L32），三颗身份闸门因此全局装在插件 ctx 上、各一次。
 - **⛔ 委派出口只有专用角色那几颗，角色工具面由 preset 挂的**族行**表达**：2026-10-18 用户决策
   删掉通用 `subagent` 行（没有明确场景就不该有「其他」）；2026-10-19 D0 把本仓模型工具按族拆成
-  `@v587d/capital-generation/tools/*` 独立入口行，"谁能用什么"从此只写在 `agent.patch.yml` 的行
+  `dsh-workbench-automation/tools/*` 独立入口行，"谁能用什么"从此只写在 `agent.patch.yml` 的行
   组合里（官方四颗 preset 的同一形状），运行期那份名字级 allow 清单已删除。两种形状的失败方向
   不同：deny 名单是 fail-open（漏写一个名字就等于有权限，2026-09 的出图绕过事故这么来的），
   allow 名单与行组合都是 fail-closed（多写/多挂才会越权），而行组合还多两点好处——① 名单里一个
@@ -31,7 +31,7 @@
   决定该角色挂哪几行；恢复通用委派行 = 一并恢复那个绕过入口，禁止。回归 `test/persona.test.mjs`
   「委派出口只有专用角色」「组合表：每颗 preset 挂的族行必须恰好是这几行」与
   `test/role-tool-policy.test.mjs`、`test/family-entries.test.mjs`。
-- **⛔ 序列旁路必须接平台认证围栏**：`chart-ui/index.js` 的 `/capital-charts` 路由把
+- **⛔ 序列旁路必须接平台认证围栏**：`chart-ui/index.js` 的 `/automation-charts` 路由把
   `ctx.get('connection').requestRejection(req)` 接进 handler（认证先于方法 / 路径判定）；
   `webServer` 本身不做认证，不接就是无认证端点。账本 L13、探针 `check:dsh`、回归
   `test/chart-host.test.mjs`。

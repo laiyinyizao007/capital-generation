@@ -7,7 +7,7 @@
  * one registration per process.
  */
 import type { Context } from '@deepseek-ai/cordis';
-export declare const name = "capital-policy";
+export declare const name = "automation-policy";
 /**
  * `tools` is a hard dependency: without `inject`, boot resolves it to undefined without
  * throwing and every identity guard silently skips installation. Waiting for the fiber

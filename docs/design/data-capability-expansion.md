@@ -126,7 +126,7 @@ fund_nav|基金净值序列（8 种区间口径）|0
 - ✅ 剪枝风险同步下降（40% 余量）；
 - ⚠ 代价三处，都要一起改，否则测试先红是对的：`hub.listCapabilities()` 的返回形态、
   `test/data-collector-hub.test.mjs:325`（`deepEqual(Object.keys(...))` 钉死三个键）、
-  `preset/capital-generation/skills/capital-data-protocol/SKILL.md:54` 那行"capability + 一行 summary + paginated"；
+  `preset/dsh-workbench-automation/skills/capital-data-protocol/SKILL.md:54` 那行"capability + 一行 summary + paginated"；
 - ⛔ **必须先加一条生产者护栏**：实测当前 69 条 summary 里 `|` `:` `;` 换行 制表符 **命中数全为 0**——
   但这是**今天的数据性质，不是保证**。定长分隔编码必须让 producer 拒绝（或转义）分隔符，
   并加断言。分隔符撞车属于"错了不报错、只是话说错"那一族：模型会把一条能力读成两条。

@@ -38,7 +38,7 @@ const fetcher = createLocalFetcher({
   maxBytes: 524_288,
   maxContentChars: 100_000,
   maxRedirects: 5,
-  userAgent: `capital-generation-local-fetch-smoke/${LOCAL_FETCH_CLIENT_VERSION}`,
+  userAgent: `automation-workbench-local-fetch-smoke/${LOCAL_FETCH_CLIENT_VERSION}`,
 })
 
 const { urls, source } = loadUrls()

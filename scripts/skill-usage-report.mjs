@@ -35,7 +35,7 @@ const SINCE = Date.parse(argValue('--since', '1970-01-01T00:00:00.000Z'))
 
 const CATALOG_NAMES = new Set(SELECTED_SKILL_CATALOG.map(({ name }) => name))
 const ROLE_BY_PRESET = {
-  'capital-generation': 'main',
+  'dsh-workbench-automation': 'main',
   'capital-data-junior': 'data_junior',
   'capital-web-retriever': 'web_retriever',
   'capital-data-analyst': 'data_analyst',

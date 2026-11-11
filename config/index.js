@@ -1,7 +1,7 @@
 import z from '@deepseek-ai/schemastery'
 import { SELECTED_SKILL_CATALOG, SELECTED_SKILL_SKILL_DIRS } from '../selected-skills/catalog.js'
 
-export const name = 'capital-config'
+export const name = 'automation-config'
 
 /**
  * Profile entry id; 0.1.7 makes it the settings namespace itself. The browser half
@@ -9,7 +9,7 @@ export const name = 'capital-config'
  * entry's `*.credentialRef` names; drift makes the card vanish silently. Every
  * editable field must be `.volatile()` or describe omits it.
  */
-export const SETTINGS_ENTRY_ID = 'capital-config'
+export const SETTINGS_ENTRY_ID = 'automation-config'
 
 const WindDocsSchema = z.object({
   endpoint: z.string().default('').volatile().description('可选：覆盖 Wind 文档检索端点'),
@@ -27,7 +27,7 @@ export const LOCAL_FETCH_DEFAULTS = {
   maxBytes: 524288,
   maxContentChars: 100000,
   maxRedirects: 5,
-  userAgent: '@v587d/capital-generation',
+  userAgent: 'dsh-workbench-automation',
 }
 
 const LocalFetchSchema = z.object({
@@ -116,9 +116,9 @@ export const Config = z.object({
  * Read-only route for the "Selected Skills" detail hover: serves the packaged
  * SKILL.md snapshot from disk instead of shipping ~750 KB in the client bundle.
  * Request names only index a precomputed Map (never path fragments). Same auth
- * fence as `/capital-charts` (`requestRejection`).
+ * fence as `/automation-charts` (`requestRejection`).
  */
-export const SKILL_DOC_ROUTE = '/capital-skills'
+export const SKILL_DOC_ROUTE = '/automation-skills'
 /** Byte cap per document: oversized files are rejected whole, never truncated. */
 export const MAX_SKILL_DOC_BYTES = 128 * 1024
 
@@ -132,7 +132,7 @@ export const SKILL_DOCS = new Map(SELECTED_SKILL_CATALOG.map((entry) => [
 function fsModule() {
   const processLike = globalThis.process
   const fs = processLike?.getBuiltinModule?.('node:fs')
-  if (!fs || typeof fs.readFileSync !== 'function') throw new Error('capital-config: Node fs is unavailable')
+  if (!fs || typeof fs.readFileSync !== 'function') throw new Error('automation-config: Node fs is unavailable')
   return fs
 }
 
@@ -253,8 +253,8 @@ export function apply(ctx) {
         path: SKILL_DOC_ROUTE,
         handler: createSkillDocHandler({ authorize }),
       }),
-      'capital-config: skill 原文旁路',
+      'automation-config: skill 原文旁路',
     )
   })
-  ctx.logger?.info?.('capital-config: settings entry active (volatile config surface + skill 原文旁路)')
+  ctx.logger?.info?.('automation-config: settings entry active (volatile config surface + skill 原文旁路)')
 }

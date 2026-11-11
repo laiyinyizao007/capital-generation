@@ -1,7 +1,7 @@
 <p align="center">
-  <a href="https://github.com/v587d/capital-generation"><img src="https://img.shields.io/badge/Market-CN%20%7C%20HK%20%7C%20US-orange" alt="Market·CN+HK+US"></a>
-  <a href="https://github.com/v587d/capital-generation"><img src="https://img.shields.io/badge/Financial-Agent-red" alt="Financial Agent"></a>
-  <a href="https://github.com/v587d/capital-generation">
+  <a href="https://github.com/v587d/dsh-workbench-automation"><img src="https://img.shields.io/badge/Market-CN%20%7C%20HK%20%7C%20US-orange" alt="Market·CN+HK+US"></a>
+  <a href="https://github.com/v587d/dsh-workbench-automation"><img src="https://img.shields.io/badge/Financial-Agent-red" alt="Financial Agent"></a>
+  <a href="https://github.com/v587d/dsh-workbench-automation">
     <img src="https://img.shields.io/badge/%E5%93%81%E7%A7%8D-%E8%82%A1%E7%A5%A8%20%7C%E5%80%BA%E5%88%B8%20%7C%E6%9C%9F%E8%B4%A7%20%7C%E5%95%86%E5%93%81%20%7C%E8%A1%8D%E7%94%9F%E5%93%81-fedcba" alt="股票·债券·期货·商品·衍生品">
   </a>
 </p>
@@ -14,8 +14,8 @@
 <p align="center">
   <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="awesome · DSH plugin"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="License"></a>
-  <a href="https://github.com/v587d/capital-generation/releases"><img src="https://img.shields.io/badge/version-2.20.0-9cf" alt="Version"></a>
-  <a href="https://www.npmjs.com/package/@v587d/capital-generation"><img src="https://img.shields.io/npm/v/%40v587d%2Fcapital-generation" alt="npm version"></a>
+  <a href="https://github.com/v587d/dsh-workbench-automation/releases"><img src="https://img.shields.io/badge/version-1.0.0-9cf" alt="Version"></a>
+  <a href="https://www.npmjs.com/package/dsh-workbench-automation"><img src="https://img.shields.io/npm/v/%40v587d%2Fdsh-workbench-automation" alt="npm version"></a>
   <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white" alt="powered-by-dsh"></a>
 </p>
 
@@ -52,21 +52,21 @@ Capital Generation 是运行在 [DeepSeek Harness（DSH）](https://github.com/d
     Linux / macOS ：
 
     ```bash
-    dsh plugin --profile capital add @v587d/capital-generation
+    dsh plugin --profile capital add dsh-workbench-automation
     ```
     或
     ```bash
-    dsh plugin --profile capital add github:v587d/capital-generation
+    dsh plugin --profile capital add github:v587d/dsh-workbench-automation
     ```
 
     DSH 桌面端在 「添加插件」 中输入：
 
     ```input
-    https://github.com/v587d/capital-generation
+    https://github.com/v587d/dsh-workbench-automation
     ```
     或
     ```input
-    @v587d/capital-generation
+    dsh-workbench-automation
     ```
     **本仓库已包含构建产物，普通用户不需要克隆仓库或运行构建命令。**
 
@@ -200,7 +200,7 @@ Capital Generation 是运行在 [DeepSeek Harness（DSH）](https://github.com/d
 - **升级到 2.9.0 后，分析师和绘图专员去哪了？** 这一版把它们收进自动模式内部，不再出现在选择器与预设管理里，避免误开一个没有取数入口的空会话。旧会话仍能按原身份恢复；新任务直接用自动模式提出即可。
 - **桌面端升级后仍是旧版？** 桌面端安装时会固定所解析的版本，不会自动升级。卸载后重新安装，再到插件详情查看版本号；如需指定版本，可在地址末尾加 `#v2.20.0` 或 `@2.20.0`。
 - **刚发布的新版本装不到？** 桌面端取包时会跳过**刚发布不久**的版本（宿主侧包管理器的发布冷却策略，实测会静默装成上一个版本），国内镜像的同步也可能滞后一段时间。急着用最新代码，改用仓库地址安装最直接；但仓库地址安装的是 git 依赖，插件页不显示「版本」检查。
-- **插件页的「版本」段怎么用？** 只有用包名从 npm 安装的版本才有；它只列比当前新的版本。回旧版要先卸载，再安装 `@v587d/capital-generation@版本号`（桌面端地址末尾加 `#v版本号`）；旧版必须匹配当前 DSH 基线，对应关系见 [CHANGELOG 的 Migration](CHANGELOG.md)。
+- **插件页的「版本」段怎么用？** 只有用包名从 npm 安装的版本才有；它只列比当前新的版本。回旧版要先卸载，再安装 `dsh-workbench-automation@版本号`（桌面端地址末尾加 `#v版本号`）；旧版必须匹配当前 DSH 基线，对应关系见 [CHANGELOG 的 Migration](CHANGELOG.md)。
 - **网页抓取失败？** 配置卡片中的「允许启动本地提取网页内容」默认开启：AnySearch 提取失败时可尝试本机直连。关闭后，本机直连的具名来源查询也不可用；请检查该开关和网络连接。
 - **Wind 那部分会消耗积分？** 会。Wind 的公告 / 新闻语义检索、宏观 / 行业 / 汇率指标、按日期区间取的历史 K 线都按次消耗你在 Wind 侧的额度；额度与条款以 Wind 为准，插件不做用量封顶。没配 `WIND_API_KEY` 时这几类不可用，其余功能照常——公告清单与正文有零密钥的东财工具，不配 Wind 也能查。
 - **没有加载想要的精选 Skill？** 先看「智能装载 Skills」开关：关着时只给已勾选的方法；打开后按角色放开全部方法，但仍由模型判断任务是否命中。再确认它归哪个预设——自动模式偏研究/组合/写作，估值、财务与筛选由分析师在计算时加载，文档深读与核验由资讯专员加载。列表上方可以按「Skill 特点」和「适用预设」两个维度取交集筛选；点技能名可看原文。需要强制使用时，在对话里直接输入 `/` 加原文中的英文名（例如 `/china-earnings-analysis`），不要用中文标题。
@@ -212,7 +212,7 @@ Capital Generation 是运行在 [DeepSeek Harness（DSH）](https://github.com/d
 ## 开发与贡献 
 普通用户不需要执行下面的命令。修改源码时请参考 [贡献指南](CONTRIBUTING.md) 和 [开发约定](AGENTS.md)：
 
-[![OctoCounts](https://api.octocounts.com/badge/v587d/capital-generation/branch/master)](https://octocounts.com/github/v587d/capital-generation/tree/master)
+[![OctoCounts](https://api.octocounts.com/badge/v587d/dsh-workbench-automation/branch/master)](https://octocounts.com/github/v587d/dsh-workbench-automation/tree/master)
 
 ```bash
 npm install
@@ -222,7 +222,7 @@ npm run check:dsh   # 检查 DSH 扩展面兼容性
 npm run smoke:boot  # 检查插件装配
 ```
 
-完整版本历史见 [CHANGELOG.md](CHANGELOG.md)。问题与建议可到 [Issues](https://github.com/v587d/capital-generation/issues) 或 [DSH官方 Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions/6947) 交流。本项目采用 [MIT 许可](LICENSE)。
+完整版本历史见 [CHANGELOG.md](CHANGELOG.md)。问题与建议可到 [Issues](https://github.com/v587d/dsh-workbench-automation/issues) 或 [DSH官方 Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions/6947) 交流。本项目采用 [MIT 许可](LICENSE)。
 
 ## 致谢
 

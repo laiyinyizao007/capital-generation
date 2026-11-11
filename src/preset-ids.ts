@@ -1,18 +1,18 @@
 /**
- * Single source of Capital preset identity. Since 0.2.1 the preset id is the role
+ * Single source of preset identity. Since 0.2.1 the preset id is the role
  * identity used by root convergence, shell guards, role surfaces, diagnostics and tests.
- * These strings must match `preset/capital-generation/agent.patch.yml` `config.id` and
+ * These strings must match `preset/dsh-workbench-automation/agent.patch.yml` `config.id` and
  * delegation `agentPreset` values; `config.id` is also session-log identity, so do not
  * rename casually. `test/persona.test.mjs` cross-checks them.
  */
-export const ROOT_PRESET_ID = 'capital-generation'
+export const ROOT_PRESET_ID = 'dsh-workbench-automation'
 
 export const ROLE_PRESET_IDS = {
-  collector: 'capital-data-collector',
-  junior: 'capital-data-junior',
-  specialist: 'capital-visualization-specialist',
-  retriever: 'capital-web-retriever',
-  analyst: 'capital-data-analyst',
+  collector: 'automation-data-collector',
+  junior: 'automation-data-junior',
+  specialist: 'automation-visualization-specialist',
+  retriever: 'automation-web-retriever',
+  analyst: 'automation-data-analyst',
 } as const
 
 export type RolePresetId = (typeof ROLE_PRESET_IDS)[keyof typeof ROLE_PRESET_IDS]
@@ -21,12 +21,12 @@ export type RolePresetId = (typeof ROLE_PRESET_IDS)[keyof typeof ROLE_PRESET_IDS
 export const ROLE_PRESET_ID_LIST: readonly string[] = Object.values(ROLE_PRESET_IDS)
 
 /** Every preset claimed by this plugin: root plus five roles. */
-export const CAPITAL_PRESET_IDS: readonly string[] = [ROOT_PRESET_ID, ...ROLE_PRESET_ID_LIST]
+export const AUTOMATION_PRESET_IDS: readonly string[] = [ROOT_PRESET_ID, ...ROLE_PRESET_ID_LIST]
 
-const CAPITAL_PRESET_ID_SET: ReadonlySet<string> = new Set(CAPITAL_PRESET_IDS)
+const AUTOMATION_PRESET_ID_SET: ReadonlySet<string> = new Set(AUTOMATION_PRESET_IDS)
 
-export function isCapitalPresetId(id: string | undefined): boolean {
-  return id !== undefined && CAPITAL_PRESET_ID_SET.has(id)
+export function isAutomationPresetId(id: string | undefined): boolean {
+  return id !== undefined && AUTOMATION_PRESET_ID_SET.has(id)
 }
 
 /**

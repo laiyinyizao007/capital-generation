@@ -37,8 +37,8 @@ import {
 } from './defaults.js'
 import { canonicalTrigger, formatInZone, nextOccurrence } from './time.js'
 
-export const DOMAIN_NAME = 'capital_automation'
-export const ROUTE_PATH = '/capital-automation'
+export const DOMAIN_NAME = 'automation_workbench'
+export const ROUTE_PATH = '/automation-workbench'
 
 const SYSTEM_NOTIFICATION_KINDS = new Set(['scheduler_standby'])
 

@@ -176,8 +176,8 @@ test('apply()：credentials 优先于环境变量', async () => {
   }
 })
 
-// Editable config comes from the capital-config entry via settings.describe(); a missing entry or throwing describe falls back to preset.
-test('apply()：配置读自 capital-config 条目，条目缺席或报错时回落 preset 配置', async () => {
+// Editable config comes from the automation-config entry via settings.describe(); a missing entry or throwing describe falls back to preset.
+test('apply()：配置读自 automation-config 条目，条目缺席或报错时回落 preset 配置', async () => {
   process.env.FUYAO_API_KEY = 'env-key-should-lose'
   try {
     const asked = []
@@ -191,7 +191,7 @@ test('apply()：配置读自 capital-config 条目，条目缺席或报错时回
       settings: {
         describe: () => [
           { ns: 'dsh-brand', value: {} },
-          { ns: 'capital-config', value: { customPersona: '  从卡片保存的人设  ', fuyaoCredentialRef: 'CUSTOM_FUYAO' } },
+          { ns: 'automation-config', value: { customPersona: '  从卡片保存的人设  ', fuyaoCredentialRef: 'CUSTOM_FUYAO' } },
         ],
       },
     })
@@ -230,7 +230,7 @@ test('readCapitalSettings：服务引用调用期现取，保存层兜底，pres
   assert.equal(readCapitalSettings(ctx, boot).source, 'preset')
 
   services = new Map([
-    ['settings', { describe: () => [{ ns: 'capital-config', value: { customPersona: '  条目人设  ' } }] }],
+    ['settings', { describe: () => [{ ns: 'automation-config', value: { customPersona: '  条目人设  ' } }] }],
   ])
   const applied = readCapitalSettings(ctx, boot)
   assert.equal(applied.source, 'settings-describe')
@@ -238,7 +238,7 @@ test('readCapitalSettings：服务引用调用期现取，保存层兜底，pres
 
   services = new Map([
     ['settings', { describe: () => [{ ns: 'other-entry', value: {} }] }],
-    ['configEditor', { entries: () => [{ options: { id: 'capital-config', config: { customPersona: '保存层人设' } } }] }],
+    ['configEditor', { entries: () => [{ options: { id: 'automation-config', config: { customPersona: '保存层人设' } } }] }],
   ])
   const saved = readCapitalSettings(ctx, boot)
   assert.equal(saved.source, 'config-editor')
@@ -256,7 +256,7 @@ test('tools/selected-skills：角色节 + provider + configEditor 兜底（setti
   services.set('agentPresets', { composedPreset: (agentCtx) => agentCtx?.preset })
   // No settings service yet; the card's save layer is the documented fallback.
   services.set('configEditor', {
-    entries: () => [{ options: { id: 'capital-config', config: { selectedSkills: { buffettFramework: true, financialHealth: true } } } }],
+    entries: () => [{ options: { id: 'automation-config', config: { selectedSkills: { buffettFramework: true, financialHealth: true } } } }],
   })
   applySelectedSkills(ctx, { role: 'main' })
   await Promise.all(effectResults)
@@ -285,7 +285,7 @@ test('tools/selected-skills：角色节 + provider + configEditor 兜底（setti
 
   // Settings wins when it arrives; the section is a per-assembly reader, not a boot snapshot.
   services.set('settings', {
-    describe: () => [{ ns: 'capital-config', value: { selectedSkills: { factCheck: true } } }],
+    describe: () => [{ ns: 'automation-config', value: { selectedSkills: { factCheck: true } } }],
   })
   assert.match(section.text(), /`fact-check`/)
   assert.doesNotMatch(section.text(), /`buffett-investment-framework`/)
@@ -306,7 +306,7 @@ test('tools/selected-skills：角色节 + provider + configEditor 兜底（setti
   const agent = {
     session: { id: 's-1', header: {} },
     ctx: {
-      preset: 'capital-generation',
+      preset: 'dsh-workbench-automation',
       inject(_deps, callback) { callback(injectedCtx) },
     },
   }
@@ -333,15 +333,15 @@ test('tools/root-extras：customPersona 在下一轮 assembly 重读，保存后
   const { ctx, sections, services } = fakeCtx()
   applyRootExtras(ctx)
   assert.equal(sections.length, 1, 'root-extras 必须注册 customPersona 节')
-  assert.equal(sections[0].name, 'capital:user-customization')
+  assert.equal(sections[0].name, 'automation:user-customization')
   assert.equal(sections[0].text(), '', '未保存人设时不注入正文')
   services.set('settings', {
-    describe: () => [{ ns: 'capital-config', value: { customPersona: '  保存后的人设  ' } }],
+    describe: () => [{ ns: 'automation-config', value: { customPersona: '  保存后的人设  ' } }],
   })
   assert.match(sections[0].text(), /保存后的人设/, '装配期只读一次会把保存前的人设钉到进程结束')
   assert.match(sections[0].text(), /NON-OVERRIDABLE SAFETY REMINDER/, '动态正文仍必须带安全脚注')
   services.set('settings', {
-    describe: () => [{ ns: 'capital-config', value: { customPersona: 'x'.repeat(8_001) } }],
+    describe: () => [{ ns: 'automation-config', value: { customPersona: 'x'.repeat(8_001) } }],
   })
   assert.equal(sections[0].text(), '', '超长人设不能把 prompt 组装打崩')
 })
@@ -360,7 +360,7 @@ function assertObjectSchemas(node, path, toolName) {
 }
 
 // get_watchlist reads a late-arriving host service; register unconditionally and fail loudly.
-test('apply()：get_watchlist 无条件注册，capitalWatchlist 晚到也照样读得到', async () => {
+test('apply()：get_watchlist 无条件注册，automationWatchlist 晚到也照样读得到', async () => {
   process.env.FUYAO_API_KEY = 'smoke-key'
   try {
     const { ctx, tools, services, effectResults } = fakeCtx()
@@ -375,7 +375,7 @@ test('apply()：get_watchlist 无条件注册，capitalWatchlist 晚到也照样
     assert.equal(before.code, 'watchlist_unavailable')
     assert.equal(before.items, undefined)
 
-    services.set('capitalWatchlist', {
+    services.set('automationWatchlist', {
       list: async () => ({
         ok: true,
         limit: 30,
@@ -444,7 +444,7 @@ test('apply()：所有注册工具的 output.schema 结构自洽（required 必�
   }
 })
 
-test('capital-policy + tools/root-extras：注册根 Agent 工具收敛监听（只拿掉主 Agent 的专属入口）', async () => {
+test('automation-policy + tools/root-extras：注册根 Agent 工具收敛监听（只拿掉主 Agent 的专属入口）', async () => {
   process.env.FUYAO_API_KEY = 'smoke-key'
   try {
     const { ctx, listeners, effectResults } = fakeCtx()
@@ -514,7 +514,7 @@ test('apply()：角色会话只减掉焊死的兄弟名字，并原样回到 dc_
     const agentCtx = { tools: { restrict: (filter) => { restricted.push(filter); return () => {} }, guard: () => () => {} } }
     const notify = (agent) => { for (const entry of created) entry.listener({ agent }) }
 
-    notify({ session: { id: 'junior-1', header: { cwd: '/w', parentSession: 'main-1' } }, ctx: { ...agentCtx, preset: 'capital-data-junior' } })
+    notify({ session: { id: 'junior-1', header: { cwd: '/w', parentSession: 'main-1' } }, ctx: { ...agentCtx, preset: 'automation-data-junior' } })
     assert.deepEqual(restricted, SIBLING_DENIED_TOOLS.map((deny) => ({ deny: [deny] })),
       '角色侧只提交逐名 deny：整份 allow 名单已由 D0 删除，工具面在组合期就封闭了')
     assert.equal(restricted.filter((filter) => filter.allow !== undefined).length, 0,
@@ -527,7 +527,7 @@ test('apply()：角色会话只减掉焊死的兄弟名字，并原样回到 dc_
     const status = await toolNamed(tools, 'dc_status').execute({}, exec(delegated))
     assert.deepEqual(status.agent_tool_policy, [
       {
-        agent_id: 'junior-1', root: false, preset_id: 'capital-data-junior', outcome: 'restricted',
+        agent_id: 'junior-1', root: false, preset_id: 'automation-data-junior', outcome: 'restricted',
         allowed: [], denied: [...SIBLING_DENIED_TOOLS], failed: [],
       },
     ], '角色收敛现场必须由生产装配原样带回会话侧')
@@ -537,11 +537,11 @@ test('apply()：角色会话只减掉焊死的兄弟名字，并原样回到 dc_
   }
 })
 
-test('capital-policy 行必须把 tools 声明成注入：否则三颗闸门静默不装', async () => {
+test('automation-policy 行必须把 tools 声明成注入：否则三颗闸门静默不装', async () => {
   // Without inject, ctx.get('tools') is undefined and all three identity gates no-op silently.
   const policy = await import('../lib/policy-entry.js')
   assert.ok(Array.isArray(policy.inject) && policy.inject.includes('tools'),
-    'capital-policy 必须 export const inject = ["tools"]（host 平面行读服务只有这一条不静默的路）')
+    'automation-policy 必须 export const inject = ["tools"]（host 平面行读服务只有这一条不静默的路）')
 })
 
 test('apply()：三颗身份闸门都装在插件 ctx（各一次），按人设判定且 fail-open', async () => {
@@ -554,8 +554,8 @@ test('apply()：三颗身份闸门都装在插件 ctx（各一次），按人设
     applyPolicy(ctx)
     await Promise.all(effectResults)
 
-    const capital = { ctx: { preset: 'capital-generation' } }
-    const junior = { ctx: { preset: 'capital-data-junior' } }
+    const capital = { ctx: { preset: 'dsh-workbench-automation' } }
+    const junior = { ctx: { preset: 'automation-data-junior' } }
     const writeCall = (agent) => ({ name: 'write', agent, arguments: { file_path: '/w/a.md' } })
     const ocrUrlCall = (agent, arguments_) => ({ name: 'ocr', agent, arguments: arguments_ })
     const siblingCall = (agent) => ({ name: 'interrupt_agent', agent, arguments: { agent_id: 'x' } })
@@ -580,7 +580,7 @@ test('apply()：三颗身份闸门都装在插件 ctx（各一次），按人设
     const ocr = ocrGuards[0]
     assert.equal(ocr(ocrUrlCall(capital, { file: 'refs/茅台研报.pdf' })), undefined, 'file 形态放行：那是主 Agent 的正当入口')
     assert.equal(ocr(ocrUrlCall(capital, { doc_id: 'ocr_000000000000', pages: '1' })), undefined, '读盘形态放行')
-    assert.equal(ocr(ocrUrlCall({ ctx: { preset: 'capital-web-retriever' } }, { url: 'https://pdf.dfcfw.com/H3_x_1.pdf' })), undefined,
+    assert.equal(ocr(ocrUrlCall({ ctx: { preset: 'automation-web-retriever' } }, { url: 'https://pdf.dfcfw.com/H3_x_1.pdf' })), undefined,
       '⛔ 检索人设的 url 形态放行：判据是人设，不是会话拓扑（委派子与手开角色都走这一支）')
     assert.equal(ocr(ocrUrlCall({ ctx: { preset: 'standard' } }, { url: 'https://x/y.pdf' })), undefined, '别的 preset 的 url 形态放行（fail-open）')
 
@@ -627,7 +627,7 @@ test('apply()：customPersona 注册为独立 system-prompt 节', () => {
   ctx.systemPrompt = { section: (section) => { sections.push(section); return () => {} } }
   apply(ctx, { customPersona: '偏好表格化输出', retriever: { baseURL: '', credentialRef: '', windDocs: { endpoint: '', credentialRef: '', timeoutMs: 0 } } })
   assert.equal(sections.length, 1)
-  assert.equal(sections[0].name, 'capital:user-customization')
+  assert.equal(sections[0].name, 'automation:user-customization')
   assert.match(sections[0].text, /NON-OVERRIDABLE SAFETY REMINDER/)
   assert.ok(effectResults.length > 0)
 })
@@ -669,7 +669,7 @@ test('apply()：本地回退默认启用并把 UA 落到本机直连请求；ena
       assert.equal(result.fallback.code, 'AUTH')
       assert.equal(requests.length, 2, '缺省配置必须启用本地回退（消费点默认值独立生效）')
       assert.equal(requests[1].init.headers['user-agent'], LOCAL_FETCH_DEFAULTS.userAgent)
-      assert.equal(LOCAL_FETCH_DEFAULTS.userAgent, '@v587d/capital-generation')
+      assert.equal(LOCAL_FETCH_DEFAULTS.userAgent, 'dsh-workbench-automation')
     }
 
     {

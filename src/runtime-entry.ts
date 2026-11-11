@@ -5,17 +5,17 @@
  */
 import type { Context } from '@deepseek-ai/cordis'
 
-import { capitalSharedRuntime, type CapitalShared } from './runtime.js'
+import { automationSharedRuntime, type AutomationShared } from './runtime.js'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
     /** Shared by the Capital root, junior and specialist presets. */
-    capitalChartRuntime: CapitalShared
+    automationChartRuntime: AutomationShared
   }
 }
 
-export const name = 'capital-runtime'
+export const name = 'automation-runtime'
 
 export function apply(ctx: Context): void {
-  ctx.provide('capitalChartRuntime', capitalSharedRuntime(ctx))
+  ctx.provide('automationChartRuntime', automationSharedRuntime(ctx))
 }

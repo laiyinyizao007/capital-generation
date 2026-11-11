@@ -6,11 +6,11 @@
 import type { Context } from '@deepseek-ai/cordis'
 
 import { registerDatasetTools } from './data-collector/dataset-tools.js'
-import { capitalDatasetStore, type RuntimeContext } from './runtime.js'
+import { automationDatasetStore, type RuntimeContext } from './runtime.js'
 
-export const name = 'capital-dataset-read-tools'
+export const name = 'automation-dataset-read-tools'
 export const inject = ['tools']
 
 export function apply(ctx: Context): void {
-  registerDatasetTools(ctx, capitalDatasetStore(ctx as unknown as RuntimeContext))
+  registerDatasetTools(ctx, automationDatasetStore(ctx as unknown as RuntimeContext))
 }

@@ -6,33 +6,33 @@
 
 /** Custom tool entry points, in declaration order. */
 export const CAPITAL_ROW_TOOLS = {
-  '@v587d/capital-generation/tools/collect': ['request_data', 'list_capabilities', 'describe_capability', 'dc_status'],
-  '@v587d/capital-generation/tools/dataset-read': ['describe_dataset', 'inspect_dataset', 'profile_dataset', 'query_dataset'],
-  '@v587d/capital-generation/tools/chart-source': ['prepare_chart_source'],
-  '@v587d/capital-generation/tools/chart-render': ['render_chart'],
-  '@v587d/capital-generation/tools/retrieve-search': ['anysearch_search', 'web_retriever_fetch', 'wind_docs_announcements', 'wind_docs_news'],
-  '@v587d/capital-generation/tools/retrieve-sources': [
+  'dsh-workbench-automation/tools/collect': ['request_data', 'list_capabilities', 'describe_capability', 'dc_status'],
+  'dsh-workbench-automation/tools/dataset-read': ['describe_dataset', 'inspect_dataset', 'profile_dataset', 'query_dataset'],
+  'dsh-workbench-automation/tools/chart-source': ['prepare_chart_source'],
+  'dsh-workbench-automation/tools/chart-render': ['render_chart'],
+  'dsh-workbench-automation/tools/retrieve-search': ['anysearch_search', 'web_retriever_fetch', 'wind_docs_announcements', 'wind_docs_news'],
+  'dsh-workbench-automation/tools/retrieve-sources': [
     'cls_telegraph', 'wscn_lives', 'cninfo_irm', 'sseinfo_qa',
     'eastmoney_724', 'eastmoney_stock_news', 'eastmoney_reports',
     'eastmoney_announcements', 'eastmoney_announcement_body',
     'sina_reports', 'ths_eps_forecast',
   ],
-  '@v587d/capital-generation/tools/ocr': ['ocr'],
+  'dsh-workbench-automation/tools/ocr': ['ocr'],
   // Root-only one-turn wait across delegated children and their descendants.
-  '@v587d/capital-generation/tools/orchestration': ['wait_for_agents'],
+  'dsh-workbench-automation/tools/orchestration': ['wait_for_agents'],
   // Main Agent's final-turn delivery step; the card must be written by the closing turn.
-  '@v587d/capital-generation/tools/present': ['present_charts'],
-  '@v587d/capital-generation/tools/time': ['get_local_datetime', 'resolve_data_time_range'],
-  '@v587d/capital-generation/tools/watchlist': ['get_watchlist'],
+  'dsh-workbench-automation/tools/present': ['present_charts'],
+  'dsh-workbench-automation/tools/time': ['get_local_datetime', 'resolve_data_time_range'],
+  'dsh-workbench-automation/tools/watchlist': ['get_watchlist'],
   // Root presence settings only; this row registers no tools.
-  '@v587d/capital-generation/tools/root-extras': [],
+  'dsh-workbench-automation/tools/root-extras': [],
   // Role-scoped selected-skill catalog + prompt section; registers no model tools.
-  '@v587d/capital-generation/tools/selected-skills': [],
+  'dsh-workbench-automation/tools/selected-skills': [],
 }
 
 /** Rows that declare a non-tool placement config (the value is not a tool switch). */
 const ROW_CONFIG_KEYS = {
-  '@v587d/capital-generation/tools/selected-skills': ['role'],
+  'dsh-workbench-automation/tools/selected-skills': ['role'],
 }
 
 /** A row owns its complete tool family; generic capabilities are not trimmed per role. */

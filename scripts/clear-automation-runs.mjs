@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Local maintenance helper (not shipped): clear CapGen automation run history.
+ * Local maintenance helper (not shipped): clear automation-workbench run history.
  *
  * The automation domain is an in-memory authoritative, whole-file JSON unit: a live
  * dsh process republishes its snapshot on every heartbeat, so editing the file while
@@ -32,8 +32,8 @@ const wait = args.has('--wait')
 const keepNotifications = args.has('--keep-notifications')
 
 const home = process.env.DSH_HOME ?? join(homedir(), '.dsh')
-const storagePath = join(home, 'storages', 'capital_automation.json')
-const locksDir = join(home, 'storages', 'capital-automation-locks')
+const storagePath = join(home, 'storages', 'automation_workbench.json')
+const locksDir = join(home, 'storages', 'automation-workbench-locks')
 const ports = [3080, 8888]
 
 function fail(message) {

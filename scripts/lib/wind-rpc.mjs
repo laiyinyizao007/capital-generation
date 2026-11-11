@@ -9,7 +9,7 @@ export const WIND_BASE = 'https://mcp.wind.com.cn'
 export const WIND_INITIALIZE_PARAMS = {
   protocolVersion: '2025-03-26',
   capabilities: {},
-  clientInfo: { name: 'capital-generation', version: 'contract-probe' },
+  clientInfo: { name: 'automation-workbench', version: 'contract-probe' },
 }
 
 /** Upstream answers either plain JSON or SSE; take the last `data:` line. */

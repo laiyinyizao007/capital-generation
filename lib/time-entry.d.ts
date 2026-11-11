@@ -4,6 +4,6 @@
  * enforced by `tool-exec` identity checks, not by row composition.
  */
 import type { Context } from '@deepseek-ai/cordis';
-export declare const name = "capital-time-tools";
+export declare const name = "automation-time-tools";
 export declare const inject: string[];
 export declare function apply(ctx: Context): void;

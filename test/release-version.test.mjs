@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url'
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
 const rootVersion = () => JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version
 
-test('发版闸门：随包嵌套包（chart-ui / capital-config / capital-watchlist / capital-automation）的 version 必须与主包一致', () => {
+test('发版闸门：随包嵌套包（chart-ui / automation-config / automation-watchlist / automation-workbench）的 version 必须与主包一致', () => {
   const version = rootVersion()
   for (const manifestPath of ['chart-ui/package.json', 'config/package.json', 'watchlist/package.json', 'automation/package.json']) {
     const manifest = JSON.parse(readFileSync(join(ROOT, manifestPath), 'utf8'))
